@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
 import { Sidebar } from "@/components/admin/sidebar";
 import { Topbar } from "@/components/admin/topbar";
 import { createClient } from "@/lib/supabase/server";
+
+// The root layout now identifies as the storefront, so the admin restates its own.
+export const metadata: Metadata = {
+  title: {
+    default: "Hazestudios Admin",
+    template: "%s · Hazestudios Admin",
+  },
+};
 
 export default async function AdminLayout({
   children,

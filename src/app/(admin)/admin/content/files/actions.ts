@@ -12,7 +12,7 @@ export async function recordFile(payload: {
   const supabase = await createClient();
   const { error } = await supabase.from("files").insert(payload);
   if (error) return { error: error.message };
-  revalidatePath("/content/files");
+  revalidatePath("/admin/content/files");
   return { ok: true };
 }
 
@@ -29,6 +29,6 @@ export async function deleteFile(id: string, url: string) {
 
   const { error } = await supabase.from("files").delete().eq("id", id);
   if (error) return { error: error.message };
-  revalidatePath("/content/files");
+  revalidatePath("/admin/content/files");
   return { ok: true };
 }

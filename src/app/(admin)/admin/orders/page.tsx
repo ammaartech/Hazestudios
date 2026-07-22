@@ -52,10 +52,10 @@ export default async function OrdersPage({
     <div>
       <PageHeader title="Orders">
         <Button variant="outline" asChild>
-          <Link href="/orders/drafts">Drafts</Link>
+          <Link href="/admin/orders/drafts">Drafts</Link>
         </Button>
         <Button asChild>
-          <Link href="/orders/new">Create order</Link>
+          <Link href="/admin/orders/new">Create order</Link>
         </Button>
       </PageHeader>
 
@@ -63,7 +63,7 @@ export default async function OrdersPage({
         <CardContent className="pt-0">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <FilterTabs
-              basePath="/orders"
+              basePath="/admin/orders"
               param="tab"
               current={tab}
               tabs={[
@@ -80,7 +80,7 @@ export default async function OrdersPage({
           {orders.length === 0 ? (
             <p className="py-12 text-center text-sm text-muted-foreground">
               No orders found.{" "}
-              <Link href="/orders/new" className="text-primary hover:underline">
+              <Link href="/admin/orders/new" className="text-primary hover:underline">
                 Create an order
               </Link>
             </p>

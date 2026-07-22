@@ -32,7 +32,7 @@ export async function issueGiftCard(payload: {
   });
   if (error) return { error: error.message };
 
-  revalidatePath("/products/gift-cards");
+  revalidatePath("/admin/products/gift-cards");
   return { ok: true };
 }
 
@@ -43,6 +43,6 @@ export async function toggleGiftCard(id: string, disable: boolean) {
     .update({ disabled_at: disable ? new Date().toISOString() : null })
     .eq("id", id);
   if (error) return { error: error.message };
-  revalidatePath("/products/gift-cards");
+  revalidatePath("/admin/products/gift-cards");
   return { ok: true };
 }

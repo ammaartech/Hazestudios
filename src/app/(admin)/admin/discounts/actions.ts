@@ -65,7 +65,7 @@ export async function saveDiscount(payload: DiscountPayload) {
     }
   }
 
-  revalidatePath("/discounts");
+  revalidatePath("/admin/discounts");
   return { ok: true };
 }
 
@@ -76,7 +76,7 @@ export async function toggleDiscount(id: string, disable: boolean) {
     .update({ status: disable ? "disabled" : "active" })
     .eq("id", id);
   if (error) return { error: error.message };
-  revalidatePath("/discounts");
+  revalidatePath("/admin/discounts");
   return { ok: true };
 }
 
@@ -84,6 +84,6 @@ export async function deleteDiscount(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("discounts").delete().eq("id", id);
   if (error) return { error: error.message };
-  revalidatePath("/discounts");
+  revalidatePath("/admin/discounts");
   return { ok: true };
 }

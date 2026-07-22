@@ -41,7 +41,7 @@ export default async function CollectionsPage() {
     <div>
       <PageHeader title="Collections">
         <Button asChild>
-          <Link href="/products/collections/new">Create collection</Link>
+          <Link href="/admin/products/collections/new">Create collection</Link>
         </Button>
       </PageHeader>
 

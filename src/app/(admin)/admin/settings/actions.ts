@@ -26,7 +26,7 @@ export async function updateShopSettings(
     .update(patch)
     .eq("id", 1);
   if (error) return { error: error.message };
-  revalidatePath("/settings", "layout");
+  revalidatePath("/admin/settings", "layout");
   return { ok: true };
 }
 
@@ -64,7 +64,7 @@ export async function saveLocation(payload: {
     });
     if (error) return { error: error.message };
   }
-  revalidatePath("/settings/locations");
+  revalidatePath("/admin/settings/locations");
   return { ok: true };
 }
 
@@ -80,7 +80,7 @@ export async function deleteLocation(id: string) {
   }
   const { error } = await supabase.from("locations").delete().eq("id", id);
   if (error) return { error: error.message };
-  revalidatePath("/settings/locations");
+  revalidatePath("/admin/settings/locations");
   return { ok: true };
 }
 
@@ -109,6 +109,6 @@ export async function updateStaffRole(userId: string, role: StaffRole) {
     .update({ role })
     .eq("user_id", userId);
   if (error) return { error: error.message };
-  revalidatePath("/settings/users");
+  revalidatePath("/admin/settings/users");
   return { ok: true };
 }

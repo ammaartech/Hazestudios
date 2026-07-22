@@ -93,7 +93,7 @@ export function CollectionForm({
         return;
       }
       toast.success(initial.id ? "Collection updated" : "Collection created");
-      router.push("/products/collections");
+      router.push("/admin/products/collections");
       router.refresh();
     });
   }
@@ -108,7 +108,7 @@ export function CollectionForm({
         return;
       }
       toast.success("Collection deleted");
-      router.push("/products/collections");
+      router.push("/admin/products/collections");
       router.refresh();
     });
   }
@@ -121,7 +121,7 @@ export function CollectionForm({
     <div>
       <PageHeader
         title={initial.id ? title || "Edit collection" : "Create collection"}
-        backHref="/products/collections"
+        backHref="/admin/products/collections"
         backLabel="Collections"
       >
         {initial.id && (

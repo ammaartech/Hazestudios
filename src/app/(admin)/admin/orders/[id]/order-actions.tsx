@@ -82,7 +82,7 @@ export function DeleteOrderButton({ orderId }: { orderId: string }) {
           if (result.error) toast.error(result.error);
           else {
             toast.success("Order deleted");
-            router.push("/orders");
+            router.push("/admin/orders");
             router.refresh();
           }
         });

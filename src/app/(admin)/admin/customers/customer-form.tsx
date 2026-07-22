@@ -54,7 +54,7 @@ export function CustomerForm({ initial }: { initial: CustomerPayload }) {
         return;
       }
       toast.success(initial.id ? "Customer updated" : "Customer created");
-      router.push("/customers");
+      router.push("/admin/customers");
       router.refresh();
     });
   }
@@ -69,7 +69,7 @@ export function CustomerForm({ initial }: { initial: CustomerPayload }) {
         return;
       }
       toast.success("Customer deleted");
-      router.push("/customers");
+      router.push("/admin/customers");
       router.refresh();
     });
   }

@@ -42,7 +42,7 @@ export default async function CustomersPage({
     <div>
       <PageHeader title="Customers">
         <Button asChild>
-          <Link href="/customers/new">Add customer</Link>
+          <Link href="/admin/customers/new">Add customer</Link>
         </Button>
       </PageHeader>
 

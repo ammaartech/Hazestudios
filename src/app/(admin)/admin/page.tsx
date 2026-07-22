@@ -110,7 +110,7 @@ export default async function HomePage() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Recent orders</CardTitle>
           <Link
-            href="/orders"
+            href="/admin/orders"
             className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors duration-150 hover:underline"
           >
             View all <ArrowRight className="size-3.5" />
@@ -120,7 +120,7 @@ export default async function HomePage() {
           {recentOrders.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
               No orders yet.{" "}
-              <Link href="/orders/new" className="text-primary hover:underline">
+              <Link href="/admin/orders/new" className="text-primary hover:underline">
                 Create your first order
               </Link>
             </p>
@@ -174,7 +174,7 @@ export default async function HomePage() {
               </p>
             </div>
             <Link
-              href="/products/new"
+              href="/admin/products/new"
               className="inline-flex h-9 cursor-pointer items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors duration-150 hover:bg-primary/90"
             >
               Add product

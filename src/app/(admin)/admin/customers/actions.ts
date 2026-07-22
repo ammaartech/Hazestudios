@@ -41,7 +41,7 @@ export async function saveCustomer(payload: CustomerPayload) {
       .eq("id", payload.id);
     if (error) return { error: error.message };
     revalidatePath(`/customers/${payload.id}`);
-    revalidatePath("/customers");
+    revalidatePath("/admin/customers");
     return { id: payload.id };
   }
 
@@ -51,7 +51,7 @@ export async function saveCustomer(payload: CustomerPayload) {
     .select("id")
     .single();
   if (error) return { error: error.message };
-  revalidatePath("/customers");
+  revalidatePath("/admin/customers");
   return { id: data.id as string };
 }
 
@@ -59,7 +59,7 @@ export async function deleteCustomer(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("customers").delete().eq("id", id);
   if (error) return { error: error.message };
-  revalidatePath("/customers");
+  revalidatePath("/admin/customers");
   return { ok: true };
 }
 
@@ -83,7 +83,7 @@ export async function saveSegment(payload: {
       .insert({ name: payload.name.trim(), filters: payload.filters });
     if (error) return { error: error.message };
   }
-  revalidatePath("/customers/segments");
+  revalidatePath("/admin/customers/segments");
   return { ok: true };
 }
 
@@ -91,6 +91,6 @@ export async function deleteSegment(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("segments").delete().eq("id", id);
   if (error) return { error: error.message };
-  revalidatePath("/customers/segments");
+  revalidatePath("/admin/customers/segments");
   return { ok: true };
 }

@@ -106,7 +106,7 @@ export default async function AnalyticsPage() {
     <div>
       <PageHeader title="Analytics">
         <Link
-          href="/analytics/reports"
+          href="/admin/analytics/reports"
           className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
         >
           Reports <ArrowRight className="size-3.5" />

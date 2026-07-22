@@ -132,7 +132,7 @@ export async function createOrder(payload: OrderPayload) {
     await adjustStock(supabase, payload.items, -1);
   }
 
-  revalidatePath("/orders");
+  revalidatePath("/admin/orders");
   return { id: order.id as string };
 }
 
@@ -150,7 +150,7 @@ export async function convertDraftToOrder(orderId: string) {
   if (error) return { error: error.message };
 
   await adjustStock(supabase, items ?? [], -1);
-  revalidatePath("/orders");
+  revalidatePath("/admin/orders");
   revalidatePath(`/orders/${orderId}`);
   return { ok: true };
 }
@@ -163,7 +163,7 @@ export async function markOrderPaid(orderId: string) {
     .eq("id", orderId);
   if (error) return { error: error.message };
   revalidatePath(`/orders/${orderId}`);
-  revalidatePath("/orders");
+  revalidatePath("/admin/orders");
   return { ok: true };
 }
 
@@ -191,7 +191,7 @@ export async function fulfillOrder(
   if (statusError) return { error: statusError.message };
 
   revalidatePath(`/orders/${orderId}`);
-  revalidatePath("/orders");
+  revalidatePath("/admin/orders");
   return { ok: true };
 }
 
@@ -245,7 +245,7 @@ export async function refundOrder(
   }
 
   revalidatePath(`/orders/${orderId}`);
-  revalidatePath("/orders");
+  revalidatePath("/admin/orders");
   return { ok: true };
 }
 
@@ -253,6 +253,6 @@ export async function deleteOrder(orderId: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("orders").delete().eq("id", orderId);
   if (error) return { error: error.message };
-  revalidatePath("/orders");
+  revalidatePath("/admin/orders");
   return { ok: true };
 }

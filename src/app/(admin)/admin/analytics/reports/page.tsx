@@ -158,7 +158,7 @@ export default async function ReportsPage({
 
   return (
     <div>
-      <PageHeader title="Reports" backHref="/analytics" backLabel="Analytics">
+      <PageHeader title="Reports" backHref="/admin/analytics" backLabel="Analytics">
         <CsvExportButton
           headers={headers}
           rows={rows}
@@ -170,7 +170,7 @@ export default async function ReportsPage({
         <CardContent className="pt-0">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
             <FilterTabs
-              basePath="/analytics/reports"
+              basePath="/admin/analytics/reports"
               param="report"
               current={report}
               tabs={REPORTS.map((r) => ({ label: r.label, value: r.value }))}

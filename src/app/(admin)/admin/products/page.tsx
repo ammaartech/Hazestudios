@@ -54,7 +54,7 @@ export default async function ProductsPage({
     <div>
       <PageHeader title="Products">
         <Button asChild>
-          <Link href="/products/new">Add product</Link>
+          <Link href="/admin/products/new">Add product</Link>
         </Button>
       </PageHeader>
 
@@ -62,7 +62,7 @@ export default async function ProductsPage({
         <CardContent className="pt-0">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <FilterTabs
-              basePath="/products"
+              basePath="/admin/products"
               param="status"
               current={status}
               tabs={[
@@ -78,7 +78,7 @@ export default async function ProductsPage({
           {products.length === 0 ? (
             <p className="py-12 text-center text-sm text-muted-foreground">
               No products found.{" "}
-              <Link href="/products/new" className="text-primary hover:underline">
+              <Link href="/admin/products/new" className="text-primary hover:underline">
                 Add your first product
               </Link>
             </p>

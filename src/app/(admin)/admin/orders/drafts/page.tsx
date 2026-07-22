@@ -33,9 +33,9 @@ export default async function DraftsPage() {
 
   return (
     <div>
-      <PageHeader title="Drafts" backHref="/orders" backLabel="Orders">
+      <PageHeader title="Drafts" backHref="/admin/orders" backLabel="Orders">
         <Button asChild>
-          <Link href="/orders/new">Create order</Link>
+          <Link href="/admin/orders/new">Create order</Link>
         </Button>
       </PageHeader>
 

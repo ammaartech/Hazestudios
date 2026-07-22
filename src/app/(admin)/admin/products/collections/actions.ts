@@ -63,7 +63,7 @@ export async function saveCollection(payload: CollectionPayload) {
     }
   }
 
-  revalidatePath("/products/collections");
+  revalidatePath("/admin/products/collections");
   return { id: collectionId };
 }
 
@@ -71,6 +71,6 @@ export async function deleteCollection(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("collections").delete().eq("id", id);
   if (error) return { error: error.message };
-  revalidatePath("/products/collections");
+  revalidatePath("/admin/products/collections");
   return { ok: true };
 }

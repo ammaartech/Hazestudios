@@ -238,7 +238,7 @@ export function ProductForm({
         return;
       }
       toast.success(initial.id ? "Product updated" : "Product created");
-      router.push("/products");
+      router.push("/admin/products");
       router.refresh();
     });
   }
@@ -253,7 +253,7 @@ export function ProductForm({
         return;
       }
       toast.success("Product deleted");
-      router.push("/products");
+      router.push("/admin/products");
       router.refresh();
     });
   }
@@ -262,7 +262,7 @@ export function ProductForm({
     <div>
       <PageHeader
         title={initial.id ? title || "Edit product" : "Add product"}
-        backHref="/products"
+        backHref="/admin/products"
         backLabel="Products"
       >
         {initial.id && (

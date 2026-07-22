@@ -100,14 +100,14 @@ export function OrderBuilder({
         return;
       }
       toast.success(isDraft ? "Draft saved" : "Order created");
-      router.push(isDraft ? "/orders/drafts" : `/orders/${result.id}`);
+      router.push(isDraft ? "/admin/orders/drafts" : `/orders/${result.id}`);
       router.refresh();
     });
   }
 
   return (
     <div>
-      <PageHeader title="Create order" backHref="/orders" backLabel="Orders">
+      <PageHeader title="Create order" backHref="/admin/orders" backLabel="Orders">
         <Button
           variant="outline"
           onClick={() => submit(true)}

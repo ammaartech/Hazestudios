@@ -188,7 +188,7 @@ export async function saveProduct(payload: ProductPayload) {
     if (error) return { error: error.message };
   }
 
-  revalidatePath("/products");
+  revalidatePath("/admin/products");
   revalidatePath(`/products/${productId}`);
   return { id: productId };
 }
@@ -197,7 +197,7 @@ export async function deleteProduct(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("products").delete().eq("id", id);
   if (error) return { error: error.message };
-  revalidatePath("/products");
+  revalidatePath("/admin/products");
   return { ok: true };
 }
 
@@ -208,7 +208,7 @@ export async function setProductStatus(id: string, status: ProductStatus) {
     .update({ status })
     .eq("id", id);
   if (error) return { error: error.message };
-  revalidatePath("/products");
+  revalidatePath("/admin/products");
   return { ok: true };
 }
 
@@ -229,6 +229,6 @@ export async function adjustInventory(
     { onConflict: "product_id,variant_id,location_id" }
   );
   if (error) return { error: error.message };
-  revalidatePath("/products/inventory");
+  revalidatePath("/admin/products/inventory");
   return { ok: true };
 }

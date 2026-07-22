@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono, Archivo } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -13,12 +13,20 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Display face for the storefront's oversized editorial lockups. A neo-grotesque
+// stands in for Nike's proprietary Futura ND / Helvetica Now Display pairing.
+const archivo = Archivo({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800", "900"],
+});
+
 export const metadata: Metadata = {
   title: {
-    default: "Hazestudios Admin",
-    template: "%s · Hazestudios Admin",
+    default: "Hazestudios",
+    template: "%s · Hazestudios",
   },
-  description: "Hazestudios ecommerce admin dashboard",
+  description: "Hazestudios — ready-to-wear, cut and finished in limited runs.",
 };
 
 export default function RootLayout({
@@ -29,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${geistMono.variable} ${archivo.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {children}

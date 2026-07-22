@@ -8,7 +8,7 @@ export default function NewCustomerPage() {
     <div>
       <PageHeader
         title="Add customer"
-        backHref="/customers"
+        backHref="/admin/customers"
         backLabel="Customers"
       />
       <CustomerForm

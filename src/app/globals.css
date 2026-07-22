@@ -10,6 +10,7 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
+  --font-display: var(--font-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -117,9 +118,84 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* ---------------------------------------------------------------------------
+   Storefront theme
+   ---------------------------------------------------------------------------
+   Adapted from design-md/nike/DESIGN.md: pure black/white with a single soft
+   gray, zero radius on surfaces, all chromatic energy reserved for photography
+   and the sale price. Scoped to `.shop` so it re-skins the existing shadcn
+   components inside the storefront without touching the admin, which keeps its
+   green-primary rounded theme from :root above.
+--------------------------------------------------------------------------- */
+.shop {
+  /* shadcn contract — re-pointed at the editorial palette */
+  --background: #ffffff;
+  --foreground: #111111;
+  --card: #ffffff;
+  --card-foreground: #111111;
+  --popover: #ffffff;
+  --popover-foreground: #111111;
+  --primary: #111111;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #111111;
+  --muted: #f5f5f5;
+  --muted-foreground: #707072;
+  --accent: #f5f5f5;
+  --accent-foreground: #111111;
+  --destructive: #d30005;
+  --border: #e5e5e5;
+  --input: #cacacb;
+  --ring: #111111;
+  /* Product cards and editorial tiles are hard-edged; pills opt in explicitly. */
+  --radius: 0px;
+
+  /* Editorial tokens beyond the shadcn contract */
+  --shop-ink: #111111;
+  --shop-canvas: #ffffff;
+  --shop-cloud: #f5f5f5;
+  --shop-charcoal: #39393b;
+  --shop-mute: #707072;
+  --shop-stone: #9e9ea0;
+  --shop-hairline: #cacacb;
+  --shop-hairline-soft: #e5e5e5;
+  --shop-sale: #d30005;
+  --shop-success: #007d48;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+
+  /* Oversized display lockups: tight leading and slightly negative tracking are
+     what make the type read as editorial rather than as a big heading. */
+  .shop .display {
+    font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+    line-height: 0.86;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  /* Small uppercase metadata — nav, eyebrows, sizes, price labels. */
+  .shop .meta {
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  /* The one animation primitive the storefront uses, for image reveals. */
+  @media (prefers-reduced-motion: reduce) {
+    .shop *,
+    .shop *::before,
+    .shop *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
   body {
     @apply bg-background text-foreground;

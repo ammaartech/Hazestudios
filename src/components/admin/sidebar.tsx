@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { mainNav, salesChannelNav, type NavItem } from "./nav";
 
 function isActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
+  if (href === "/admin") return pathname === "/admin";
   return pathname === href || pathname.startsWith(href + "/");
 }
 
@@ -76,10 +76,10 @@ export function Sidebar() {
 
       <div className="border-t border-sidebar-border p-3">
         <Link
-          href="/settings/general"
+          href="/admin/settings/general"
           className={cn(
             "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-150",
-            pathname.startsWith("/settings")
+            pathname.startsWith("/admin/settings")
               ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
               : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
           )}

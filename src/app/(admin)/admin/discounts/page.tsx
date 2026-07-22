@@ -60,7 +60,7 @@ export default async function DiscountsPage({
         <CardContent className="pt-0">
           <div className="mb-3">
             <FilterTabs
-              basePath="/discounts"
+              basePath="/admin/discounts"
               param="status"
               current={status}
               tabs={[

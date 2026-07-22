@@ -69,7 +69,7 @@ export default async function OrderDetailPage({
     <div>
       <PageHeader
         title={`${order.is_draft ? "Draft " : ""}#${order.is_draft ? "D" : ""}${order.order_number}`}
-        backHref={order.is_draft ? "/orders/drafts" : "/orders"}
+        backHref={order.is_draft ? "/admin/orders/drafts" : "/admin/orders"}
         backLabel={order.is_draft ? "Drafts" : "Orders"}
       >
         {order.is_draft ? (

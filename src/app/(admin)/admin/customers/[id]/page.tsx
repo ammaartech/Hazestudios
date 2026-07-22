@@ -50,7 +50,7 @@ export default async function CustomerDetailPage({
 
   return (
     <div>
-      <PageHeader title={name} backHref="/customers" backLabel="Customers" />
+      <PageHeader title={name} backHref="/admin/customers" backLabel="Customers" />
 
       <div className="mb-5 grid gap-4 sm:grid-cols-3">
         <Card>
