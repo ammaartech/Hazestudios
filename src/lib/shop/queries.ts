@@ -33,7 +33,7 @@ export interface ShopVariant extends ProductVariant {
 }
 
 const PRODUCT_COLUMNS =
-  "id,title,description_html,status,vendor,product_type,tags,price,compare_at_price,cost_per_item,sku,barcode,track_inventory,has_variants,seo_title,seo_description,created_at,updated_at";
+  "id,title,handle,description_html,status,vendor,product_type,category,tags,price,compare_at_price,cost_per_item,sku,barcode,track_inventory,continue_selling,requires_shipping,weight,weight_unit,country_of_origin,hs_code,has_variants,seo_title,seo_description,published_at,created_at,updated_at";
 
 /**
  * Stock is summed across locations. A product that doesn't track inventory is
@@ -46,18 +46,25 @@ function attachStock(
   variants: ProductVariant[],
   levels: InventoryLevel[]
 ): ShopProduct {
-  const untracked = !product.track_inventory;
+  // Three ways a zero-stock item stays buyable: inventory isn't tracked, or the
+  // product opts into overselling, or (per variant) the variant does.
+  const untracked = !product.track_inventory || product.continue_selling;
 
   const shopVariants: ShopVariant[] = variants.map((v) => {
     const stock = levels
       .filter((l) => l.variant_id === v.id)
       .reduce((sum, l) => sum + l.quantity, 0);
+    const sellable =
+      !v.track_inventory || v.continue_selling || untracked || stock > 0;
     return {
       ...v,
       price: Number(v.price),
       compare_at_price: v.compare_at_price != null ? Number(v.compare_at_price) : null,
+      cost_per_item: v.cost_per_item != null ? Number(v.cost_per_item) : null,
       stock,
-      available: untracked || stock > 0,
+      // `available` on the row is the operator's "sell this variant" switch; a
+      // variant turned off is unavailable no matter how much stock it has.
+      available: v.available && sellable,
     };
   });
 
@@ -70,6 +77,8 @@ function attachStock(
     ? shopVariants.reduce((sum, v) => sum + v.stock, 0)
     : simpleStock;
 
+  const anyVariantSellable = shopVariants.some((v) => v.available);
+
   return {
     ...product,
     price: Number(product.price),
@@ -79,7 +88,9 @@ function attachStock(
     options,
     variants: shopVariants,
     totalStock,
-    inStock: untracked || totalStock > 0,
+    inStock: shopVariants.length
+      ? anyVariantSellable
+      : untracked || totalStock > 0,
   };
 }
 
@@ -168,12 +179,21 @@ export async function getProductsInCollection(
   return hydrate((data ?? []) as Product[]);
 }
 
-export async function getProduct(id: string): Promise<ShopProduct | null> {
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Accepts either a handle (`/products/black-tee`) or a raw id.
+ *
+ * Handles are the canonical, shareable URL. Ids still resolve so that links
+ * created before handles existed — and the admin's own internal links — keep
+ * working instead of turning into 404s.
+ */
+export async function getProduct(idOrHandle: string): Promise<ShopProduct | null> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("products")
     .select(PRODUCT_COLUMNS)
-    .eq("id", id)
+    .eq(UUID.test(idOrHandle) ? "id" : "handle", idOrHandle)
     .eq("status", "active")
     .maybeSingle();
   if (!data) return null;

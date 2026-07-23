@@ -50,7 +50,9 @@ export function Topbar({
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 const q = (e.target as HTMLInputElement).value.trim();
-                if (q) router.push(`/products?q=${encodeURIComponent(q)}`);
+                // `/products` is the storefront; admin search belongs on the
+                // admin route, which is where this was landing wrong before.
+                if (q) router.push(`/admin/products?q=${encodeURIComponent(q)}`);
               }
             }}
           />

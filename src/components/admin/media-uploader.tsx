@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
   DndContext,
+  KeyboardSensor,
   PointerSensor,
   closestCenter,
   useSensor,
@@ -14,154 +15,329 @@ import {
   SortableContext,
   arrayMove,
   rectSortingStrategy,
+  sortableKeyboardCoordinates,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ArrowUpFromLine, Loader2, X } from "lucide-react";
+import { ArrowUpFromLine, GripVertical, RotateCw, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
+export type MediaStatus = "uploading" | "ready" | "error";
+
 export interface DraftImage {
-  /** DB id when persisted, local uuid otherwise */
+  /** DB id when persisted, client uuid otherwise — stable either way, which is
+   *  what lets the save upsert images instead of wiping and re-inserting them */
   id: string;
+  /** object URL while uploading, public Storage URL once it lands */
   url: string;
   alt: string;
-  isNew?: boolean;
+  status?: MediaStatus;
+  error?: string;
+  /** retained only for retry after a failed upload */
+  file?: File;
 }
+
+const MAX_BYTES = 20 * 1024 * 1024;
+const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
+
+export function isUploading(images: DraftImage[]): boolean {
+  return images.some((i) => i.status === "uploading");
+}
+
+/** Errored uploads never reach the database. */
+export function uploadableImages(images: DraftImage[]): DraftImage[] {
+  return images.filter((i) => i.status !== "error" && i.status !== "uploading");
+}
+
+/* -------------------------------------------------------------------------- */
 
 function SortableThumb({
   image,
   index,
   onRemove,
   onAltChange,
+  onRetry,
+  onMakeCover,
 }: {
   image: DraftImage;
   index: number;
   onRemove: () => void;
   onAltChange: (alt: string) => void;
+  onRetry: () => void;
+  onMakeCover: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: image.id });
 
+  const isCover = index === 0;
+  const uploading = image.status === "uploading";
+  const failed = image.status === "error";
+
   return (
-    <div
+    <figure
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "group relative overflow-hidden rounded-md border border-input bg-card",
-        index === 0 ? "col-span-2 row-span-2" : "",
-        isDragging && "z-10 opacity-80 shadow-lg"
+        "group/media relative flex flex-col overflow-hidden rounded-lg border bg-card",
+        "motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200",
+        isCover ? "col-span-2 row-span-2" : "",
+        failed ? "border-destructive" : "border-input",
+        isDragging && "z-20 shadow-lg ring-2 ring-ring/40"
       )}
     >
-      <div
-        {...attributes}
-        {...listeners}
-        className="relative aspect-square w-full cursor-grab active:cursor-grabbing"
-      >
+      <div className="relative aspect-square w-full overflow-hidden bg-muted">
         <Image
           src={image.url}
           alt={image.alt || "Product image"}
           fill
-          sizes="(max-width: 768px) 50vw, 200px"
-          className="object-cover"
+          sizes="(max-width: 640px) 50vw, 220px"
+          className={cn(
+            "object-cover transition-opacity duration-200",
+            uploading && "opacity-50"
+          )}
           unoptimized
         />
+
+        {/* Storage uploads report no byte progress, so this is an honest
+            indeterminate bar rather than a fabricated percentage. */}
+        {uploading && (
+          <div className="absolute inset-x-0 bottom-0 h-1 overflow-hidden bg-foreground/10">
+            <div className="h-full w-1/3 rounded-full bg-primary motion-safe:animate-[media-progress_1.1s_ease-in-out_infinite]" />
+          </div>
+        )}
+
+        {failed && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-card/90 p-2 text-center">
+            <p className="text-xs font-medium text-destructive">Upload failed</p>
+            <button
+              type="button"
+              onClick={onRetry}
+              className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-input px-2 py-1 text-xs font-medium transition-colors duration-150 hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            >
+              <RotateCw className="size-3" />
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Drag handle is its own control rather than the whole tile, so the
+            alt-text field below stays clickable and the tile is keyboard
+            sortable without hijacking arrow keys inside the input. */}
+        {!uploading && !failed && (
+          <button
+            type="button"
+            aria-label={`Reorder ${image.alt || `image ${index + 1}`}`}
+            {...attributes}
+            {...listeners}
+            className="absolute left-1.5 top-1.5 flex size-6 cursor-grab items-center justify-center rounded-md bg-foreground/60 text-background opacity-0 transition-opacity duration-150 focus-visible:opacity-100 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:cursor-grabbing group-hover/media:opacity-100"
+          >
+            <GripVertical className="size-3.5" />
+          </button>
+        )}
+
+        <div className="absolute right-1.5 top-1.5 flex gap-1 opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover/media:opacity-100">
+          {!isCover && !uploading && !failed && (
+            <button
+              type="button"
+              aria-label="Make cover image"
+              title="Make cover image"
+              onClick={onMakeCover}
+              className="flex size-6 cursor-pointer items-center justify-center rounded-md bg-foreground/60 text-background transition-colors duration-150 hover:bg-foreground/80 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            >
+              <Star className="size-3.5" />
+            </button>
+          )}
+          <button
+            type="button"
+            aria-label="Remove image"
+            onClick={onRemove}
+            className="flex size-6 cursor-pointer items-center justify-center rounded-md bg-foreground/60 text-background transition-colors duration-150 hover:bg-destructive hover:text-white focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          >
+            <X className="size-3.5" />
+          </button>
+        </div>
+
+        {isCover && (
+          <span className="absolute bottom-1.5 left-1.5 rounded-md bg-foreground/70 px-1.5 py-0.5 text-[0.6875rem] font-medium text-background">
+            Cover
+          </span>
+        )}
       </div>
-      <button
-        type="button"
-        aria-label="Remove image"
-        onClick={onRemove}
-        className="absolute right-1.5 top-1.5 hidden size-6 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white transition-colors duration-150 hover:bg-black/80 group-hover:flex"
-      >
-        <X className="size-3.5" />
-      </button>
+
       <input
         value={image.alt}
         onChange={(e) => onAltChange(e.target.value)}
-        placeholder="Alt text"
-        aria-label="Image alt text"
-        className="w-full border-t border-input bg-card px-2 py-1 text-xs outline-none placeholder:text-muted-foreground focus:bg-accent/40"
+        placeholder="Describe this image"
+        aria-label={`Alt text for image ${index + 1}`}
+        className="w-full border-t border-input bg-card px-2 py-1.5 text-xs outline-none transition-colors duration-150 placeholder:text-muted-foreground focus:bg-accent/50"
       />
-    </div>
+    </figure>
   );
 }
 
+/* -------------------------------------------------------------------------- */
+
 export function MediaUploader({
   images,
-  onChange,
+  update,
   bucket = "product-images",
 }: {
   images: DraftImage[];
-  onChange: (images: DraftImage[]) => void;
+  /** functional form: uploads resolve out of order and must not clobber
+   *  each other or an edit the operator made while they were in flight */
+  update: (fn: (prev: DraftImage[]) => DraftImage[]) => void;
   bucket?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const objectUrls = useRef(new Set<string>());
+
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  async function uploadFiles(files: FileList | File[]) {
-    const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
-    if (!list.length) return;
+  useEffect(() => {
+    const urls = objectUrls.current;
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, []);
 
-    setUploading(true);
-    const supabase = createClient();
-    const uploaded: DraftImage[] = [];
+  const uploadOne = useCallback(
+    async (id: string, file: File) => {
+      const supabase = createClient();
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
+      const path = `${id}.${ext}`;
 
-    for (const file of list) {
-      const ext = file.name.split(".").pop() ?? "png";
-      const path = `${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage.from(bucket).upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-      });
+      const { error } = await supabase.storage
+        .from(bucket)
+        .upload(path, file, { cacheControl: "3600", upsert: true });
+
       if (error) {
-        toast.error(`Upload failed for ${file.name}: ${error.message}`);
-        continue;
+        update((prev) =>
+          prev.map((i) =>
+            i.id === id ? { ...i, status: "error", error: error.message } : i
+          )
+        );
+        return;
       }
+
       const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-      uploaded.push({
-        id: crypto.randomUUID(),
-        url: data.publicUrl,
-        alt: "",
-        isNew: true,
+      update((prev) =>
+        prev.map((i) =>
+          i.id === id
+            ? { ...i, url: data.publicUrl, status: "ready", error: undefined, file: undefined }
+            : i
+        )
+      );
+    },
+    [bucket, update]
+  );
+
+  const addFiles = useCallback(
+    (fileList: FileList | File[]) => {
+      const files: File[] = [];
+      for (const file of Array.from(fileList)) {
+        if (!ACCEPTED.includes(file.type)) {
+          toast.error(`${file.name} isn't a supported image type.`);
+          continue;
+        }
+        if (file.size > MAX_BYTES) {
+          toast.error(`${file.name} is over the 20 MB limit.`);
+          continue;
+        }
+        files.push(file);
+      }
+      if (!files.length) return;
+
+      // Previews appear on this tick from a local object URL — the operator
+      // never waits on the network to see what they just dropped.
+      const drafts: DraftImage[] = files.map((file) => {
+        const url = URL.createObjectURL(file);
+        objectUrls.current.add(url);
+        return {
+          id: crypto.randomUUID(),
+          url,
+          alt: "",
+          status: "uploading" as const,
+          file,
+        };
       });
-    }
 
-    setUploading(false);
-    if (uploaded.length) onChange([...images, ...uploaded]);
-  }
+      update((prev) => [...prev, ...drafts]);
+      // Parallel, not sequential: ten images used to mean ten serial round trips.
+      drafts.forEach((d, i) => void uploadOne(d.id, files[i]));
+    },
+    [update, uploadOne]
+  );
 
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
+  function handleDragEnd({ active, over }: DragEndEvent) {
     if (!over || active.id === over.id) return;
-    const oldIndex = images.findIndex((i) => i.id === active.id);
-    const newIndex = images.findIndex((i) => i.id === over.id);
-    onChange(arrayMove(images, oldIndex, newIndex));
+    update((prev) => {
+      const from = prev.findIndex((i) => i.id === active.id);
+      const to = prev.findIndex((i) => i.id === over.id);
+      return from < 0 || to < 0 ? prev : arrayMove(prev, from, to);
+    });
   }
+
+  const uploadingCount = images.filter((i) => i.status === "uploading").length;
 
   return (
     <div>
+      <style>{`@keyframes media-progress{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}`}</style>
+
       {images.length > 0 && (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
+          accessibility={{
+            announcements: {
+              onDragStart: ({ active }) => `Picked up image ${active.id}.`,
+              onDragOver: ({ over }) =>
+                over ? `Image moved over position ${over.id}.` : "",
+              onDragEnd: ({ over }) =>
+                over ? `Image dropped into position.` : "Move cancelled.",
+              onDragCancel: () => "Move cancelled.",
+            },
+          }}
         >
-          <SortableContext items={images.map((i) => i.id)} strategy={rectSortingStrategy}>
+          <SortableContext
+            items={images.map((i) => i.id)}
+            strategy={rectSortingStrategy}
+          >
             <div className="mb-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
               {images.map((image, index) => (
                 <SortableThumb
                   key={image.id}
                   image={image}
                   index={index}
-                  onRemove={() => onChange(images.filter((i) => i.id !== image.id))}
-                  onAltChange={(alt) =>
-                    onChange(images.map((i) => (i.id === image.id ? { ...i, alt } : i)))
+                  onRemove={() =>
+                    update((prev) => prev.filter((i) => i.id !== image.id))
                   }
+                  onAltChange={(alt) =>
+                    update((prev) =>
+                      prev.map((i) => (i.id === image.id ? { ...i, alt } : i))
+                    )
+                  }
+                  onMakeCover={() =>
+                    update((prev) => {
+                      const from = prev.findIndex((i) => i.id === image.id);
+                      return from < 0 ? prev : arrayMove(prev, from, 0);
+                    })
+                  }
+                  onRetry={() => {
+                    if (!image.file) return;
+                    update((prev) =>
+                      prev.map((i) =>
+                        i.id === image.id
+                          ? { ...i, status: "uploading", error: undefined }
+                          : i
+                      )
+                    );
+                    void uploadOne(image.id, image.file);
+                  }}
                 />
               ))}
             </div>
@@ -172,10 +348,13 @@ export function MediaUploader({
       <div
         role="button"
         tabIndex={0}
-        aria-label="Upload images"
+        aria-label="Add images"
         onClick={() => inputRef.current?.click()}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") inputRef.current?.click();
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
         }}
         onDragOver={(e) => {
           e.preventDefault();
@@ -185,39 +364,38 @@ export function MediaUploader({
         onDrop={(e) => {
           e.preventDefault();
           setDragOver(false);
-          uploadFiles(e.dataTransfer.files);
+          addFiles(e.dataTransfer.files);
         }}
         className={cn(
-          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed py-10 transition-colors duration-150",
+          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed py-10 transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
           dragOver
             ? "border-primary bg-primary/5"
             : "border-input hover:border-muted-foreground/50 hover:bg-accent/40"
         )}
       >
-        {uploading ? (
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
-        ) : (
-          <span className="flex size-10 items-center justify-center rounded-full bg-foreground text-background">
-            <ArrowUpFromLine className="size-5" />
-          </span>
-        )}
+        <span className="flex size-10 items-center justify-center rounded-full bg-foreground text-background">
+          <ArrowUpFromLine className="size-5" />
+        </span>
         <div className="text-center">
           <p className="text-sm font-medium">
-            {uploading ? "Uploading…" : "Add files"}
+            {uploadingCount > 0
+              ? `Uploading ${uploadingCount} image${uploadingCount === 1 ? "" : "s"}…`
+              : "Add images"}
           </p>
           <p className="text-xs text-muted-foreground">
-            or drop images to upload · first image is the cover
+            Drop files here or click to browse · the first image is the cover
           </p>
         </div>
       </div>
+
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept={ACCEPTED.join(",")}
         multiple
         hidden
         onChange={(e) => {
-          if (e.target.files) uploadFiles(e.target.files);
+          if (e.target.files) addFiles(e.target.files);
           e.target.value = "";
         }}
       />

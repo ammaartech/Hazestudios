@@ -123,9 +123,12 @@ export default async function ProductsPage({
                         </span>
                       </TableCell>
                       <TableCell>
+                        {/* The admin list opens the editor. It used to link to
+                            the storefront, which dropped the operator out of
+                            the admin mid-task. */}
                         <Link
-                          href={`/products/${p.id}`}
-                          className="font-medium text-foreground hover:underline"
+                          href={`/admin/products/${p.id}`}
+                          className="font-medium text-foreground transition-colors duration-150 hover:text-primary hover:underline"
                         >
                           {p.title}
                         </Link>

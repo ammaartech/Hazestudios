@@ -23,7 +23,8 @@ export function ProductCard({
 
   return (
     <Link
-      href={`/products/${product.id}`}
+      // Handle, not id: the shareable URL customers see and search engines index.
+      href={`/products/${product.handle || product.id}`}
       className={cn(
         "group block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--shop-ink)]",
         className

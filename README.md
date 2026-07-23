@@ -23,6 +23,34 @@ A Shopify-style ecommerce admin dashboard built with **Next.js (App Router) + Ty
 6. Open http://localhost:3000 → you'll be redirected to `/login`.
    Click **"First time here? Create the owner account"** to create your admin login.
 
+## Migrations
+
+Later migrations (`0002` onward) can be applied from the command line instead of
+pasting into the SQL editor. This needs a Postgres connection, which the
+PostgREST keys in step 3 cannot provide — they bypass RLS but cannot run DDL.
+
+Add the **Session pooler** URI from *Project Settings → Database → Connection
+string* to `.env.local` (already gitignored):
+
+```
+SUPABASE_DB_URL=postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
+```
+
+Then:
+
+```bash
+npm run db:status                       # what's applied, what's pending
+npm run db:baseline 0001 0002 0003 0004 # record hand-applied migrations, without re-running them
+npm run db:migrate                      # apply everything pending
+npm run db:migrate:dry                  # apply, report, then roll back
+npm run db:verify                       # smoke-test save_product against the live schema
+```
+
+Each migration runs in its own transaction, so a failure rolls that file back
+whole. The `_migrations` ledger is what stops already-applied files from being
+re-run — **baseline any migration you applied by hand before running `db:migrate`**,
+or it will try to execute it again and fail on `already exists`.
+
 ## What's functional
 
 - **Products** — full Shopify-style form: title, rich-text description with raw-HTML `<>` toggle,

@@ -5,14 +5,18 @@ export type FulfillmentStatus = "unfulfilled" | "partial" | "fulfilled";
 export type DiscountType = "percentage" | "fixed" | "free_shipping" | "bxgy";
 export type DiscountStatus = "active" | "scheduled" | "expired" | "disabled";
 export type StaffRole = "owner" | "admin" | "staff";
+export type WeightUnit = "kg" | "g" | "lb" | "oz";
 
 export interface Product {
   id: string;
   title: string;
+  /** URL slug — unique, auto-derived from title when left blank */
+  handle: string;
   description_html: string;
   status: ProductStatus;
   vendor: string;
   product_type: string;
+  category: string;
   tags: string[];
   price: number;
   compare_at_price: number | null;
@@ -20,9 +24,17 @@ export interface Product {
   sku: string;
   barcode: string;
   track_inventory: boolean;
+  /** allow orders past zero stock */
+  continue_selling: boolean;
+  requires_shipping: boolean;
+  weight: number | null;
+  weight_unit: WeightUnit;
+  country_of_origin: string;
+  hs_code: string;
   has_variants: boolean;
   seo_title: string;
   seo_description: string;
+  published_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -52,8 +64,16 @@ export interface ProductVariant {
   option3: string | null;
   price: number;
   compare_at_price: number | null;
+  cost_per_item: number | null;
   sku: string;
   barcode: string;
+  weight: number | null;
+  weight_unit: WeightUnit;
+  requires_shipping: boolean;
+  track_inventory: boolean;
+  continue_selling: boolean;
+  /** unchecked in the variants table = not sold, but kept for later */
+  available: boolean;
   image_id: string | null;
   position: number;
 }

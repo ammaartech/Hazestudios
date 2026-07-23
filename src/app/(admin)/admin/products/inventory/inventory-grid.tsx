@@ -76,8 +76,8 @@ export function InventoryGrid({
             <TableRow key={`${row.productId}-${row.variantId ?? "simple"}`}>
               <TableCell>
                 <Link
-                  href={`/products/${row.productId}`}
-                  className="font-medium hover:underline"
+                  href={`/admin/products/${row.productId}`}
+                  className="font-medium transition-colors duration-150 hover:text-primary hover:underline"
                 >
                   {row.label}
                 </Link>

@@ -128,8 +128,8 @@ export default async function OrderDetailPage({
                       <p className="font-medium">
                         {item.product_id ? (
                           <Link
-                            href={`/products/${item.product_id}`}
-                            className="hover:underline"
+                            href={`/admin/products/${item.product_id}`}
+                            className="transition-colors duration-150 hover:text-primary hover:underline"
                           >
                             {item.title_snapshot}
                           </Link>
