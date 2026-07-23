@@ -7,9 +7,12 @@ deliberately not the same design system; they share only the shadcn component co
 
 ## Theme
 
-**Light, always, for the admin.** The scene: an operator at a desk in daytime office light, with the
-live storefront (white) open in the next tab and packing slips printing beside them. A dark admin
-would fight both. `.dark` tokens exist and are kept correct, but light is the shipped default.
+**Light content, dark chrome, for the admin.** The scene: an operator at a desk in daytime office
+light, with the live storefront (white) open in the next tab and packing slips printing beside them.
+A dark *work area* would fight both, so the canvas, cards, and forms stay light. The nav chrome —
+topbar, sidebar, and the contextual save bar — is one unified dark ink (`--sidebar`) that frames the
+light work area and carries the brand mark. `.dark` tokens exist and are kept correct, but the light
+content surface is the shipped default.
 
 **Storefront is light too**, for a different reason: garments photograph against white, and the
 editorial reference (`design-md/nike`) reserves all chromatic energy for photography and the sale
@@ -17,29 +20,32 @@ price.
 
 ## Color
 
-Strategy: **Restrained**. Tinted neutrals plus one accent under 10% of surface area.
+Strategy: **Restrained**. Tinted neutrals plus one accent — cobalt — under 10% of the light content
+surface. The dark ink chrome is a committed neutral surface, not the accent.
 
-The neutral ramp is tinted cool — chroma 0.002–0.006 at hue ~286 — not warm. This is a deliberate
-rejection of the cream/sand default; the accent is green, and the neutrals lean toward its cool
-side rather than toward generic paper-warmth.
+The neutral ramp is tinted cool — chroma 0.002–0.006 at hue ~264 — toward the cobalt accent, never
+warm. This is a deliberate rejection of the cream/sand default; the neutrals lean to the accent's
+cool side rather than toward generic paper-warmth.
 
 ### Admin tokens (`:root` in `src/app/globals.css`)
 
 | Role | Value | Use |
 |---|---|---|
-| `--background` | `oklch(0.972 0.001 286.375)` | App canvas — a shade below card, so cards read as raised without shadow |
+| `--background` | `oklch(0.968 0.002 264)` | App canvas — a shade below card, so cards read as raised without shadow |
 | `--card` / `--popover` | `oklch(1 0 0)` | Content surfaces, panels, dialogs |
-| `--sidebar` | `oklch(0.985 0 0)` | The second neutral layer — nav sits between canvas and card |
-| `--foreground` | `oklch(0.234 0.006 271.152)` | Body ink. ~13.8:1 on card, ~13:1 on canvas |
-| `--muted-foreground` | `oklch(0.492 0.008 271.288)` | Secondary text and placeholders. ~4.9:1 on card — above the 4.5 floor, which is why it may be used for real prose and not only decoration |
-| `--primary` | `oklch(0.511 0.096 165.542)` | Deep green. Primary actions, current selection, focus ring only |
+| `--sidebar` | `oklch(0.215 0.018 264)` | Dark ink chrome — the topbar, sidebar, and save bar share it |
+| `--sidebar-foreground` | `oklch(0.72 0.012 264)` | Muted nav text on the chrome. ~7.1:1; active/hover brightens to near-white |
+| `--foreground` | `oklch(0.21 0.02 264)` | Body ink. ~17.7:1 on card, ~16:1 on canvas |
+| `--muted-foreground` | `oklch(0.505 0.014 264)` | Secondary text and placeholders. ~5.9:1 on card — above the 4.5 floor, which is why it may be used for real prose and not only decoration |
+| `--primary` | `oklch(0.505 0.17 258)` | Cobalt. Primary actions, current selection, focus ring. ~5.9:1 for white button text |
 | `--destructive` | `oklch(0.577 0.245 27.325)` | Delete, archive, negative deltas |
-| `--border` | `oklch(0.898 0.003 286.35)` | Hairlines between rows and sections |
-| `--input` | `oklch(0.871 0.004 286.32)` | Field borders — one step darker than `--border`, so controls read as interactive |
+| `--border` | `oklch(0.905 0.004 264)` | Hairlines between rows and sections |
+| `--input` | `oklch(0.86 0.006 264)` | Field borders — one step darker than `--border`, so controls read as interactive |
 
-**Accent discipline.** Green appears on: the primary button, the active nav item, the focus ring,
-the selected row, and nowhere else. It never tints a card background, never decorates an icon, never
-appears on an inactive state.
+**Accent discipline.** Cobalt appears on: the primary button, the active nav item, the focus ring,
+the selected row, the media cover badge, and the brand mark — and nowhere else. It never tints a
+content card, never decorates an incidental icon, never appears on an inactive state. On the dark
+chrome the accent brightens one step (`--sidebar-primary`) so it holds contrast against the ink.
 
 **Semantic state vocabulary** (standardised in `src/components/admin/status-badges.tsx`): every
 status is a dot or pill carrying *text plus* hue, never hue alone.

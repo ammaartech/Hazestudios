@@ -201,17 +201,17 @@ function ProductFormInner({
         }
       />
 
-      <div className="mb-5">
+      <div className="mb-6">
         <Link
           href="/admin/products"
-          className="mb-1 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
+          className="mb-1.5 -ml-1 inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-[13px] font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground"
         >
           <ChevronLeft className="size-4" />
           Products
         </Link>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="min-w-0 truncate text-xl font-bold tracking-tight">
+          <h1 className="min-w-0 truncate text-[1.375rem] font-semibold leading-tight tracking-[-0.012em] text-foreground">
             {isNew ? "Add product" : header.title || "Untitled product"}
           </h1>
 

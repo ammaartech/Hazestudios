@@ -3,8 +3,16 @@
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
-export function SearchInput({ placeholder = "Search" }: { placeholder?: string }) {
+export function SearchInput({
+  placeholder = "Search",
+  className,
+}: {
+  placeholder?: string;
+  /** Override the default `max-w-xs` container width (e.g. to fill the row). */
+  className?: string;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -17,7 +25,7 @@ export function SearchInput({ placeholder = "Search" }: { placeholder?: string }
   }
 
   return (
-    <div className="relative w-full max-w-xs">
+    <div className={cn("relative w-full max-w-xs", className)}>
       <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         defaultValue={searchParams.get("q") ?? ""}

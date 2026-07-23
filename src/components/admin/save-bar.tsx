@@ -70,7 +70,7 @@ export function SaveBar({
           : "pointer-events-none -translate-y-2 opacity-0"
       )}
     >
-      <div className="flex items-center gap-3 bg-[#1a1a1a] px-4 py-2.5 text-white shadow-lg md:px-8">
+      <div className="flex items-center gap-3 border-b border-sidebar-border bg-sidebar px-4 py-2.5 text-white shadow-lg md:px-8">
         <p
           role="status"
           aria-live="polite"

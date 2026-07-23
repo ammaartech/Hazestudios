@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import Image from "next/image";
 import {
   DndContext,
@@ -74,27 +74,44 @@ function SortableThumb({
   const isCover = index === 0;
   const uploading = image.status === "uploading";
   const failed = image.status === "error";
+  const draggable = !uploading && !failed;
+
+  // Keep interactive controls from starting a drag (PointerSensor listens on
+  // the image surface). stopPropagation on pointerdown lets the click through.
+  const stop = (e: ReactPointerEvent) => e.stopPropagation();
 
   return (
     <figure
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "group/media relative flex flex-col overflow-hidden rounded-lg border bg-card",
+        "group/media relative flex flex-col overflow-hidden rounded-xl border bg-card",
         "motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200",
-        isCover ? "col-span-2 row-span-2" : "",
-        failed ? "border-destructive" : "border-input",
-        isDragging && "z-20 shadow-lg ring-2 ring-ring/40"
+        failed ? "border-destructive" : isCover ? "border-primary/40 ring-1 ring-primary/20" : "border-border",
+        isDragging ? "z-20 shadow-xl ring-2 ring-primary/60" : "shadow-xs"
       )}
     >
-      <div className="relative aspect-square w-full overflow-hidden bg-muted">
+      {/* The photo itself is the drag surface — grab the image to move it.
+          Uniform tile size keeps @dnd-kit's rect strategy exact, so the
+          reorder is smooth rather than the jumpy mixed-size grid it was. */}
+      <div
+        {...(draggable ? attributes : {})}
+        {...(draggable ? listeners : {})}
+        aria-label={draggable ? `Reorder ${image.alt || `image ${index + 1}`}` : undefined}
+        className={cn(
+          "relative aspect-square w-full touch-none overflow-hidden bg-muted outline-none",
+          draggable && "cursor-grab active:cursor-grabbing focus-visible:ring-3 focus-visible:ring-ring/50",
+          isDragging && "cursor-grabbing"
+        )}
+      >
         <Image
           src={image.url}
           alt={image.alt || "Product image"}
           fill
-          sizes="(max-width: 640px) 50vw, 220px"
+          sizes="(max-width: 640px) 50vw, 200px"
+          draggable={false}
           className={cn(
-            "object-cover transition-opacity duration-200",
+            "object-cover transition-opacity duration-200 select-none",
             uploading && "opacity-50"
           )}
           unoptimized
@@ -109,7 +126,7 @@ function SortableThumb({
         )}
 
         {failed && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-card/90 p-2 text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-card/95 p-2 text-center">
             <p className="text-xs font-medium text-destructive">Upload failed</p>
             <button
               type="button"
@@ -122,45 +139,41 @@ function SortableThumb({
           </div>
         )}
 
-        {/* Drag handle is its own control rather than the whole tile, so the
-            alt-text field below stays clickable and the tile is keyboard
-            sortable without hijacking arrow keys inside the input. */}
-        {!uploading && !failed && (
-          <button
-            type="button"
-            aria-label={`Reorder ${image.alt || `image ${index + 1}`}`}
-            {...attributes}
-            {...listeners}
-            className="absolute left-1.5 top-1.5 flex size-6 cursor-grab items-center justify-center rounded-md bg-foreground/60 text-background opacity-0 transition-opacity duration-150 focus-visible:opacity-100 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:cursor-grabbing group-hover/media:opacity-100"
-          >
+        {/* Grip hint — signposts draggability without being the only handle. */}
+        {draggable && (
+          <span className="pointer-events-none absolute left-2 top-2 flex size-6 items-center justify-center rounded-md bg-foreground/55 text-background opacity-0 transition-opacity duration-150 group-hover/media:opacity-100">
             <GripVertical className="size-3.5" />
-          </button>
+          </span>
         )}
 
-        <div className="absolute right-1.5 top-1.5 flex gap-1 opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover/media:opacity-100">
-          {!isCover && !uploading && !failed && (
+        {draggable && (
+          <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover/media:opacity-100">
+            {!isCover && (
+              <button
+                type="button"
+                aria-label="Make cover image"
+                title="Make cover image"
+                onPointerDown={stop}
+                onClick={onMakeCover}
+                className="flex size-6 cursor-pointer items-center justify-center rounded-md bg-foreground/60 text-background transition-colors duration-150 hover:bg-foreground/85 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+              >
+                <Star className="size-3.5" />
+              </button>
+            )}
             <button
               type="button"
-              aria-label="Make cover image"
-              title="Make cover image"
-              onClick={onMakeCover}
-              className="flex size-6 cursor-pointer items-center justify-center rounded-md bg-foreground/60 text-background transition-colors duration-150 hover:bg-foreground/80 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+              aria-label="Remove image"
+              onPointerDown={stop}
+              onClick={onRemove}
+              className="flex size-6 cursor-pointer items-center justify-center rounded-md bg-foreground/60 text-background transition-colors duration-150 hover:bg-destructive hover:text-white focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
             >
-              <Star className="size-3.5" />
+              <X className="size-3.5" />
             </button>
-          )}
-          <button
-            type="button"
-            aria-label="Remove image"
-            onClick={onRemove}
-            className="flex size-6 cursor-pointer items-center justify-center rounded-md bg-foreground/60 text-background transition-colors duration-150 hover:bg-destructive hover:text-white focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-          >
-            <X className="size-3.5" />
-          </button>
-        </div>
+          </div>
+        )}
 
-        {isCover && (
-          <span className="absolute bottom-1.5 left-1.5 rounded-md bg-foreground/70 px-1.5 py-0.5 text-[0.6875rem] font-medium text-background">
+        {isCover && !failed && (
+          <span className="absolute bottom-2 left-2 rounded-md bg-primary px-1.5 py-0.5 text-[0.6875rem] font-semibold text-primary-foreground shadow-sm">
             Cover
           </span>
         )}
@@ -171,7 +184,7 @@ function SortableThumb({
         onChange={(e) => onAltChange(e.target.value)}
         placeholder="Describe this image"
         aria-label={`Alt text for image ${index + 1}`}
-        className="w-full border-t border-input bg-card px-2 py-1.5 text-xs outline-none transition-colors duration-150 placeholder:text-muted-foreground focus:bg-accent/50"
+        className="w-full border-t border-border bg-card px-2.5 py-2 text-xs outline-none transition-colors duration-150 placeholder:text-muted-foreground focus:bg-accent/50"
       />
     </figure>
   );
@@ -307,7 +320,7 @@ export function MediaUploader({
             items={images.map((i) => i.id)}
             strategy={rectSortingStrategy}
           >
-            <div className="mb-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
+            <div className="mb-3 grid grid-cols-2 gap-3 min-[520px]:grid-cols-3 md:grid-cols-4">
               {images.map((image, index) => (
                 <SortableThumb
                   key={image.id}

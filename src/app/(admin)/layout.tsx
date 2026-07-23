@@ -38,7 +38,7 @@ export default async function AdminLayout({
       <Topbar storeName={storeName} userEmail={userEmail} />
       <Sidebar />
       <main className="pt-14 md:pl-60">
-        <div className="mx-auto max-w-6xl px-4 py-6 md:px-8">{children}</div>
+        <div className="mx-auto max-w-6xl px-4 py-6 md:px-8 lg:py-8">{children}</div>
       </main>
     </div>
   );

@@ -10,13 +10,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\next.config.ts": {
-    "mtime": 1784459007.0847354,
-    "ast_hash": "9b77af189a21a7a64e4bd7a426f64176",
+    "mtime": 1784573183.144735,
+    "ast_hash": "343a5ce15b2a8b49bd591f0b3eb89ae8",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\package.json": {
-    "mtime": 1784459216.689036,
-    "ast_hash": "f3900fe8c5a17f61ed4da0c420e82e14",
+    "mtime": 1784836868.749037,
+    "ast_hash": "c22981008b91abcf129564b6a1690329",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\postcss.config.mjs": {
@@ -24,369 +24,19 @@
     "ast_hash": "239f3ebf717465dc636818a1a619398d",
     "semantic_hash": ""
   },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\analytics\\live\\page.tsx": {
-    "mtime": 1784459520.6524448,
-    "ast_hash": "0e0f800462e809e9d0d8ef39288b8bc0",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\analytics\\page.tsx": {
-    "mtime": 1784460488.7368672,
-    "ast_hash": "fdea541e9eda5039a48c646db19f1e04",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\analytics\\reports\\page.tsx": {
-    "mtime": 1784460530.7689602,
-    "ast_hash": "dd931359c658d65fbf4edbf224cd3d38",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\analytics\\reports\\report-controls.tsx": {
-    "mtime": 1784460503.3965106,
-    "ast_hash": "1cbb91b6d7107283f3f1106d011a4455",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\content\\files\\actions.ts": {
-    "mtime": 1784460393.6627977,
-    "ast_hash": "a933911803e0e7a48057dfecfc59808b",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\content\\files\\file-card.tsx": {
-    "mtime": 1784460412.2071543,
-    "ast_hash": "1d5978a37e52c12b6252692b9b72923f",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\content\\files\\file-uploader.tsx": {
-    "mtime": 1784460399.3808763,
-    "ast_hash": "3700babe4080958e38c773a53629502c",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\content\\files\\page.tsx": {
-    "mtime": 1784460417.4538794,
-    "ast_hash": "f7df26e5d1f521403181afe7b7deb3a7",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\content\\metaobjects\\page.tsx": {
-    "mtime": 1784459520.5734706,
-    "ast_hash": "cf1041d761e479012e6e1af739fca7fc",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\customers\\[id]\\page.tsx": {
-    "mtime": 1784460105.2938519,
-    "ast_hash": "3d332d5fe0840e5039506367e3cb34ed",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\customers\\actions.ts": {
-    "mtime": 1784460041.937543,
-    "ast_hash": "4695fa9cf16ebabd8485fc3521bf8486",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\customers\\companies\\page.tsx": {
-    "mtime": 1784459520.5142145,
-    "ast_hash": "965d2b2c8330f75c628c42ec88baa9df",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\customers\\customer-form.tsx": {
-    "mtime": 1784460071.0344272,
-    "ast_hash": "61590097ada5a77f3d4e0e898f641771",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\customers\\new\\page.tsx": {
-    "mtime": 1784460086.1316862,
-    "ast_hash": "0ee7cade102026c945a98a7868bea1c4",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\customers\\page.tsx": {
-    "mtime": 1784460083.9030998,
-    "ast_hash": "e65dbc9f748b4a6ffe0c41f2b8eba23c",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\customers\\segments\\page.tsx": {
-    "mtime": 1784460140.66696,
-    "ast_hash": "97783e1a44600f7c34b9ac380ccf7e4e",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\customers\\segments\\segment-builder.tsx": {
-    "mtime": 1784460131.675849,
-    "ast_hash": "59db8456333b6ea03ce79b9efb8dfc68",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\customers\\segments\\segment-delete.tsx": {
-    "mtime": 1784460143.252386,
-    "ast_hash": "a11657d13feea79c4121cec7c0ac695a",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\discounts\\actions.ts": {
-    "mtime": 1784460330.1202378,
-    "ast_hash": "f4b2ac759b52cc16d43d406bc050283e",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\discounts\\discount-dialog.tsx": {
-    "mtime": 1784460354.6978695,
-    "ast_hash": "be01a2258c07dc9983a797ce5bfcfc20",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\discounts\\discount-row-actions.tsx": {
-    "mtime": 1784460358.7299945,
-    "ast_hash": "2b2ce11596a193abe3d5f75aac23852b",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\discounts\\page.tsx": {
-    "mtime": 1784460375.9418523,
-    "ast_hash": "251d4c2e836e08f8c669bc9e007182a7",
-    "semantic_hash": ""
-  },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\layout.tsx": {
-    "mtime": 1784459499.9312043,
-    "ast_hash": "d8fbfe8d8e4527a9688f6ff5fd62a13b",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\marketing\\automations\\page.tsx": {
-    "mtime": 1784459520.766848,
-    "ast_hash": "803be41b0107b28f28d99a7e2fe96be4",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\marketing\\page.tsx": {
-    "mtime": 1784459520.708138,
-    "ast_hash": "da5a3d523e2bb99caac55622ca3a75b9",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\online-store\\page.tsx": {
-    "mtime": 1784459520.837825,
-    "ast_hash": "ad7e7748bbc9a1c1cc17fce0c9ad2314",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\orders\\[id]\\order-actions.tsx": {
-    "mtime": 1784460278.5693643,
-    "ast_hash": "2eb6789ee42684b3b1ec0cd942932d06",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\orders\\[id]\\page.tsx": {
-    "mtime": 1784460310.1574802,
-    "ast_hash": "7ec316108b085d27861f3c45d416dd14",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\orders\\abandoned\\page.tsx": {
-    "mtime": 1784459520.275333,
-    "ast_hash": "0697a19fcd91d68ebf268afeff0d81f0",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\orders\\actions.ts": {
-    "mtime": 1784460187.2637303,
-    "ast_hash": "e756fabd8afc83a93190131965ebd7ea",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\orders\\drafts\\page.tsx": {
-    "mtime": 1784460218.2177825,
-    "ast_hash": "ed85958af00aab80ccc3de2b6914aa58",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\orders\\new\\order-builder.tsx": {
-    "mtime": 1784460254.27667,
-    "ast_hash": "2f838807b91fea16f3fa2379bc9cbed7",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\orders\\new\\page.tsx": {
-    "mtime": 1784460256.7965617,
-    "ast_hash": "f2c561ee5fb2a43e79942a0345c3d672",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\orders\\page.tsx": {
-    "mtime": 1784460205.7522688,
-    "ast_hash": "8eac39ccc1af0fcb902962ba29932080",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\page.tsx": {
-    "mtime": 1784459546.1046836,
-    "ast_hash": "2a3dc425c08ef3290ffba367ad7fc37e",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\pos\\page.tsx": {
-    "mtime": 1784459520.8941135,
-    "ast_hash": "876852de087c31c187d63ee639905103",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\[id]\\page.tsx": {
-    "mtime": 1784459829.4007578,
-    "ast_hash": "0a5d6dacb198af119528c18f486713f2",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\actions.ts": {
-    "mtime": 1784459703.0151405,
-    "ast_hash": "bd12501b718b496fcaae57fcc4662009",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\collections\\[id]\\page.tsx": {
-    "mtime": 1784459914.9439316,
-    "ast_hash": "8d24aca7af61ebd5c4a02615a9f2eae2",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\collections\\actions.ts": {
-    "mtime": 1784459848.9248478,
-    "ast_hash": "5d569aa22c9b96831fb5296e7b4db931",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\collections\\collection-form.tsx": {
-    "mtime": 1784459893.4356856,
-    "ast_hash": "15f3b8bef5f2c0f94692baff41933390",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\collections\\new\\page.tsx": {
-    "mtime": 1784459911.0537643,
-    "ast_hash": "f5b4d6b7927d489a0845945dc5a02f43",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\collections\\page.tsx": {
-    "mtime": 1784459908.874583,
-    "ast_hash": "abcca32a3da94cac0dd4821215509855",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\gift-cards\\actions.ts": {
-    "mtime": 1784459947.8228185,
-    "ast_hash": "d9a3e5439fec021eb7ac28be7295dc71",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\gift-cards\\gift-card-dialog.tsx": {
-    "mtime": 1784459962.9556034,
-    "ast_hash": "16a91a94cbd1ced231206443d3da732a",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\gift-cards\\gift-card-toggle.tsx": {
-    "mtime": 1784459977.4234316,
-    "ast_hash": "252431de34eda6b717622adeaa0cd58d",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\gift-cards\\page.tsx": {
-    "mtime": 1784459974.4438238,
-    "ast_hash": "2d91beb0f94dc8838a22931acdbbf5d7",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\inventory\\inventory-grid.tsx": {
-    "mtime": 1784459931.0471523,
-    "ast_hash": "1a5f1e71d505401d0a28d270297eb0ef",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\inventory\\page.tsx": {
-    "mtime": 1784459939.2169836,
-    "ast_hash": "350385ef8e99710ca2ab77449154b55c",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\new\\page.tsx": {
-    "mtime": 1784459819.0168202,
-    "ast_hash": "6eefa45293000f1004c0eabc2f165f7b",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\page.tsx": {
-    "mtime": 1784459798.083167,
-    "ast_hash": "5c40850335da0a37a06d43c61a7eebfa",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\price-lists\\page.tsx": {
-    "mtime": 1784459520.4533103,
-    "ast_hash": "b85c400288327b7ab1698d648e4fbe68",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\product-form.tsx": {
-    "mtime": 1784459776.6370485,
-    "ast_hash": "7db94ccdd12ca788846fe4d47b6274ee",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\purchase-orders\\page.tsx": {
-    "mtime": 1784459520.334205,
-    "ast_hash": "d6131bd0dfe1f5d70fa3068966d37e37",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\products\\transfers\\page.tsx": {
-    "mtime": 1784459520.3936727,
-    "ast_hash": "6b6217ff37366b26d59014fdf1f156cd",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\settings\\[section]\\page.tsx": {
-    "mtime": 1784460678.4451454,
-    "ast_hash": "0dc7733315fbd2768caad61ab9de570b",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\settings\\actions.ts": {
-    "mtime": 1784460569.844601,
-    "ast_hash": "e04bef8c80329e11ea3db9af815d8ff3",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\settings\\brand\\brand-form.tsx": {
-    "mtime": 1784460646.3860502,
-    "ast_hash": "188a02a4c77149262cf4aae289851307",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\settings\\brand\\page.tsx": {
-    "mtime": 1784460647.9197495,
-    "ast_hash": "ba73916167aeeb4e6063d5276eb10f52",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\settings\\general\\general-form.tsx": {
-    "mtime": 1784460583.6135273,
-    "ast_hash": "f96aeef821c10ccfaeff9aec04ff1083",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\settings\\general\\page.tsx": {
-    "mtime": 1784460585.5286906,
-    "ast_hash": "fc827a6b462672c36ee00eff901e210e",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\settings\\layout.tsx": {
-    "mtime": 1784460548.5322163,
-    "ast_hash": "97f1fa26b302327b32e4249e4452e53e",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\settings\\locations\\location-dialog.tsx": {
-    "mtime": 1784460620.3241856,
-    "ast_hash": "38bb69c85b6874df975d753157a29012",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\settings\\locations\\page.tsx": {
-    "mtime": 1784460626.2649994,
-    "ast_hash": "e0ff9904dacda62bc41ef4bf9269797c",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\settings\\page.tsx": {
-    "mtime": 1784460557.1282513,
-    "ast_hash": "40d4014432aaf338c79864671ced25ab",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\settings\\policies\\page.tsx": {
-    "mtime": 1784460661.7110002,
-    "ast_hash": "0ede7f213fe09711a79ca2f5aa9bfef1",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\settings\\policies\\policies-form.tsx": {
-    "mtime": 1784460659.951567,
-    "ast_hash": "dc656df057868fef69e6f1b9a351a583",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\settings\\settings-nav.tsx": {
-    "mtime": 1784460556.0749512,
-    "ast_hash": "cd91c539b5b66af97037698513d9ba06",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\settings\\users\\page.tsx": {
-    "mtime": 1784460603.4377637,
-    "ast_hash": "8158555f64b644925dc18c299733713d",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\settings\\users\\role-select.tsx": {
-    "mtime": 1784460593.5650575,
-    "ast_hash": "ad4356251d9d83d2deff3fc8f490619b",
-    "semantic_hash": ""
-  },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\social-channels\\page.tsx": {
-    "mtime": 1784459520.949772,
-    "ast_hash": "05e186349e38d515552f2b3bc8ca0e87",
+    "mtime": 1784839051.6397932,
+    "ast_hash": "097cfcd5744a46e370975746448649aa",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\layout.tsx": {
-    "mtime": 1784459402.2102783,
-    "ast_hash": "5d38c1ab9792cfeafd73d10ca887722e",
+    "mtime": 1784573163.7385805,
+    "ast_hash": "dc80c2ae98bc783b2bf9ffcc4d41d571",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\login\\page.tsx": {
-    "mtime": 1784459423.1201506,
-    "ast_hash": "099d5dfe62c8044ec132d48130abbcd8",
+    "mtime": 1784573058.0894103,
+    "ast_hash": "f621b4550266864f3b5a9e1c32ce485c",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\admin\\charts.tsx": {
@@ -405,18 +55,18 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\admin\\media-uploader.tsx": {
-    "mtime": 1784459665.4372911,
-    "ast_hash": "b177aaf3e0defe4c8430503aeede1b04",
+    "mtime": 1784839190.7040522,
+    "ast_hash": "3629f23bf6d7caf7487773191c1a298f",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\admin\\nav.ts": {
-    "mtime": 1784459441.1768064,
-    "ast_hash": "9bbeef1d5fdd7263a65050502ea5d356",
+    "mtime": 1784573054.2105918,
+    "ast_hash": "812ce0833e3848160052c67917cb8e66",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\admin\\page-header.tsx": {
-    "mtime": 1784459477.6179078,
-    "ast_hash": "ba16cbb8b6fd1fbda3c3b43e2203c2f6",
+    "mtime": 1784839043.2589643,
+    "ast_hash": "a519c7582b0ba9967c3725a4649ff099",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\admin\\rich-text-editor.tsx": {
@@ -425,13 +75,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\admin\\search-input.tsx": {
-    "mtime": 1784459812.553429,
-    "ast_hash": "cbaf970b687c315141b7282b6755927c",
+    "mtime": 1784835667.8168445,
+    "ast_hash": "4941e7f0732e0036f0ffd0f05ea85d5d",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\admin\\sidebar.tsx": {
-    "mtime": 1784459456.0633278,
-    "ast_hash": "89a30eddeabd6ccf73032566806e0db0",
+    "mtime": 1784838988.9243608,
+    "ast_hash": "6df19bb1a132fe2862c435967f13fc6f",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\admin\\status-badges.tsx": {
@@ -440,13 +90,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\admin\\tags-input.tsx": {
-    "mtime": 1784459638.8426113,
-    "ast_hash": "957a7dedd4d214f0d34d19828db84b16",
+    "mtime": 1784748454.2576957,
+    "ast_hash": "145739f720acefb1b2e0ea9d59f7e259",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\admin\\topbar.tsx": {
-    "mtime": 1784459470.6125278,
-    "ast_hash": "78095ae8777f2b4703037987968c46a3",
+    "mtime": 1784838919.2043204,
+    "ast_hash": "17f9ba04b9c7860160f35c23c77222eb",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\ui\\alert.tsx": {
@@ -475,8 +125,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\ui\\checkbox.tsx": {
-    "mtime": 1784459219.677185,
-    "ast_hash": "09073231ed001b522fd23911b54ae2f5",
+    "mtime": 1784836311.1626654,
+    "ast_hash": "73e9f355fa5126277a6b44ae54056ea4",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\ui\\command.tsx": {
@@ -575,8 +225,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\format.ts": {
-    "mtime": 1784459326.6430547,
-    "ast_hash": "cff9d09c25c7f112719f08231536b0a6",
+    "mtime": 1784748524.90644,
+    "ast_hash": "b7ec58c8a74b9cf05b708a41418644b9",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\segments.ts": {
@@ -594,19 +244,14 @@
     "ast_hash": "5453d99289cf630306e5030428c0fc33",
     "semantic_hash": ""
   },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\supabase\\middleware.ts": {
-    "mtime": 1784459492.5500655,
-    "ast_hash": "61a6f9768d52fcc9bed13c86e3b0f13e",
-    "semantic_hash": ""
-  },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\supabase\\server.ts": {
     "mtime": 1784459308.6847405,
     "ast_hash": "1896ec2446c7ae545812edc6b4669c52",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\types.ts": {
-    "mtime": 1784459299.1303196,
-    "ast_hash": "ec7106dbfea485a6b43eda598a72408c",
+    "mtime": 1784748194.7521157,
+    "ast_hash": "76680c206526432a89009ee60f4da91d",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\utils.ts": {
@@ -614,14 +259,9 @@
     "ast_hash": "5a6fd53fdcf2be529e9cc0b718fde352",
     "semantic_hash": ""
   },
-  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\middleware.ts": {
-    "mtime": 1784459316.916994,
-    "ast_hash": "bf4f39983143e9c188259640e99b73b0",
-    "semantic_hash": ""
-  },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\supabase\\migrations\\0001_init.sql": {
-    "mtime": 1784459712.8520553,
-    "ast_hash": "ba5f2ddbf7d40ae0110c3a4f9394e8dd",
+    "mtime": 1784462425.6686938,
+    "ast_hash": "72787297b48231392183ec52b6567703",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\tsconfig.json": {
@@ -640,8 +280,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\README.md": {
-    "mtime": 1784460764.5205483,
-    "ast_hash": "4893b413f42e411fdea4159e0c5f2f99",
+    "mtime": 1784751167.384061,
+    "ast_hash": "b47e770e9fcd0ef0810ca47581eea25b",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\public\\file.svg": {
@@ -667,6 +307,1381 @@
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\public\\window.svg": {
     "mtime": 1784459007.048761,
     "ast_hash": "a2760511c65806022ad20adf74370ff3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.claude\\settings.local.json": {
+    "mtime": 1784570783.2430577,
+    "ast_hash": "52ef01a0b2e0ab5d844c3e618b9e2334",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.impeccable\\config.json": {
+    "mtime": 1784570752.0956304,
+    "ast_hash": "5738d54a5499ba09bac343dbcf6d5dc0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.impeccable\\config.local.json": {
+    "mtime": 1784570752.0966332,
+    "ast_hash": "d9242cdb0e8a2f25b7645e2a4ceead1c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.impeccable\\hook.cache.json": {
+    "mtime": 1784839375.7988117,
+    "ast_hash": "f703d48a623027d50412b0a6d16ff841",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\db-config.mjs": {
+    "mtime": 1784751577.0938778,
+    "ast_hash": "6326c79540963f8a6fd8881cff7f583c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\migrate.mjs": {
+    "mtime": 1784751612.338895,
+    "ast_hash": "18ccfce981df63811e12fee723931051",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\verify-product-save.mjs": {
+    "mtime": 1784751629.97511,
+    "ast_hash": "3bb555b3cdfe5da5ac86f8e97b9e9b26",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\analytics\\live\\page.tsx": {
+    "mtime": 1784459520.6524448,
+    "ast_hash": "0e0f800462e809e9d0d8ef39288b8bc0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\analytics\\page.tsx": {
+    "mtime": 1784573038.3322465,
+    "ast_hash": "df7d1eb79425df1bcd0219247cf2d31d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\analytics\\reports\\page.tsx": {
+    "mtime": 1784573038.3335538,
+    "ast_hash": "4224e83e493596c3728b6c9efa1692fc",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\analytics\\reports\\report-controls.tsx": {
+    "mtime": 1784460503.3965106,
+    "ast_hash": "1cbb91b6d7107283f3f1106d011a4455",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\content\\files\\actions.ts": {
+    "mtime": 1784573038.3335538,
+    "ast_hash": "0ae55d19c271b14e1bb8c4e89f38fd92",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\content\\files\\file-card.tsx": {
+    "mtime": 1784460412.2071543,
+    "ast_hash": "1d5978a37e52c12b6252692b9b72923f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\content\\files\\file-uploader.tsx": {
+    "mtime": 1784460399.3808763,
+    "ast_hash": "3700babe4080958e38c773a53629502c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\content\\files\\page.tsx": {
+    "mtime": 1784460417.4538794,
+    "ast_hash": "f7df26e5d1f521403181afe7b7deb3a7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\content\\metaobjects\\page.tsx": {
+    "mtime": 1784459520.5734706,
+    "ast_hash": "cf1041d761e479012e6e1af739fca7fc",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\customers\\[id]\\page.tsx": {
+    "mtime": 1784573038.3348744,
+    "ast_hash": "83f9d1cba420240973b34b8819445153",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\customers\\actions.ts": {
+    "mtime": 1784573038.3348744,
+    "ast_hash": "d83ad3847b637b3c408547527a9eebff",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\customers\\companies\\page.tsx": {
+    "mtime": 1784459520.5142145,
+    "ast_hash": "965d2b2c8330f75c628c42ec88baa9df",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\customers\\customer-form.tsx": {
+    "mtime": 1784573038.3362398,
+    "ast_hash": "502418ba1e883dd15d3ca58e8ab882d0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\customers\\loading.tsx": {
+    "mtime": 1784749057.2624054,
+    "ast_hash": "19ce5f1ded96117fd32fe84e4ac70551",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\customers\\new\\page.tsx": {
+    "mtime": 1784573038.3362398,
+    "ast_hash": "17238fc07554e89b915dfaaa2770024e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\customers\\page.tsx": {
+    "mtime": 1784573038.3362398,
+    "ast_hash": "98ccbbc9b0408e8d23154fe3026e3e93",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\customers\\segments\\page.tsx": {
+    "mtime": 1784460140.66696,
+    "ast_hash": "97783e1a44600f7c34b9ac380ccf7e4e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\customers\\segments\\segment-builder.tsx": {
+    "mtime": 1784460131.675849,
+    "ast_hash": "59db8456333b6ea03ce79b9efb8dfc68",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\customers\\segments\\segment-delete.tsx": {
+    "mtime": 1784460143.252386,
+    "ast_hash": "a11657d13feea79c4121cec7c0ac695a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\discounts\\actions.ts": {
+    "mtime": 1784573038.3377366,
+    "ast_hash": "5e4f37e33c3ae86330d1de780b6d5453",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\discounts\\discount-dialog.tsx": {
+    "mtime": 1784460354.6978695,
+    "ast_hash": "be01a2258c07dc9983a797ce5bfcfc20",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\discounts\\discount-row-actions.tsx": {
+    "mtime": 1784460358.7299945,
+    "ast_hash": "2b2ce11596a193abe3d5f75aac23852b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\discounts\\page.tsx": {
+    "mtime": 1784573038.3387394,
+    "ast_hash": "73882d3f22ca38e3eb8c3e77c7d593f1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\loading.tsx": {
+    "mtime": 1784749057.1419892,
+    "ast_hash": "5d28de1b539a9c5476ad97a9be5e9343",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\marketing\\automations\\page.tsx": {
+    "mtime": 1784459520.766848,
+    "ast_hash": "803be41b0107b28f28d99a7e2fe96be4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\marketing\\page.tsx": {
+    "mtime": 1784459520.708138,
+    "ast_hash": "da5a3d523e2bb99caac55622ca3a75b9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\online-store\\page.tsx": {
+    "mtime": 1784459520.837825,
+    "ast_hash": "ad7e7748bbc9a1c1cc17fce0c9ad2314",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\[id]\\order-actions.tsx": {
+    "mtime": 1784573038.339743,
+    "ast_hash": "46e486cc1b9e60d369ef82808239cbd5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\[id]\\page.tsx": {
+    "mtime": 1784749026.9007175,
+    "ast_hash": "ca2702c846c1990b7125befae183cbe1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\abandoned\\page.tsx": {
+    "mtime": 1784459520.275333,
+    "ast_hash": "0697a19fcd91d68ebf268afeff0d81f0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\actions.ts": {
+    "mtime": 1784573038.3409789,
+    "ast_hash": "571a5f16881fe9a6b876301c3edf7a90",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\drafts\\page.tsx": {
+    "mtime": 1784573038.3409789,
+    "ast_hash": "9398e8323a30f3b75b127587677b68de",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\loading.tsx": {
+    "mtime": 1784749057.236632,
+    "ast_hash": "fe806dbc4043ff8da1115bd736f539e3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\new\\order-builder.tsx": {
+    "mtime": 1784573038.3419807,
+    "ast_hash": "beb4a2336c7ac84aee6cd46db335c440",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\new\\page.tsx": {
+    "mtime": 1784460256.7965617,
+    "ast_hash": "f2c561ee5fb2a43e79942a0345c3d672",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\page.tsx": {
+    "mtime": 1784573038.3429804,
+    "ast_hash": "86df24b7d474452345953cfaee2e68c4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\page.tsx": {
+    "mtime": 1784573038.3429804,
+    "ast_hash": "e7ab6bee6eb4f6004913a03048d82f55",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\pos\\page.tsx": {
+    "mtime": 1784459520.8941135,
+    "ast_hash": "876852de087c31c187d63ee639905103",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\[id]\\loading.tsx": {
+    "mtime": 1784749057.1859708,
+    "ast_hash": "ba5391cc54be5ea4f22aa02678aec51f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\[id]\\page.tsx": {
+    "mtime": 1784748905.6902025,
+    "ast_hash": "ebc4966c69b6e488a9c16c4ea1b8e36e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\actions.ts": {
+    "mtime": 1784748336.1407087,
+    "ast_hash": "3a4cce2127e1f7aae28e1b8bc81962b0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\collections\\[id]\\page.tsx": {
+    "mtime": 1784459914.9439316,
+    "ast_hash": "8d24aca7af61ebd5c4a02615a9f2eae2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\collections\\actions.ts": {
+    "mtime": 1784573038.3451955,
+    "ast_hash": "c47eabbdccb8178369b9ab122db4176c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\collections\\collection-form.tsx": {
+    "mtime": 1784573038.3451955,
+    "ast_hash": "982099fc5cf8a0207f64f5e1c30c8f4a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\collections\\new\\page.tsx": {
+    "mtime": 1784459911.0537643,
+    "ast_hash": "f5b4d6b7927d489a0845945dc5a02f43",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\collections\\page.tsx": {
+    "mtime": 1784573038.3461983,
+    "ast_hash": "c12f643b96ffb33f8d6fa4a8c469417e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\draft-mapping.ts": {
+    "mtime": 1784748883.5189126,
+    "ast_hash": "dbe721faa92896ac89bb7bf4d58a15a2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\gift-cards\\actions.ts": {
+    "mtime": 1784573038.347201,
+    "ast_hash": "ce8e24a59f5c94a6fb82c95a5f13de92",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\gift-cards\\gift-card-dialog.tsx": {
+    "mtime": 1784459962.9556034,
+    "ast_hash": "16a91a94cbd1ced231206443d3da732a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\gift-cards\\gift-card-toggle.tsx": {
+    "mtime": 1784459977.4234316,
+    "ast_hash": "252431de34eda6b717622adeaa0cd58d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\gift-cards\\page.tsx": {
+    "mtime": 1784459974.4438238,
+    "ast_hash": "2d91beb0f94dc8838a22931acdbbf5d7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\inventory\\inventory-grid.tsx": {
+    "mtime": 1784749018.7869449,
+    "ast_hash": "ae9c2176e3a6e417fc0a5f6dd8f0767f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\inventory\\page.tsx": {
+    "mtime": 1784459939.2169836,
+    "ast_hash": "350385ef8e99710ca2ab77449154b55c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\loading.tsx": {
+    "mtime": 1784749057.1643827,
+    "ast_hash": "31b1cda747e7a22e04db49df594ccd69",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\new\\loading.tsx": {
+    "mtime": 1784749057.207941,
+    "ast_hash": "87e62e531e58ad34c3aad61e9ff17614",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\new\\page.tsx": {
+    "mtime": 1784748893.8074286,
+    "ast_hash": "fb308b21290fa35739881086e7ccadd0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\page.tsx": {
+    "mtime": 1784835761.44268,
+    "ast_hash": "bc2a0d88dc66e322ff84ef63d0640c10",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\price-lists\\page.tsx": {
+    "mtime": 1784459520.4533103,
+    "ast_hash": "b85c400288327b7ab1698d648e4fbe68",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\product-draft.tsx": {
+    "mtime": 1784836890.5332243,
+    "ast_hash": "1c899c4fd05a3b54c16c6268eb7c692a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\product-form.tsx": {
+    "mtime": 1784839207.4606862,
+    "ast_hash": "afdde26ddb06212afb9829ff6e4e397f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\product-list-actions.tsx": {
+    "mtime": 1784835800.8882623,
+    "ast_hash": "5b46ba4f6abe1615a05ccf06d8246d79",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\products-table.tsx": {
+    "mtime": 1784835715.973813,
+    "ast_hash": "c7abfd65a460e225fc2e9d8c50b08fc3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\purchase-orders\\page.tsx": {
+    "mtime": 1784459520.334205,
+    "ast_hash": "d6131bd0dfe1f5d70fa3068966d37e37",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\sections\\basics.tsx": {
+    "mtime": 1784748554.66895,
+    "ast_hash": "04cfecea2212a5d516c919ad3481c1ab",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\sections\\fields.tsx": {
+    "mtime": 1784748543.820799,
+    "ast_hash": "93bc988b48ad51e2348ad40f278a933e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\sections\\inventory.tsx": {
+    "mtime": 1784748594.9787233,
+    "ast_hash": "85c4f76dcdc5d9be31adbcb5cfbb90d4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\sections\\media.tsx": {
+    "mtime": 1784748560.9381669,
+    "ast_hash": "d5e2ecc08a580b0625a49654b54a602f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\sections\\organization.tsx": {
+    "mtime": 1784748673.5100117,
+    "ast_hash": "e72243b376f36c8610646ec8c68f49fb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\sections\\pricing.tsx": {
+    "mtime": 1784748864.9200566,
+    "ast_hash": "1625e5f889d4d49f4421cefbcf122b85",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\sections\\seo.tsx": {
+    "mtime": 1784748636.0885043,
+    "ast_hash": "0d287448dc9f6c4615f3745fda7b4267",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\sections\\shipping.tsx": {
+    "mtime": 1784748613.5696375,
+    "ast_hash": "f169567e69f2522a16b10a918e8fa97d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\sections\\status.tsx": {
+    "mtime": 1784748648.8689506,
+    "ast_hash": "7949fc1ec86920d5484bb3cdce6c71df",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\sections\\variants.tsx": {
+    "mtime": 1784836294.2817235,
+    "ast_hash": "23376ca7c437c1c6e65b2ca188b202aa",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\transfers\\page.tsx": {
+    "mtime": 1784459520.3936727,
+    "ast_hash": "6b6217ff37366b26d59014fdf1f156cd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\[section]\\page.tsx": {
+    "mtime": 1784460678.4451454,
+    "ast_hash": "0dc7733315fbd2768caad61ab9de570b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\actions.ts": {
+    "mtime": 1784573038.3492227,
+    "ast_hash": "dd3b7d1eebecd1f77e808ca10efbb4c8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\brand\\brand-form.tsx": {
+    "mtime": 1784460646.3860502,
+    "ast_hash": "188a02a4c77149262cf4aae289851307",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\brand\\page.tsx": {
+    "mtime": 1784460647.9197495,
+    "ast_hash": "ba73916167aeeb4e6063d5276eb10f52",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\general\\general-form.tsx": {
+    "mtime": 1784460583.6135273,
+    "ast_hash": "f96aeef821c10ccfaeff9aec04ff1083",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\general\\page.tsx": {
+    "mtime": 1784460585.5286906,
+    "ast_hash": "fc827a6b462672c36ee00eff901e210e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\layout.tsx": {
+    "mtime": 1784460548.5322163,
+    "ast_hash": "97f1fa26b302327b32e4249e4452e53e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\locations\\location-dialog.tsx": {
+    "mtime": 1784460620.3241856,
+    "ast_hash": "38bb69c85b6874df975d753157a29012",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\locations\\page.tsx": {
+    "mtime": 1784460626.2649994,
+    "ast_hash": "e0ff9904dacda62bc41ef4bf9269797c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\page.tsx": {
+    "mtime": 1784573038.3502262,
+    "ast_hash": "1f27c07c1ca99ee893bce97a36678896",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\policies\\page.tsx": {
+    "mtime": 1784460661.7110002,
+    "ast_hash": "0ede7f213fe09711a79ca2f5aa9bfef1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\policies\\policies-form.tsx": {
+    "mtime": 1784460659.951567,
+    "ast_hash": "dc656df057868fef69e6f1b9a351a583",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\settings-nav.tsx": {
+    "mtime": 1784573038.3512287,
+    "ast_hash": "08f213c5eda876f462e1f00aa894437c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\users\\page.tsx": {
+    "mtime": 1784460603.4377637,
+    "ast_hash": "8158555f64b644925dc18c299733713d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\users\\role-select.tsx": {
+    "mtime": 1784460593.5650575,
+    "ast_hash": "ad4356251d9d83d2deff3fc8f490619b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\social-channels\\page.tsx": {
+    "mtime": 1784459520.949772,
+    "ast_hash": "05e186349e38d515552f2b3bc8ca0e87",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\collections\\[handle]\\page.tsx": {
+    "mtime": 1784573280.2372682,
+    "ast_hash": "21b97c02eb8fc40ce7c5ed0e57293c47",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\layout.tsx": {
+    "mtime": 1784573237.4669106,
+    "ast_hash": "d092e8498995723f459dbf0cb1e40b53",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\page.tsx": {
+    "mtime": 1784573263.9504697,
+    "ast_hash": "bbe70712713fc6ab0d32b5520051977a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\products\\[id]\\page.tsx": {
+    "mtime": 1784573344.8844812,
+    "ast_hash": "dc108da541dca9976b2c0850d8b3a244",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\admin\\save-bar.tsx": {
+    "mtime": 1784839015.588431,
+    "ast_hash": "4b7b17b050f7dd967a33fe4346eeb0c3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\admin\\skeletons.tsx": {
+    "mtime": 1784749046.6809962,
+    "ast_hash": "80449bc4a76e274ed6125fd514267737",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\footer.tsx": {
+    "mtime": 1784573230.389265,
+    "ast_hash": "2964096b8981d58d1a8c7b846a99c1ec",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\header.tsx": {
+    "mtime": 1784573572.9168272,
+    "ast_hash": "bfd2e72b234d4cc0036c08a4028ea199",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\price.tsx": {
+    "mtime": 1784573189.91302,
+    "ast_hash": "fa9bb5b281ee619a2a3f1a271c53cb20",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\product-card.tsx": {
+    "mtime": 1784748993.954027,
+    "ast_hash": "296e11eaf231b6719654d95d542f2134",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\product-gallery.tsx": {
+    "mtime": 1784573300.3326585,
+    "ast_hash": "e3414d7b13dcf879ef4e873eef8e1821",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\variant-picker.tsx": {
+    "mtime": 1784573328.4091096,
+    "ast_hash": "9a3c43367d86a63f443fffa41af5c11d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\form-store.ts": {
+    "mtime": 1784749222.7236733,
+    "ast_hash": "92d90899150764d2ca498f575a5d73ba",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\number-input.ts": {
+    "mtime": 1784748846.993342,
+    "ast_hash": "5cc241fa96cbb534614ba7a2cad0c7fc",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\shop\\queries.ts": {
+    "mtime": 1784748984.1669652,
+    "ast_hash": "e35ed83aabadf50d48e3a9b2ecf5b451",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\supabase\\proxy.ts": {
+    "mtime": 1784573085.7074645,
+    "ast_hash": "ce599a915638a779ef179190f63d6059",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\proxy.ts": {
+    "mtime": 1784573080.3457294,
+    "ast_hash": "11c1d25e2f65e0a2c53050e6ea828228",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\supabase\\migrations\\0002_fix_owner_trigger.sql": {
+    "mtime": 1784462433.7395618,
+    "ast_hash": "83968c19280300a98e5af3f02409b70a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\supabase\\migrations\\0003_storefront_public_read.sql": {
+    "mtime": 1784572439.432675,
+    "ast_hash": "2d0da2beec455f5c47353b29e3c0d3cb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\supabase\\migrations\\0004_storefront_seed.sql": {
+    "mtime": 1784572524.5808978,
+    "ast_hash": "754f6893f822f06daedc4e7843cc4226",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\supabase\\migrations\\0005_product_parity.sql": {
+    "mtime": 1784749346.8126786,
+    "ast_hash": "5a3dea293b03a95fb2740586578087cb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\DESIGN.md": {
+    "mtime": 1784839375.3604255,
+    "ast_hash": "1ecb6452b53d93b1a2ced34ab58af6c1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\PRODUCT.md": {
+    "mtime": 1784747970.4236674,
+    "ast_hash": "51cbb0f423f1e1231fbea524712b3b25",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\airbnb\\DESIGN.md": {
+    "mtime": 1784571042.2797055,
+    "ast_hash": "57743e0ae73b656625546d5b1461a37f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\airbnb\\README.md": {
+    "mtime": 1784571042.2797055,
+    "ast_hash": "446cfd78a0ae0f82f2cdf67243486639",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\airtable\\DESIGN.md": {
+    "mtime": 1784571042.2829516,
+    "ast_hash": "b623a1757802f49c8e6a6ca46ff0bc13",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\airtable\\README.md": {
+    "mtime": 1784571042.2829516,
+    "ast_hash": "e763ba4a15364abef72fa97d35afa8c6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\apple\\DESIGN.md": {
+    "mtime": 1784571042.283956,
+    "ast_hash": "80fefd6464d842c79f5c5433bd870d95",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\apple\\README.md": {
+    "mtime": 1784571042.2854323,
+    "ast_hash": "e01fea6af6d188bf889e0715799774c5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\binance\\DESIGN.md": {
+    "mtime": 1784571042.2865055,
+    "ast_hash": "053340eaf6ae5c8536e9c33f880ccb2c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\binance\\README.md": {
+    "mtime": 1784571042.2865055,
+    "ast_hash": "b6effe9cd16750cd8fc6764a743d6cd7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\bmw-m\\DESIGN.md": {
+    "mtime": 1784571042.2875075,
+    "ast_hash": "d1bad396fcd7c5a7e48cdb5ef476d0dd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\bmw-m\\README.md": {
+    "mtime": 1784571042.2888074,
+    "ast_hash": "781669747cb9b1eef58830288d653be3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\bmw\\DESIGN.md": {
+    "mtime": 1784571042.290015,
+    "ast_hash": "13ff1e1cca3998621e766e93f78cc374",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\bmw\\README.md": {
+    "mtime": 1784571042.2910898,
+    "ast_hash": "af78082a435516ef2fca4969b93a3162",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\bugatti\\DESIGN.md": {
+    "mtime": 1784571042.292415,
+    "ast_hash": "240c3146453bd617bc5b12011ea65c42",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\bugatti\\README.md": {
+    "mtime": 1784571042.292415,
+    "ast_hash": "7ef9de54e8e35403f950dd81d3ee3462",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\cal\\DESIGN.md": {
+    "mtime": 1784571042.2936735,
+    "ast_hash": "61a9f41fd2829ad635000aaf91e2bcef",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\cal\\README.md": {
+    "mtime": 1784571042.2941759,
+    "ast_hash": "2d5a6aa4e738ecc5eaddbe6119c3331e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\claude\\DESIGN.md": {
+    "mtime": 1784571042.295179,
+    "ast_hash": "9cdc7a3d90c4769827d5111c0950b216",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\claude\\README.md": {
+    "mtime": 1784571042.295179,
+    "ast_hash": "63f2167016d1a23ae73aa86f9b0fdaf1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\clay\\DESIGN.md": {
+    "mtime": 1784571042.296182,
+    "ast_hash": "6398448d920020fe58d273e7b752b60c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\clay\\README.md": {
+    "mtime": 1784571042.296182,
+    "ast_hash": "5e52e30bf94765a561cd4bc9fcd28e15",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\clickhouse\\DESIGN.md": {
+    "mtime": 1784571042.2972023,
+    "ast_hash": "c090683f726aab25c9ae68713df510c9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\clickhouse\\README.md": {
+    "mtime": 1784571042.2972023,
+    "ast_hash": "6db258ae94ae9a24b980eb4c323426c5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\cohere\\DESIGN.md": {
+    "mtime": 1784571042.2984512,
+    "ast_hash": "b4e1bd94eafeee4b99c228e1cf6d3799",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\cohere\\README.md": {
+    "mtime": 1784571042.2984512,
+    "ast_hash": "893f076261886c9b54dbf8e2787e12ff",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\coinbase\\DESIGN.md": {
+    "mtime": 1784571042.3004556,
+    "ast_hash": "95b7ec9f43ef6b3d010fdfd31fa20894",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\coinbase\\README.md": {
+    "mtime": 1784571042.3004556,
+    "ast_hash": "07480d1c455abed987d1835ab00aacd1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\composio\\DESIGN.md": {
+    "mtime": 1784571042.3023367,
+    "ast_hash": "ba9efa5b40e0e01973e1dd1579c9c569",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\composio\\README.md": {
+    "mtime": 1784571042.3035588,
+    "ast_hash": "1cc425c9a2f8836eb0b3ed8a09623872",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\cursor\\DESIGN.md": {
+    "mtime": 1784571042.3035588,
+    "ast_hash": "664a8a724509772802053f7bcbe13324",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\cursor\\README.md": {
+    "mtime": 1784571042.3035588,
+    "ast_hash": "6e2f11be8c20de0c28e783e10599e8ae",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\dell-1996\\DESIGN.md": {
+    "mtime": 1784571042.305564,
+    "ast_hash": "b94fbdf46959173be3b3d92fb4beea87",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\dell-1996\\README.md": {
+    "mtime": 1784571042.306903,
+    "ast_hash": "aa345561e83f0b1a74d1969091bd0627",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\elevenlabs\\DESIGN.md": {
+    "mtime": 1784571042.306903,
+    "ast_hash": "c560f36cc8a9f63572db1309333e446c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\elevenlabs\\README.md": {
+    "mtime": 1784571042.3079345,
+    "ast_hash": "5e712007eb380e08477fe7aaedb6e889",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\expo\\DESIGN.md": {
+    "mtime": 1784571042.3079345,
+    "ast_hash": "db899f4ef8e6e80f6b8ddcb8d56a8357",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\expo\\README.md": {
+    "mtime": 1784571042.3093033,
+    "ast_hash": "cb495733c54fbdf0e10beeaae1163fc3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\ferrari\\DESIGN.md": {
+    "mtime": 1784571042.3104393,
+    "ast_hash": "bdc79278db097b4592d3861cd6920dd3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\ferrari\\README.md": {
+    "mtime": 1784571042.3107817,
+    "ast_hash": "ff418bc7fe086bcd043f562c68b17de7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\figma\\DESIGN.md": {
+    "mtime": 1784571042.3107817,
+    "ast_hash": "bb1037cbb1745814f4debaa6f0b9e30a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\figma\\README.md": {
+    "mtime": 1784571042.3107817,
+    "ast_hash": "97e4de6c849e440816463a4c08114dd1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\framer\\DESIGN.md": {
+    "mtime": 1784571042.312923,
+    "ast_hash": "7d7fc8b49de2a6b428398b6b7db4ceb0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\framer\\README.md": {
+    "mtime": 1784571042.3139558,
+    "ast_hash": "eb5c7ed81c85337a8c2c0947a1aa6a19",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\hashicorp\\DESIGN.md": {
+    "mtime": 1784571042.3139558,
+    "ast_hash": "d8466c3df31e17da9012315a91f03198",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\hashicorp\\README.md": {
+    "mtime": 1784571042.3151515,
+    "ast_hash": "ca09e5baf180d9ab8580824780574c9e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\hp\\DESIGN.md": {
+    "mtime": 1784571042.3151515,
+    "ast_hash": "ff636b7ec18f893514911e860d2d5d87",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\hp\\README.md": {
+    "mtime": 1784571042.3151515,
+    "ast_hash": "3530aa7b2f346ac0492428c19047a62a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\ibm\\DESIGN.md": {
+    "mtime": 1784571042.3151515,
+    "ast_hash": "062adcf30b691ac97927330233414001",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\ibm\\README.md": {
+    "mtime": 1784571042.317591,
+    "ast_hash": "72cce1d7a66ce00d48710b1a1af2fd65",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\intercom\\DESIGN.md": {
+    "mtime": 1784571042.3186018,
+    "ast_hash": "43ce610b45405cc64e96a6071a0aef45",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\intercom\\README.md": {
+    "mtime": 1784571042.3186018,
+    "ast_hash": "a40b283e6be6cd448d5d13db9713b4f9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\kraken\\DESIGN.md": {
+    "mtime": 1784571042.3196056,
+    "ast_hash": "2b58b77eec725cb02afdf1eb17133785",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\kraken\\README.md": {
+    "mtime": 1784571042.3196056,
+    "ast_hash": "91257bfd14c23ddf3f6db2e6a4da8c89",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\lamborghini\\DESIGN.md": {
+    "mtime": 1784571042.3208344,
+    "ast_hash": "fb67c14d18975e5a7eac42000c9cd44c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\lamborghini\\README.md": {
+    "mtime": 1784571042.3208344,
+    "ast_hash": "590b00b46513288599c02607cd03591d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\linear.app\\DESIGN.md": {
+    "mtime": 1784571042.3218377,
+    "ast_hash": "dd1682e2f3a319b54272ca66b9383b6d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\linear.app\\README.md": {
+    "mtime": 1784571042.3228405,
+    "ast_hash": "a50843b68972bc014b7e0b91ac731732",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\lovable\\DESIGN.md": {
+    "mtime": 1784571042.3228405,
+    "ast_hash": "0b6355af45aff9dada442340c4659684",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\lovable\\README.md": {
+    "mtime": 1784571042.3240104,
+    "ast_hash": "78caab84763b375bd62b454851c82b23",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\mastercard\\DESIGN.md": {
+    "mtime": 1784571042.3245342,
+    "ast_hash": "4c20cf9ddf0ccb9f004d16ab4595f14a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\mastercard\\README.md": {
+    "mtime": 1784571042.3245342,
+    "ast_hash": "70f3fce49ac332b7e399857904d87ce9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\meta\\DESIGN.md": {
+    "mtime": 1784571042.325644,
+    "ast_hash": "14b088f370774506c2c5b53369c2664a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\meta\\README.md": {
+    "mtime": 1784571042.3266478,
+    "ast_hash": "949728aad1d61ca5a0a6dfd22a92ee30",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\minimax\\DESIGN.md": {
+    "mtime": 1784571042.3276641,
+    "ast_hash": "297a9ee61419d9b81c0e99e7f863672c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\minimax\\README.md": {
+    "mtime": 1784571042.3276641,
+    "ast_hash": "62b842ca55d4718dd500dc833679f752",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\mintlify\\DESIGN.md": {
+    "mtime": 1784571042.328667,
+    "ast_hash": "4216b58896ae3461339adbd6e489da12",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\mintlify\\README.md": {
+    "mtime": 1784571042.328667,
+    "ast_hash": "9ce113fcb9225e21d54d3a7edb8eaab9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\miro\\DESIGN.md": {
+    "mtime": 1784571042.3296697,
+    "ast_hash": "189876e4a701d3ed9ee73f517ca36533",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\miro\\README.md": {
+    "mtime": 1784571042.3306725,
+    "ast_hash": "f36fb592ada6aeb8b3721e9b272e5dec",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\mistral.ai\\DESIGN.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "d67a380fdbcd8f01aa148ad47bcda37b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\mistral.ai\\README.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "19ccf577d5177c899288b6be072d8685",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\mongodb\\DESIGN.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "7b1b9c7963c2e1b8ede0faefa3d31ee8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\mongodb\\README.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "b6bbafc09489f5fc1539c98e8e67af6a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\nike\\DESIGN.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "ddafeeba39e54928eea369e92b9d563a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\nike\\README.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "495cbe9899d878ccdba8724ccc4e7ae4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\nintendo-2001\\DESIGN.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "433f3b1f3a011274352f1e107001a160",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\nintendo-2001\\README.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "d2ba1db0c0896caeb96330d4fed57311",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\notion\\DESIGN.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "9fad35845721a15ed45c181692e7a889",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\notion\\README.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "3895ecfd1c0834cbd3247b0ee074c199",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\nvidia\\DESIGN.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "13aa2ce69278a7dee59b3f9b82df67ab",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\nvidia\\README.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "68967249031dfcbbc234d4ac47e170da",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\ollama\\DESIGN.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "b8ae843fde6b4252482fa3d545a8dba5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\ollama\\README.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "e5ff056b527aa44f00a1a4dbc4f69964",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\opencode.ai\\DESIGN.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "ed5837cac4cb2b3eb5d36f652e60df90",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\opencode.ai\\README.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "d9e6daafc4594bfec8e5104d9ee5ed83",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\pinterest\\DESIGN.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "c7ce0d26125a518e117676bbcfbcb2e5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\pinterest\\README.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "4f0c582eece5f088005609d5eb48a8a1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\playstation\\DESIGN.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "75911cca998ba809c6b14fd5be88d9e0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\playstation\\README.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "f4bc48c6b507b3ee92152eb6fa7615bc",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\posthog\\DESIGN.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "1bcc528def99842457f386ad2ddd4d53",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\posthog\\README.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "5fe1533c4cd743c7b24451ebc8f9598b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\raycast\\DESIGN.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "e537dc5cd0750a3b1e35ff94539c4760",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\raycast\\README.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "a002152cb79e9cbe179eff4fc0b8a438",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\renault\\DESIGN.md": {
+    "mtime": 1784571042.331675,
+    "ast_hash": "bcfecaf556dc3f8b172cc6882cb13bca",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\renault\\README.md": {
+    "mtime": 1784571042.347608,
+    "ast_hash": "b738b55af71b69a5536769cf322ed3a8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\replicate\\DESIGN.md": {
+    "mtime": 1784571042.347608,
+    "ast_hash": "972c51a9392e2bf706996be0df737ae1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\replicate\\README.md": {
+    "mtime": 1784571042.3489256,
+    "ast_hash": "b26f291c7787e4f6fd8f3b3f67237e33",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\resend\\DESIGN.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "a727f8fea638885e77ae993705356511",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\resend\\README.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "1271cc0d4631deeb468365df327cd457",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\revolut\\DESIGN.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "75e73f0283b2b5c9afea2867e270b7ac",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\revolut\\README.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "539358e79e42501f8b0f1f7983ff0bbf",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\runwayml\\DESIGN.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "bcd38afdfaf3646006f4d0bf54258216",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\runwayml\\README.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "a4450750fd82111d7d66f62cedfa8923",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\sanity\\DESIGN.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "3e78ad7ac4e0980053350f33c4017ca4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\sanity\\README.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "f85eecacea49847f42a4dd767c481a77",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\sentry\\DESIGN.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "d282f2632e047d7614f6de5306142328",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\sentry\\README.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "e6051e22c0d2ae3ff0815b9bf76f16ef",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\shopify\\DESIGN.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "8e6e08118bf6d416c816c54e32d942e3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\shopify\\README.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "8d146837156e29d4102b4bea8c5cb1af",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\slack\\DESIGN.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "27daa5eded4ac2c057dd87618723da54",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\spacex\\DESIGN.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "e784d676e085c8e3fb6a16ede1f2176f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\spacex\\README.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "872cc6752ce75df56a978eac13c65545",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\spotify\\DESIGN.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "6d5e5992bd1e2e339148377b1c06bd73",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\spotify\\README.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "8f86e8cd3faeb80def5b52689d6734c5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\starbucks\\DESIGN.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "8475dc0ec4ca26b4453577701ab0411c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\starbucks\\README.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "322c33f6898b00f643dce28566cf9530",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\stripe\\DESIGN.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "4495ff5a52f0a2e65a961c177c82bef7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\stripe\\README.md": {
+    "mtime": 1784571042.3494287,
+    "ast_hash": "cb5f05f104795a1fc255658ef142595e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\supabase\\DESIGN.md": {
+    "mtime": 1784571042.363542,
+    "ast_hash": "78bd877f968ceb4758d82f06714ea45a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\supabase\\README.md": {
+    "mtime": 1784571042.363542,
+    "ast_hash": "5d2ca39b609f821e33493e14528ed936",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\superhuman\\DESIGN.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "0a740a113ec13996de4708a16dfd8832",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\superhuman\\README.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "ade573a177bf29518fea4bd2e42b55f9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\tesla\\DESIGN.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "802daa7f110a6acbc18294c4017056a3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\tesla\\README.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "a0c7d9d94feab35d6090f76bc270c85b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\theverge\\DESIGN.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "680f41c3b21219066aaafded3687b61a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\theverge\\README.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "d36e53747640759730c56dba598092c3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\together.ai\\DESIGN.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "fdadae039718382c5e78b5521a8499f9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\together.ai\\README.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "7569456427d1b9f053472ef00b8e75e1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\uber\\DESIGN.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "b1a7cce8101e5f25787944536ebd0224",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\uber\\README.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "4ec0407f9521e543909fb23629d4389a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\vercel\\DESIGN.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "10fc43f2087c9e14fe051687d6b425f0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\vercel\\README.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "60b38c38c543403402d3c63422c05fba",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\vodafone\\DESIGN.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "8885f24de62b51d8a8026e3e0cb040b6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\vodafone\\README.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "6e4079538ce7608629e30230acd6dfb7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\voltagent\\DESIGN.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "cf6a918f07977c14b94c4ef0ed4bf397",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\voltagent\\README.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "4a43e223500ff1a89604270affde27f0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\warp\\DESIGN.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "0f482ebdf98343d1c0f0e619021c859a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\warp\\README.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "605b3b55548eb8525cef5bd2a188246d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\webflow\\DESIGN.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "2ab606a64441e956a66e9b2a97fa5496",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\webflow\\README.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "1730fa73df5ed64c20105ce5e0b6eba7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\wired\\DESIGN.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "7988ca6b04b21fa53e53ea6e87e21aa0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\wired\\README.md": {
+    "mtime": 1784571042.3647063,
+    "ast_hash": "1fbe7ccf0919a2246f2e010ccbac7633",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\wise\\DESIGN.md": {
+    "mtime": 1784571042.379447,
+    "ast_hash": "5e32d8770a28c189a4e84a87c30a2f51",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\wise\\README.md": {
+    "mtime": 1784571042.379447,
+    "ast_hash": "210cea956622af8d7a3d4257ad1462b0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\x.ai\\DESIGN.md": {
+    "mtime": 1784571042.379447,
+    "ast_hash": "c4f846c2f05e96601e5f21930a423062",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\x.ai\\README.md": {
+    "mtime": 1784571042.379447,
+    "ast_hash": "e6efb688de11c07e0ecb70d6e4c191c4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\zapier\\DESIGN.md": {
+    "mtime": 1784571042.379447,
+    "ast_hash": "94207e59be0354d358766c8b90669fac",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\design-md\\zapier\\README.md": {
+    "mtime": 1784571042.379447,
+    "ast_hash": "be7b254cadb3c5db242a48bdf68b93b8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\docs\\SHOPIFY_GAP.md": {
+    "mtime": 1784748567.4546013,
+    "ast_hash": "2c1b7100f52647a90d58771038b05b4a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\verify-variant-remap.mjs": {
+    "mtime": 1784836858.6424572,
+    "ast_hash": "1ab5b9c206d9c39b23d6a139441916c9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\sections\\variant-bulk-editor.tsx": {
+    "mtime": 1784836377.0730436,
+    "ast_hash": "7fd5e5799abf2767975872f8a572e906",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\sections\\variant-options.tsx": {
+    "mtime": 1784836406.3661275,
+    "ast_hash": "3c66785cd9b11560cd94a17ecb3540b5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\sections\\variant-table.tsx": {
+    "mtime": 1784836192.8904612,
+    "ast_hash": "f52102d792286438421b8c25706d04ef",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\variant-presets.ts": {
+    "mtime": 1784835971.0087137,
+    "ast_hash": "c865749f167c63342b800bbde0859e01",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\variants.ts": {
+    "mtime": 1784836731.4430192,
+    "ast_hash": "7585b0697b24604ceec54f7fcdb1af0a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\supabase\\migrations\\0006_save_product_where_clause.sql": {
+    "mtime": 1784837769.3640149,
+    "ast_hash": "0dc8acf218b8079d309474bb00d063c7",
     "semantic_hash": ""
   }
 }

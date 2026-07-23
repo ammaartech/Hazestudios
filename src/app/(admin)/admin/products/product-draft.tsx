@@ -5,35 +5,28 @@ import { FormStore } from "@/lib/form-store";
 import { toAmount, toNumber } from "@/lib/number-input";
 import type { DraftImage } from "@/components/admin/media-uploader";
 import type { Location, ProductStatus, WeightUnit } from "@/lib/types";
+import {
+  activeOptions,
+  cartesian,
+  variantTitle,
+  type OptionDraft,
+  type VariantOverride,
+  type VariantRow,
+} from "@/lib/variants";
+
+// The variant algebra lives in `@/lib/variants` — pure, React-free, and tested
+// on its own. Re-exported here so the editor's modules keep one import source.
+export {
+  activeOptions,
+  cartesian,
+  remapOverrides,
+  variantTitle,
+} from "@/lib/variants";
+export type { OptionDraft, VariantOverride, VariantRow } from "@/lib/variants";
 
 /* -------------------------------------------------------------------------- */
 /* Draft shape                                                                 */
 /* -------------------------------------------------------------------------- */
-
-export interface OptionDraft {
-  /** stable across renames, so React keys and overrides survive editing */
-  key: string;
-  name: string;
-  values: string[];
-}
-
-/**
- * Per-variant divergence from the product-level defaults. Only keys the operator
- * actually touched are stored — everything else falls through to the parent, so
- * changing the base price still moves untouched variants with it.
- */
-export interface VariantOverride {
-  price?: string;
-  compare_at_price?: string;
-  cost_per_item?: string;
-  sku?: string;
-  barcode?: string;
-  weight?: string;
-  available?: boolean;
-  image_id?: string | null;
-  /** locationId → quantity */
-  inventory?: Record<string, number>;
-}
 
 /**
  * Money and weight live as strings, not numbers. A numeric state field fights
@@ -76,40 +69,6 @@ export interface ProductDraft extends Record<string, unknown> {
 /* -------------------------------------------------------------------------- */
 /* Variant derivation                                                          */
 /* -------------------------------------------------------------------------- */
-
-export interface VariantRow {
-  title: string;
-  option1: string | null;
-  option2: string | null;
-  option3: string | null;
-  price: string;
-  compare_at_price: string;
-  cost_per_item: string;
-  sku: string;
-  barcode: string;
-  weight: string;
-  available: boolean;
-  image_id: string | null;
-  inventory: Record<string, number>;
-  /** true when this row has its own value for the field, not the parent's */
-  overridden: (keyof VariantOverride)[];
-}
-
-/** Every combination of the filled-in options, in option order. */
-export function cartesian(options: OptionDraft[]): string[][] {
-  const lists = options
-    .filter((o) => o.name.trim() && o.values.length > 0)
-    .map((o) => o.values);
-  if (!lists.length) return [];
-  return lists.reduce<string[][]>(
-    (acc, values) => acc.flatMap((combo) => values.map((v) => [...combo, v])),
-    [[]]
-  );
-}
-
-export function variantTitle(combo: string[]): string {
-  return combo.join(" / ");
-}
 
 export function deriveVariants(draft: ProductDraft): VariantRow[] {
   return cartesian(draft.options).map((combo) => {
@@ -176,9 +135,10 @@ export function toPayload(draft: ProductDraft, locations: Location[]) {
       alt: img.alt,
     })),
 
-    options: draft.options
-      .filter((o) => o.name.trim() && o.values.length > 0)
-      .map((o) => ({ name: o.name.trim(), values: o.values })),
+    options: activeOptions(draft.options).map((o) => ({
+      name: o.name.trim(),
+      values: o.values,
+    })),
 
     variants: variants.map((v) => ({
       title: v.title,
