@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
 import type { ShopProduct, ShopVariant } from "@/lib/shop/queries";
 import { sortOptionValues } from "@/lib/variants";
 import { cn } from "@/lib/utils";
 import { Price } from "./price";
+import { useCart } from "./cart-provider";
 
 /**
  * Option selection for a product with up to two axes (Size, Colour).
@@ -16,6 +16,7 @@ import { Price } from "./price";
  * combination's own stock then drives the CTA.
  */
 export function VariantPicker({ product }: { product: ShopProduct }) {
+  const { add, isPending } = useCart();
   const options = product.options;
   const [selection, setSelection] = useState<Record<string, string>>(() => {
     // Preselect a single-value axis (e.g. "One Size") — there's no choice to make.
@@ -99,16 +100,26 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
     ? "Sold out"
     : !allChosen && options.length
       ? `Select ${options.find((o) => !selection[o.name])?.name.toLowerCase()}`
-      : canAdd
-        ? "Add to bag"
-        : "Sold out";
+      : isPending
+        ? "Adding…"
+        : canAdd
+          ? "Add to bag"
+          : "Sold out";
 
+  /**
+   * The server re-checks the product, the variant and their pairing, so this
+   * guard is about not sending a request that is known to be pointless — not
+   * about trusting the client.
+   */
   function addToBag() {
-    // Cart lands in the next pass — say so rather than silently doing nothing.
-    toast.info("Cart is not wired up yet", {
-      description: selected
-        ? `${product.title} · ${selected.title}`
-        : product.title,
+    if (!canAdd || isPending) return;
+
+    add({
+      productId: product.id,
+      variantId: selected?.id ?? null,
+      title: product.title,
+      optionLabel: selected?.title,
+      price,
     });
   }
 
@@ -200,7 +211,7 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
         ref={inlineCta}
         type="button"
         onClick={addToBag}
-        disabled={!canAdd}
+        disabled={!canAdd || isPending}
         className={cn(
           "glass glass-pill glass-press mt-4 min-h-14 w-full cursor-pointer px-8 text-base font-medium",
           "focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)",
@@ -242,7 +253,7 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
           <button
             type="button"
             onClick={addToBag}
-            disabled={!canAdd}
+            disabled={!canAdd || isPending}
             tabIndex={ctaVisible ? -1 : 0}
             className={cn(
               "glass glass-pill glass-press min-h-12 shrink-0 cursor-pointer px-6 text-sm font-medium",

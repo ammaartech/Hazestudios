@@ -6,6 +6,7 @@ import { useSyncExternalStore } from "react";
 import { ShoppingBag, User } from "lucide-react";
 import type { Collection } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useCart } from "./cart-provider";
 
 /**
  * Scroll position, read as the external store it is. The snapshot is a boolean
@@ -45,6 +46,7 @@ export function ShopHeader({
     isPastTop,
     atTopOnServer
   );
+  const { count, openDrawer } = useCart();
 
   // Only the home page opens on a full-bleed hero; everywhere else the header
   // sits on white from the first pixel and is glass immediately.
@@ -119,10 +121,25 @@ export function ShopHeader({
             <User className="size-4" aria-hidden />
           </Link>
 
-          {/* Cart lands in the next pass; the affordance is here so the header
-              layout is final and the count has a reserved slot. */}
+          {/* A real link to /cart that opens the drawer instead when it can:
+              middle-click, ⌘-click and a JS-less load all still reach the page,
+              but a plain click keeps the shopper where they are. On /cart
+              itself the drawer would duplicate the page, so the link stands. */}
           <Link
             href="/cart"
+            onClick={(event) => {
+              if (
+                pathname === "/cart" ||
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.button !== 0
+              ) {
+                return;
+              }
+              event.preventDefault();
+              openDrawer();
+            }}
             className={cn(
               "meta glass-press hidden min-h-10 cursor-pointer items-center gap-2 rounded-full px-4 transition-colors duration-300 md:flex",
               scrolled
@@ -131,7 +148,10 @@ export function ShopHeader({
             )}
           >
             <ShoppingBag className="size-4" aria-hidden />
-            Bag (0)
+            {/* The count is announced, but the label is not a live region —
+                a shopper stepping a quantity does not want it read out on
+                every tap. The drawer opening is the confirmation. */}
+            Bag ({count})
           </Link>
         </div>
       </div>

@@ -122,9 +122,23 @@ async function hydrate(products: Product[]): Promise<ShopProduct[]> {
   );
 }
 
+/**
+ * Published collections only.
+ *
+ * RLS already hides unpublished ones from `anon`, but this layer is also
+ * reached by a signed-in staff session browsing the storefront — for whom the
+ * policy does not apply. Without the explicit filter, staff would see an
+ * unreleased drop sitting in the public navigation and reasonably conclude it
+ * had gone live.
+ */
 export async function getCollections(): Promise<Collection[]> {
   const supabase = await createClient();
-  const { data } = await supabase.from("collections").select("*").order("created_at");
+  const { data } = await supabase
+    .from("collections")
+    .select("*")
+    .not("published_at", "is", null)
+    .lte("published_at", new Date().toISOString())
+    .order("created_at");
   return (data ?? []) as Collection[];
 }
 
@@ -134,8 +148,52 @@ export async function getCollectionByHandle(handle: string): Promise<Collection 
     .from("collections")
     .select("*")
     .eq("handle", handle)
+    .not("published_at", "is", null)
+    .lte("published_at", new Date().toISOString())
     .maybeSingle();
   return (data as Collection) ?? null;
+}
+
+/**
+ * Applies the merchant's chosen ordering.
+ *
+ * `manual` is the only mode that consults `manualOrder` — the positions stored
+ * on product_collections. Everything else is derived, so it stays correct as
+ * the catalogue changes without anyone revisiting the collection.
+ */
+function sortProducts<T extends Product>(
+  products: T[],
+  sort: Collection["sort_order"],
+  manualOrder?: Map<string, number>
+): T[] {
+  const rows = [...products];
+
+  switch (sort) {
+    case "alpha_asc":
+      return rows.sort((a, b) => a.title.localeCompare(b.title));
+    case "alpha_desc":
+      return rows.sort((a, b) => b.title.localeCompare(a.title));
+    case "price_asc":
+      return rows.sort((a, b) => Number(a.price) - Number(b.price));
+    case "price_desc":
+      return rows.sort((a, b) => Number(b.price) - Number(a.price));
+    case "created_asc":
+      return rows.sort((a, b) => a.created_at.localeCompare(b.created_at));
+    case "created_desc":
+      return rows.sort((a, b) => b.created_at.localeCompare(a.created_at));
+    case "manual":
+    default:
+      // A smart collection has no manual order to consult, and a product added
+      // outside the stored positions sorts last rather than jumping to front.
+      if (!manualOrder) {
+        return rows.sort((a, b) => b.created_at.localeCompare(a.created_at));
+      }
+      return rows.sort(
+        (a, b) =>
+          (manualOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+          (manualOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER)
+      );
+  }
 }
 
 /**
@@ -152,31 +210,37 @@ export async function getProductsInCollection(
     const { data } = await supabase
       .from("products")
       .select(PRODUCT_COLUMNS)
-      .eq("status", "active")
-      .order("created_at", { ascending: false });
+      .eq("status", "active");
     const { productMatchesRules } = await import("@/lib/smart-collections");
     const matching = ((data ?? []) as Product[]).filter((p) =>
       productMatchesRules(p, collection.rules)
     );
-    return hydrate(matching);
+    return hydrate(sortProducts(matching, collection.sort_order));
   }
 
   const { data: links } = await supabase
     .from("product_collections")
-    .select("product_id")
-    .eq("collection_id", collection.id);
+    .select("product_id, position")
+    .eq("collection_id", collection.id)
+    .order("position");
 
-  const ids = (links ?? []).map((l) => l.product_id as string);
-  if (!ids.length) return [];
+  const rows = (links ?? []) as { product_id: string; position: number }[];
+  if (!rows.length) return [];
+
+  const manualOrder = new Map(rows.map((l) => [l.product_id, l.position]));
 
   const { data } = await supabase
     .from("products")
     .select(PRODUCT_COLUMNS)
     .eq("status", "active")
-    .in("id", ids)
-    .order("created_at", { ascending: false });
+    .in(
+      "id",
+      rows.map((l) => l.product_id)
+    );
 
-  return hydrate((data ?? []) as Product[]);
+  return hydrate(
+    sortProducts((data ?? []) as Product[], collection.sort_order, manualOrder)
+  );
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -199,6 +263,23 @@ export async function getProduct(idOrHandle: string): Promise<ShopProduct | null
   if (!data) return null;
   const [hydrated] = await hydrate([data as Product]);
   return hydrated ?? null;
+}
+
+/**
+ * Products by id, hydrated. The cart's resolution step — a cart line stores a
+ * reference, so every read has to look the product up again to get today's
+ * price and stock. Anything that has since been unpublished simply doesn't come
+ * back, which is how a cart drops a line that is no longer for sale.
+ */
+export async function getProductsByIds(ids: string[]): Promise<ShopProduct[]> {
+  if (!ids.length) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("products")
+    .select(PRODUCT_COLUMNS)
+    .eq("status", "active")
+    .in("id", ids);
+  return hydrate((data ?? []) as Product[]);
 }
 
 export async function getLatestProducts(limit = 8): Promise<ShopProduct[]> {

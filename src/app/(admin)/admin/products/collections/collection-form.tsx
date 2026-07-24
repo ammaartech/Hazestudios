@@ -1,108 +1,123 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
+import { ExternalLink, MoreHorizontal, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/admin/page-header";
-import type { CollectionRule, CollectionType, Product } from "@/lib/types";
-import { saveCollection, deleteCollection, type CollectionPayload } from "./actions";
+import { SaveBar } from "@/components/admin/save-bar";
+import { useField, useIsDirty } from "@/lib/form-store";
+import { deleteCollection, saveCollection, type CollectionPayload } from "./actions";
+import type { CollectionDraft } from "./collection-draft";
+import { CollectionDraftProvider, useCollectionStore } from "./collection-store";
+import { CollectionItems, type PickerProduct } from "./collection-items";
+import {
+  DetailsSection,
+  ImageSection,
+  SeoSection,
+  TypeSection,
+  VisibilitySection,
+} from "./collection-sections";
 
-const RULE_FIELDS: { value: CollectionRule["field"]; label: string }[] = [
-  { value: "tag", label: "Tag" },
-  { value: "title", label: "Title" },
-  { value: "vendor", label: "Vendor" },
-  { value: "product_type", label: "Product type" },
-  { value: "price", label: "Price" },
-];
-
-const TEXT_OPERATORS: { value: CollectionRule["operator"]; label: string }[] = [
-  { value: "equals", label: "is equal to" },
-  { value: "contains", label: "contains" },
-  { value: "starts_with", label: "starts with" },
-];
-
-const PRICE_OPERATORS: { value: CollectionRule["operator"]; label: string }[] = [
-  { value: "equals", label: "is equal to" },
-  { value: "greater_than", label: "is greater than" },
-  { value: "less_than", label: "is less than" },
-];
-
-export interface CollectionFormInitial {
-  id?: string;
-  title: string;
-  description: string;
-  type: CollectionType;
-  rules: CollectionRule[];
-  product_ids: string[];
+export interface CollectionFormProps {
+  initial: CollectionDraft;
+  products: PickerProduct[];
+  storeUrl?: string;
 }
 
-export function CollectionForm({
-  initial,
-  products,
-}: {
-  initial: CollectionFormInitial;
-  products: Pick<Product, "id" | "title" | "status">[];
-}) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-
-  const [title, setTitle] = useState(initial.title);
-  const [description, setDescription] = useState(initial.description);
-  const [type, setType] = useState<CollectionType>(initial.type);
-  const [rules, setRules] = useState<(CollectionRule & { key: string })[]>(
-    initial.rules.map((r) => ({ ...r, key: crypto.randomUUID() }))
+export function CollectionForm(props: CollectionFormProps) {
+  return (
+    <CollectionDraftProvider initial={props.initial}>
+      <CollectionFormInner {...props} />
+    </CollectionDraftProvider>
   );
-  const [productIds, setProductIds] = useState<string[]>(initial.product_ids);
-  const [productFilter, setProductFilter] = useState("");
+}
+
+function CollectionFormInner({
+  products,
+  storeUrl = "hazestudios.com",
+}: Omit<CollectionFormProps, "initial">) {
+  const router = useRouter();
+  const store = useCollectionStore();
+  const dirty = useIsDirty(store);
+  const [saving, startSaving] = useTransition();
+
+  const [id] = useField(store, "id");
+  const [title] = useField(store, "title");
+  const [handle] = useField(store, "handle");
+  const [published] = useField(store, "published");
+
+  const isNew = !id;
+  const canSave = title.trim().length > 0;
 
   function handleSave() {
+    const draft = store.snapshot();
+
     const payload: CollectionPayload = {
-      id: initial.id,
-      title,
-      description,
-      type,
-      rules: rules
+      id: draft.id,
+      title: draft.title,
+      handle: draft.handle,
+      description: draft.description,
+      type: draft.type,
+      // Blank rules are UI scaffolding, not conditions — a saved empty rule
+      // would match nothing and silently empty the collection.
+      rules: draft.rules
         .filter((r) => r.value.trim())
         .map(({ key: _key, ...rest }) => rest),
-      product_ids: productIds,
+      product_ids: draft.product_ids,
+      image_url: draft.image_url,
+      seo_title: draft.seo_title,
+      seo_description: draft.seo_description,
+      sort_order: draft.sort_order,
+      published: draft.published,
     };
-    startTransition(async () => {
+
+    startSaving(async () => {
       const result = await saveCollection(payload);
       if ("error" in result && result.error) {
         toast.error(result.error);
         return;
       }
-      toast.success(initial.id ? "Collection updated" : "Collection created");
-      router.push("/admin/products/collections");
+
+      // Commit the saved shape as the new clean baseline so the save bar
+      // stands down. The handle comes back from the server because it may have
+      // been de-duplicated, and adopting the local value would leave the form
+      // dirty against a value that was never stored.
+      store.commit({
+        ...draft,
+        id: result.id,
+        handle: result.handle ?? draft.handle,
+      });
+
+      toast.success(isNew ? "Collection created" : "Collection updated");
+
+      if (isNew && result.id) {
+        router.replace(`/admin/products/collections/${result.id}`);
+      }
       router.refresh();
     });
   }
 
   function handleDelete() {
-    if (!initial.id) return;
-    if (!window.confirm("Delete this collection?")) return;
-    startTransition(async () => {
-      const result = await deleteCollection(initial.id!);
+    if (!id) return;
+    if (
+      !window.confirm(
+        "Delete this collection? The products stay, but the grouping is gone for good."
+      )
+    ) {
+      return;
+    }
+    startSaving(async () => {
+      const result = await deleteCollection(id);
       if ("error" in result && result.error) {
         toast.error(result.error);
         return;
@@ -113,240 +128,65 @@ export function CollectionForm({
     });
   }
 
-  const visibleProducts = products.filter((p) =>
-    p.title.toLowerCase().includes(productFilter.toLowerCase())
-  );
-
   return (
     <div>
+      <SaveBar
+        dirty={dirty}
+        saving={saving}
+        onSave={handleSave}
+        onDiscard={() => store.reset()}
+        disabled={!canSave}
+        disabledReason={!canSave ? "Give the collection a title first." : undefined}
+        saveLabel={isNew ? "Create" : "Save"}
+      />
+
       <PageHeader
-        title={initial.id ? title || "Edit collection" : "Create collection"}
+        title={title.trim() || (isNew ? "Add collection" : "Untitled collection")}
         backHref="/admin/products/collections"
         backLabel="Collections"
       >
-        {initial.id && (
-          <Button
-            variant="outline"
-            onClick={handleDelete}
-            disabled={pending}
-            className="text-destructive hover:text-destructive"
-          >
-            Delete
-          </Button>
+        {!isNew && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" aria-label="More actions">
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem asChild disabled={!published}>
+                <Link
+                  href={`/collections/${handle}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <ExternalLink className="size-4" />
+                  {published ? "View on storefront" : "Publish to view"}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onSelect={handleDelete}>
+                <Trash2 className="size-4" />
+                Delete collection
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
-        <Button onClick={handleSave} disabled={pending || !title.trim()}>
-          {pending ? "Saving…" : "Save"}
-        </Button>
       </PageHeader>
 
-      <div className="space-y-5">
-        <Card>
-          <CardContent className="space-y-4 pt-0">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Summer collection"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-              />
-            </div>
-          </CardContent>
-        </Card>
+      {/* Two columns on desktop: what the collection *is* on the left, how it
+          behaves on the right — the same split the product editor uses. */}
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+        <div className="space-y-5">
+          <DetailsSection />
+          <CollectionItems products={products} />
+          <SeoSection storeUrl={storeUrl} />
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Collection type</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <RadioGroup
-              value={type}
-              onValueChange={(v) => setType(v as CollectionType)}
-              className="space-y-1"
-            >
-              <label className="flex cursor-pointer items-start gap-2">
-                <RadioGroupItem value="manual" className="mt-0.5" />
-                <span>
-                  <span className="block text-sm font-medium">Manual</span>
-                  <span className="block text-xs text-muted-foreground">
-                    Add products to this collection one by one.
-                  </span>
-                </span>
-              </label>
-              <label className="flex cursor-pointer items-start gap-2">
-                <RadioGroupItem value="smart" className="mt-0.5" />
-                <span>
-                  <span className="block text-sm font-medium">Smart</span>
-                  <span className="block text-xs text-muted-foreground">
-                    Products matching the conditions are included automatically.
-                  </span>
-                </span>
-              </label>
-            </RadioGroup>
-
-            {type === "smart" && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">
-                    Products must match all conditions
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setRules([
-                        ...rules,
-                        {
-                          key: crypto.randomUUID(),
-                          field: "tag",
-                          operator: "equals",
-                          value: "",
-                        },
-                      ])
-                    }
-                  >
-                    <Plus className="size-4" />
-                    Add condition
-                  </Button>
-                </div>
-                {rules.map((rule) => {
-                  const operators =
-                    rule.field === "price" ? PRICE_OPERATORS : TEXT_OPERATORS;
-                  return (
-                    <div key={rule.key} className="flex flex-wrap items-center gap-2">
-                      <Select
-                        value={rule.field}
-                        onValueChange={(field) =>
-                          setRules(
-                            rules.map((r) =>
-                              r.key === rule.key
-                                ? {
-                                    ...r,
-                                    field: field as CollectionRule["field"],
-                                    operator: "equals",
-                                  }
-                                : r
-                            )
-                          )
-                        }
-                      >
-                        <SelectTrigger className="w-36" aria-label="Condition field">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {RULE_FIELDS.map((f) => (
-                            <SelectItem key={f.value} value={f.value}>
-                              {f.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select
-                        value={rule.operator}
-                        onValueChange={(operator) =>
-                          setRules(
-                            rules.map((r) =>
-                              r.key === rule.key
-                                ? {
-                                    ...r,
-                                    operator: operator as CollectionRule["operator"],
-                                  }
-                                : r
-                            )
-                          )
-                        }
-                      >
-                        <SelectTrigger className="w-40" aria-label="Condition operator">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {operators.map((o) => (
-                            <SelectItem key={o.value} value={o.value}>
-                              {o.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        value={rule.value}
-                        aria-label="Condition value"
-                        placeholder={rule.field === "price" ? "0.00" : "Value"}
-                        className="w-40"
-                        onChange={(e) =>
-                          setRules(
-                            rules.map((r) =>
-                              r.key === rule.key ? { ...r, value: e.target.value } : r
-                            )
-                          )
-                        }
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Remove condition"
-                        onClick={() => setRules(rules.filter((r) => r.key !== rule.key))}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {type === "manual" && (
-              <div className="space-y-2">
-                <Label htmlFor="product-filter">Products</Label>
-                <Input
-                  id="product-filter"
-                  value={productFilter}
-                  onChange={(e) => setProductFilter(e.target.value)}
-                  placeholder="Filter products"
-                />
-                <div className="max-h-64 space-y-1.5 overflow-y-auto rounded-md border border-input p-3">
-                  {visibleProducts.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No products.</p>
-                  ) : (
-                    visibleProducts.map((p) => (
-                      <label
-                        key={p.id}
-                        className="flex cursor-pointer items-center gap-2 text-sm"
-                      >
-                        <Checkbox
-                          checked={productIds.includes(p.id)}
-                          onCheckedChange={(checked) =>
-                            setProductIds(
-                              checked
-                                ? [...productIds, p.id]
-                                : productIds.filter((id) => id !== p.id)
-                            )
-                          }
-                        />
-                        {p.title}
-                        {p.status !== "active" && (
-                          <span className="text-xs text-muted-foreground">
-                            ({p.status})
-                          </span>
-                        )}
-                      </label>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <div className="space-y-5">
+          <VisibilitySection />
+          <TypeSection />
+          <ImageSection />
+        </div>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Home, ShoppingBag, LayoutGrid, User, X } from "lucide-react";
 import type { Collection } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useCart } from "./cart-provider";
 
 /**
  * Floating glass tab bar — the mobile navigation.
@@ -73,6 +74,7 @@ export function GlassTabBar({ collections }: { collections: Collection[] }) {
   const pathname = usePathname();
   const hidden = useHideOnScrollDown();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const { count } = useCart();
 
   useEffect(() => {
     if (!sheetOpen) return;
@@ -192,6 +194,7 @@ export function GlassTabBar({ collections }: { collections: Collection[] }) {
           {TABS.map((tab, i) => {
             const active = i === activeIndex;
             const Icon = tab.icon;
+            const badge = tab.id === "bag" && count > 0;
             const content = (
               <>
                 <Icon
@@ -202,7 +205,25 @@ export function GlassTabBar({ collections }: { collections: Collection[] }) {
                   strokeWidth={active ? 2.2 : 1.75}
                   aria-hidden
                 />
-                <span className="sr-only">{tab.label}</span>
+                {badge && (
+                  // Keyed on the count so React remounts it on every change and
+                  // the pop animation actually replays — a persistent node would
+                  // only animate the first time.
+                  <span
+                    key={count}
+                    aria-hidden
+                    className="absolute right-[calc(50%-1.15rem)] top-1 min-w-4 rounded-full bg-(--shop-ink) px-1 text-center text-[10px] font-semibold leading-4 text-(--shop-canvas) tabular-nums"
+                    style={{
+                      animation: "cart-badge-pop 340ms cubic-bezier(0.16,1,0.3,1)",
+                    }}
+                  >
+                    {count > 9 ? "9+" : count}
+                  </span>
+                )}
+                <span className="sr-only">
+                  {tab.label}
+                  {badge && `, ${count} ${count === 1 ? "item" : "items"}`}
+                </span>
               </>
             );
 

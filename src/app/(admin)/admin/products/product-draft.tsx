@@ -201,6 +201,11 @@ export function toPayload(draft: ProductDraft, locations: Location[]) {
             ),
           })),
           note: draft.size_chart.note.trim(),
+          // Keep only the custom definitions whose column survived pruning, so
+          // the storefront can label them.
+          custom: draft.size_chart.custom.filter((m) =>
+            populatedMeasurements(draft.size_chart).includes(m.key)
+          ),
         }
       : null,
   };

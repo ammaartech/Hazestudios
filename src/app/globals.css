@@ -373,23 +373,45 @@
   }
 
   /* Primary control on the white content plane.
-     Same reasoning as `.glass-on-light`, carried through to the dark material:
-     glass needs a backdrop to refract, and flat white gives it none. A
-     translucent ink tint over white can only resolve to mid-grey (#6b6b6b),
-     which reads as a disabled button rather than the primary action — so here
-     the material goes fully opaque and keeps its glass character in the
-     specular rim, the shadow and the press response instead.
-     `.glass-dark` stays translucent, but only where it has photography to sit
-     on: the hero CTA, collection tiles and the sold-out badge. */
+     Dark glass, not paint. The tension here is real: `.glass-dark`'s 0.62 tint
+     over white resolves to mid-grey (#6b6b6b), which reads as a *disabled*
+     button rather than the primary action. The answer is not to give up the
+     translucency — it is to set the alpha by contrast. At 0.84 the same ink
+     lands near #363636 over white, holding ~11:1 against white text (AA wants
+     4.5:1) while still passing enough of the backdrop through to refract when
+     imagery, a gallery or the sticky bar's content scrolls beneath it.
+
+     The gradient is the lens itself: light catches the top curve, falls away
+     through the middle, and the bottom edge picks up the shadow the body of the
+     glass casts into itself. Painted as a background-image rather than a
+     pseudo-element so it composites behind the label with no stacking work. */
   .shop .glass-ink {
-    background-color: var(--shop-ink);
+    background-color: rgba(17, 17, 17, 0.84);
+    background-image: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.16),
+      rgba(255, 255, 255, 0.05) 38%,
+      rgba(255, 255, 255, 0) 58%,
+      rgba(0, 0, 0, 0.08)
+    );
     color: var(--shop-canvas);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    /* A lit edge on near-black needs far less brightness than on glass, or the
-       rim reads as a white outline rather than a highlight. */
-    --glass-rim-top: rgba(255, 255, 255, 0.26);
-    --glass-rim-bottom: rgba(255, 255, 255, 0.05);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    /* A lit edge on near-black needs far less brightness than on clear glass,
+       or the rim reads as a white outline rather than a highlight. */
+    --glass-rim-top: rgba(255, 255, 255, 0.38);
+    --glass-rim-bottom: rgba(255, 255, 255, 0.07);
+  }
+
+  /* Declared after `.glass-ink` rather than alongside the other fallbacks near
+     the top: both selectors have identical specificity, so source order is the
+     only thing deciding the winner. Without a backdrop filter there is nothing
+     to refract, and the CTA returns to solid ink instead of sitting washed-out
+     and grey over the content plane. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .shop .glass-ink {
+      background-color: var(--shop-ink);
+    }
   }
 
   /* Glass sitting on the white content plane, where blur has nothing to refract.
@@ -475,10 +497,83 @@
   }
 }
 
+/* The bag panel. It rises on a phone and arrives from the edge on a desktop,
+   because that is where each one is anchored — a panel pinned to the right that
+   slid up from the bottom would appear to come from somewhere it does not live.
+   Redefining the keyframes inside the media query is the same override the
+   reduced-motion block below uses: the last matching definition wins. */
+@keyframes cart-sheet {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (min-width: 768px) {
+  @keyframes cart-sheet {
+    from {
+      opacity: 0;
+      transform: translateX(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
+
+@keyframes cart-scrim {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* The badge only animates when the count actually changes, so it reads as a
+   response to the shopper's tap rather than idle decoration. */
+@keyframes cart-badge-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   @keyframes glass-rise {
     from {
       opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes cart-sheet {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes cart-badge-pop {
+    from {
+      opacity: 1;
     }
     to {
       opacity: 1;

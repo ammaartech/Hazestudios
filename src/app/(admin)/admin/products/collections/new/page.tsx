@@ -1,26 +1,14 @@
-import { createClient } from "@/lib/supabase/server";
 import { CollectionForm } from "../collection-form";
+import { draftFromCollection } from "../collection-draft";
+import { getPickerProducts } from "../collection-data";
 
-export const metadata = { title: "Create collection" };
+export const metadata = { title: "Add collection" };
 export const dynamic = "force-dynamic";
 
 export default async function NewCollectionPage() {
-  const supabase = await createClient();
-  const { data: products } = await supabase
-    .from("products")
-    .select("id, title, status")
-    .order("title");
+  const products = await getPickerProducts();
 
   return (
-    <CollectionForm
-      initial={{
-        title: "",
-        description: "",
-        type: "manual",
-        rules: [],
-        product_ids: [],
-      }}
-      products={products ?? []}
-    />
+    <CollectionForm initial={draftFromCollection(null, [])} products={products} />
   );
 }

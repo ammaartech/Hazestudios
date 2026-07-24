@@ -142,6 +142,12 @@ export interface SizeChart {
   measurements: string[];
   rows: SizeChartRow[];
   note: string;
+  /**
+   * Operator-defined measurements that aren't in the built-in vocabulary — a
+   * "Cuff" or "Back length" a particular garment needs. They travel with the
+   * chart (rather than the global list) so they define valid keys just for it.
+   */
+  custom: Measurement[];
 }
 
 export const EMPTY_SIZE_CHART: SizeChart = {
@@ -149,7 +155,35 @@ export const EMPTY_SIZE_CHART: SizeChart = {
   measurements: [],
   rows: [],
   note: "",
+  custom: [],
 };
+
+/**
+ * A collision-free stable key for a new custom measurement, slugged from its
+ * label so the stored JSON stays readable but never clashes with a built-in
+ * key or another custom one.
+ */
+export function customMeasurementKey(label: string, taken: Iterable<string>): string {
+  const slug = label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  const base = `custom:${slug || "field"}`;
+  const used = new Set(taken);
+  if (!used.has(base)) return base;
+  let n = 2;
+  while (used.has(`${base}-${n}`)) n += 1;
+  return `${base}-${n}`;
+}
+
+/**
+ * Resolve a measurement definition by key: built-in vocabulary first, then the
+ * chart's own custom set. Use this instead of `measurement()` anywhere a chart
+ * might carry custom columns.
+ */
+export function chartMeasurement(chart: SizeChart, key: string): Measurement | undefined {
+  return BY_KEY.get(key) ?? chart.custom.find((m) => m.key === key);
+}
 
 /**
  * Coerce whatever came out of the jsonb column into a usable chart.
@@ -162,8 +196,29 @@ export function parseSizeChart(input: unknown): SizeChart {
   if (!input || typeof input !== "object") return { ...EMPTY_SIZE_CHART };
   const raw = input as Partial<SizeChart>;
 
+  // Custom measurements travel inside the chart, so they define valid keys just
+  // as the built-in vocabulary does. Parse them first, then a key counts as
+  // valid if it belongs to either set.
+  const custom: Measurement[] = Array.isArray(raw.custom)
+    ? raw.custom
+        .filter(
+          (m): m is Measurement =>
+            Boolean(m) &&
+            typeof m === "object" &&
+            typeof (m as Measurement).key === "string" &&
+            typeof (m as Measurement).label === "string"
+        )
+        .map((m) => ({
+          key: m.key,
+          label: m.label,
+          help: typeof m.help === "string" ? m.help : "",
+        }))
+    : [];
+  const customKeys = new Set(custom.map((m) => m.key));
+  const isValidKey = (k: string) => BY_KEY.has(k) || customKeys.has(k);
+
   const measurements = Array.isArray(raw.measurements)
-    ? raw.measurements.filter((k): k is string => typeof k === "string" && BY_KEY.has(k))
+    ? raw.measurements.filter((k): k is string => typeof k === "string" && isValidKey(k))
     : [];
 
   const rows = Array.isArray(raw.rows)
@@ -175,7 +230,7 @@ export function parseSizeChart(input: unknown): SizeChart {
             r.values && typeof r.values === "object"
               ? Object.fromEntries(
                   Object.entries(r.values)
-                    .filter(([k, v]) => BY_KEY.has(k) && typeof v === "string")
+                    .filter(([k, v]) => isValidKey(k) && typeof v === "string")
                     .map(([k, v]) => [k, v.trim()])
                 )
               : {},
@@ -188,6 +243,9 @@ export function parseSizeChart(input: unknown): SizeChart {
     measurements,
     rows,
     note: typeof raw.note === "string" ? raw.note : "",
+    // Drop custom definitions no selected column references — they'd be dead
+    // weight in the stored JSON otherwise.
+    custom: custom.filter((m) => measurements.includes(m.key)),
   };
 }
 

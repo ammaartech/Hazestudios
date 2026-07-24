@@ -57,6 +57,8 @@ export interface ProductFormProps {
   facets: ProductFacets;
   currency?: string;
   storeUrl?: string;
+  /** Whether photo-based category suggestions are available (Anthropic key set). */
+  aiEnabled?: boolean;
 }
 
 export function ProductForm(props: ProductFormProps) {
@@ -73,6 +75,7 @@ function ProductFormInner({
   facets,
   currency = "USD",
   storeUrl = "hazestudios.com",
+  aiEnabled = false,
 }: Omit<ProductFormProps, "initial">) {
   const router = useRouter();
   const store = useProductStore();
@@ -287,9 +290,17 @@ function ProductFormInner({
           <SeoSection storeUrl={storeUrl} />
         </div>
 
-        <div className="space-y-5 lg:sticky lg:top-28">
+        {/* Not sticky: Status + Organization together are taller than the
+            viewport, and a sticky column taller than the screen pins at the top
+            and hides its own lower fields until the page bottom is reached. It
+            flows with the page so every field scrolls into view normally. */}
+        <div className="space-y-5">
           <StatusSection />
-          <OrganizationSection collections={collections} facets={facets} />
+          <OrganizationSection
+            collections={collections}
+            facets={facets}
+            aiEnabled={aiEnabled}
+          />
         </div>
       </div>
 

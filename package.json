@@ -13,6 +13,9 @@
     "db:migrate:dry": "node scripts/migrate.mjs up --dry",
     "db:verify": "node scripts/verify-product-save.mjs",
     "verify:variants": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-variant-remap.mjs",
+    "verify:cart": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-cart.mjs",
+    "verify:collections": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-collections.mjs",
+    "verify:ai": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-ai.mjs",
     "build:worldmask": "node scripts/build-world-mask.mjs"
   },
   "dependencies": {

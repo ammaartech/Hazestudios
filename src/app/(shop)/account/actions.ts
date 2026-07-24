@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { claimCart } from "../cart/actions";
+import { clearCartCookie } from "@/lib/shop/cart";
 
 export type AuthResult = { ok: true } | { ok: false; error: string };
 
@@ -62,6 +64,11 @@ export async function signIn(
 
   if (error) return { ok: false, error: readableAuthError(error.message) };
 
+  // Whatever they put in their bag as a guest follows them into the account,
+  // merged with anything already there. Must run before the redirect, which
+  // throws.
+  await claimCart();
+
   revalidatePath("/account", "layout");
   redirect(next);
 }
@@ -101,6 +108,12 @@ export async function signUp(
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+
+  // Drop the cart cookie, not the cart. The rows still carry the customer_id,
+  // so signing back in finds them again via claim_cart() — but the next person
+  // to use this browser does not inherit somebody else's bag.
+  await clearCartCookie();
+
   revalidatePath("/account", "layout");
   redirect("/");
 }

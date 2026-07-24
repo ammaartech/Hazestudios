@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { Plus, Ruler, Trash2, X } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { Check, Plus, Ruler, Trash2, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,8 @@ import { useField, useFields } from "@/lib/form-store";
 import {
   GARMENT_PRESETS,
   MEASUREMENTS,
-  measurement,
+  chartMeasurement,
+  customMeasurementKey,
   preset as findPreset,
   suggestPreset,
   type SizeChart,
@@ -59,32 +60,38 @@ function MeasurementChip({
   onToggle,
 }: {
   label: string;
-  help: string;
+  /** How-to-measure copy, shown on hover. Custom measurements have none. */
+  help?: string;
   selected: boolean;
   onToggle: () => void;
 }) {
+  const chip = (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={selected}
+      className={cn(
+        "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors duration-150",
+        selected
+          ? "border-primary bg-primary text-primary-foreground"
+          : "hover:bg-muted"
+      )}
+    >
+      {label}
+      {selected ? (
+        <X className="size-3" />
+      ) : (
+        <Plus className="size-3 opacity-60" />
+      )}
+    </button>
+  );
+
+  // No help copy (custom measurements) → no empty tooltip.
+  if (!help) return chip;
+
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-pressed={selected}
-          className={cn(
-            "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors duration-150",
-            selected
-              ? "border-primary bg-primary text-primary-foreground"
-              : "hover:bg-muted"
-          )}
-        >
-          {label}
-          {selected ? (
-            <X className="size-3" />
-          ) : (
-            <Plus className="size-3 opacity-60" />
-          )}
-        </button>
-      </TooltipTrigger>
+      <TooltipTrigger asChild>{chip}</TooltipTrigger>
       <TooltipContent className="max-w-64">{help}</TooltipContent>
     </Tooltip>
   );
@@ -100,6 +107,10 @@ export function SizeChartSection() {
     "title",
   ]);
   const sizeOptionValues = useSizeOptionValues();
+
+  // Inline "add custom measurement" field, revealed by the Custom chip.
+  const [addingCustom, setAddingCustom] = useState(false);
+  const [customLabel, setCustomLabel] = useState("");
 
   const patch = useCallback(
     (next: Partial<SizeChart>) => setChart({ ...chart, ...next }),
@@ -120,6 +131,7 @@ export function SizeChartSection() {
         measurements: guess.measurements,
         rows: sizes.map((size) => ({ size, values: {} })),
         note: "",
+        custom: [],
       });
     }
     store.set("size_chart_enabled", on);
@@ -135,7 +147,9 @@ export function SizeChartSection() {
     }
     patch({
       preset: id,
-      measurements: p.measurements,
+      // Preset seeds its own columns, but the operator's custom ones aren't part
+      // of any preset — carry them across the switch so they don't silently drop.
+      measurements: [...p.measurements, ...chart.custom.map((m) => m.key)],
       rows: chart.rows.length
         ? chart.rows
         : (sizeOptionValues.length ? sizeOptionValues : p.sizes).map((size) => ({
@@ -156,6 +170,45 @@ export function SizeChartSection() {
         ? chart.measurements.filter((m) => m !== key)
         : [...chart.measurements, key],
     });
+  }
+
+  /**
+   * Add an operator-named column that isn't in the built-in vocabulary. It
+   * becomes both a selected measurement and a definition carried on the chart,
+   * so it survives save and renders on the storefront like any other column.
+   */
+  function addCustomMeasurement(label: string) {
+    const trimmed = label.trim();
+    if (!trimmed) return;
+    const key = customMeasurementKey(trimmed, [
+      ...MEASUREMENTS.map((m) => m.key),
+      ...chart.custom.map((m) => m.key),
+    ]);
+    patch({
+      preset: "custom",
+      custom: [...chart.custom, { key, label: trimmed, help: "" }],
+      measurements: [...chart.measurements, key],
+    });
+  }
+
+  /** Removing a custom chip deletes its definition — there's no list to re-add it from. */
+  function removeCustomMeasurement(key: string) {
+    patch({
+      preset: "custom",
+      measurements: chart.measurements.filter((m) => m !== key),
+      custom: chart.custom.filter((m) => m.key !== key),
+    });
+  }
+
+  function commitCustom() {
+    addCustomMeasurement(customLabel);
+    setCustomLabel("");
+    setAddingCustom(false);
+  }
+
+  function cancelCustom() {
+    setCustomLabel("");
+    setAddingCustom(false);
   }
 
   function setRow(index: number, next: SizeChartRow) {
@@ -265,6 +318,66 @@ export function SizeChartSection() {
                     onToggle={() => toggleMeasurement(m.key)}
                   />
                 ))}
+
+                {/* Operator-defined columns render as always-selected chips; the
+                    X deletes them outright. */}
+                {chart.custom.map((m) => (
+                  <MeasurementChip
+                    key={m.key}
+                    label={m.label}
+                    selected
+                    onToggle={() => removeCustomMeasurement(m.key)}
+                  />
+                ))}
+
+                {/* Add-your-own control — mirrors the "Custom" affordance in
+                    Garment type, but here it opens an inline name field. */}
+                {addingCustom ? (
+                  <span className="inline-flex items-center gap-0.5 rounded-full border border-primary py-1 pr-1 pl-3">
+                    <input
+                      autoFocus
+                      value={customLabel}
+                      onChange={(e) => setCustomLabel(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          commitCustom();
+                        } else if (e.key === "Escape") {
+                          e.preventDefault();
+                          cancelCustom();
+                        }
+                      }}
+                      onBlur={() => {
+                        // Clicking Add fires before blur commits nothing; a click
+                        // elsewhere cancels an empty field.
+                        if (!customLabel.trim()) cancelCustom();
+                      }}
+                      placeholder="e.g. Cuff"
+                      aria-label="Custom measurement name"
+                      maxLength={40}
+                      className="w-28 bg-transparent text-[13px] font-medium outline-none placeholder:font-normal placeholder:text-muted-foreground"
+                    />
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={commitCustom}
+                      disabled={!customLabel.trim()}
+                      aria-label="Add custom measurement"
+                      className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-primary transition-colors duration-150 hover:bg-primary hover:text-primary-foreground disabled:pointer-events-none disabled:opacity-40"
+                    >
+                      <Check className="size-3.5" />
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setAddingCustom(true)}
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-dashed px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors duration-150 hover:border-solid hover:bg-muted hover:text-foreground"
+                  >
+                    <Plus className="size-3" />
+                    Custom
+                  </button>
+                )}
               </div>
             </div>
 
@@ -305,7 +418,7 @@ export function SizeChartSection() {
                             key={key}
                             className="min-w-24 px-3 py-2 text-left text-xs font-medium text-muted-foreground"
                           >
-                            {measurement(key)?.label ?? key}
+                            {chartMeasurement(chart, key)?.label ?? key}
                           </th>
                         ))}
                         <th className="w-10 px-2" aria-label="Remove size" />
@@ -336,7 +449,7 @@ export function SizeChartSection() {
                                 // legitimate entry and a number input rejects it.
                                 inputMode="decimal"
                                 placeholder="—"
-                                aria-label={`${measurement(key)?.label ?? key} for size ${row.size || index + 1}`}
+                                aria-label={`${chartMeasurement(chart, key)?.label ?? key} for size ${row.size || index + 1}`}
                                 className="h-8 tabular-nums"
                               />
                             </td>

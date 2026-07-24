@@ -88,7 +88,7 @@ export default async function ProductPage({
           </div>
 
           {sizeChart && (
-            <div className="mt-6">
+            <div className="mt-4 flex justify-center">
               <SizeGuide
                 chart={sizeChart.chart}
                 measurements={sizeChart.measurements}

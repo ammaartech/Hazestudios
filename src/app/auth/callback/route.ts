@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { claimCart } from "@/app/(shop)/cart/actions";
 
 /**
  * OAuth / email-confirmation landing.
@@ -53,6 +54,10 @@ export async function GET(request: NextRequest) {
   } catch {
     // Non-fatal — the account pages call this too.
   }
+
+  // Order matters: the cart can only be attached to a customer that exists, so
+  // this has to follow link_customer_account().
+  await claimCart();
 
   return NextResponse.redirect(new URL(next, origin));
 }

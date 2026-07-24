@@ -11,8 +11,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  chartMeasurement,
   inchesToCm,
-  measurement,
   type SizeChart,
 } from "@/lib/size-chart";
 import { cn } from "@/lib/utils";
@@ -47,11 +47,16 @@ export function SizeGuide({
   return (
     <Dialog>
       <DialogTrigger asChild>
+        {/* Sized as a real secondary control rather than a footnote: it sits
+            directly under the CTA, so at `meta`'s 11px it read as stray caption
+            text instead of something you could press. The uppercase tracking is
+            inlined rather than borrowing `.meta`, which is locked to that
+            smaller size. */}
         <button
           type="button"
-          className="meta glass glass-on-light glass-pill glass-press inline-flex min-h-10 cursor-pointer items-center gap-2 px-4 text-(--shop-charcoal) hover:text-(--shop-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--shop-ink)"
+          className="glass glass-on-light glass-pill glass-press inline-flex min-h-13 cursor-pointer items-center gap-2.5 px-8 text-[0.8125rem] font-medium uppercase tracking-[0.14em] text-(--shop-charcoal) hover:text-(--shop-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--shop-ink)"
         >
-          <Ruler className="size-3.5" aria-hidden />
+          <Ruler className="size-4" aria-hidden />
           Size guide
         </button>
       </DialogTrigger>
@@ -108,7 +113,7 @@ export function SizeGuide({
                     scope="col"
                     className="px-4 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-[var(--shop-mute)]"
                   >
-                    {measurement(key)?.label ?? key}
+                    {chartMeasurement(chart, key)?.label ?? key}
                   </th>
                 ))}
               </tr>
@@ -163,8 +168,10 @@ export function SizeGuide({
           </summary>
           <dl className="mt-3 space-y-2.5">
             {measurements.map((key) => {
-              const m = measurement(key);
-              if (!m) return null;
+              const m = chartMeasurement(chart, key);
+              // Custom measurements carry no how-to-measure copy, so they have
+              // nothing to explain here — they still appear as table columns.
+              if (!m || !m.help) return null;
               return (
                 <div key={key} className="text-sm">
                   <dt className="inline font-medium">{m.label}. </dt>

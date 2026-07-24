@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TagsInput } from "@/components/admin/tags-input";
+import { CategorySuggest } from "@/components/admin/category-suggest";
 import { useField } from "@/lib/form-store";
 import type { Collection } from "@/lib/types";
 import type { ProductFacets } from "../actions";
@@ -49,9 +50,12 @@ function SuggestInput({
 export function OrganizationSection({
   collections,
   facets,
+  aiEnabled = false,
 }: {
   collections: Collection[];
   facets: ProductFacets;
+  /** Photo-based category suggestions — only when an Anthropic key is set. */
+  aiEnabled?: boolean;
 }) {
   const store = useProductStore();
   const [category, setCategory] = useField(store, "category");
@@ -59,7 +63,16 @@ export function OrganizationSection({
   const [vendor, setVendor] = useField(store, "vendor");
   const [collectionIds, setCollectionIds] = useField(store, "collection_ids");
   const [tags, setTags] = useField(store, "tags");
+  const [images] = useField(store, "images");
   const [query, setQuery] = useState("");
+
+  // Only ready, hosted photos can be classified — an in-flight upload is still
+  // a blob: URL that Anthropic's servers can't fetch.
+  const readyImageUrls = images
+    .filter(
+      (i) => i.status !== "error" && i.status !== "uploading" && /^https?:\/\//i.test(i.url)
+    )
+    .map((i) => i.url);
 
   // Smart collections claim products by rule, so offering a checkbox for one
   // would be a control that silently does nothing.
@@ -96,6 +109,18 @@ export function OrganizationSection({
             />
           )}
         </Field>
+
+        {aiEnabled && (
+          <CategorySuggest
+            imageUrls={readyImageUrls}
+            existingCategories={facets.categories}
+            existingTypes={facets.types}
+            currentCategory={category}
+            currentType={productType}
+            onCategory={setCategory}
+            onType={setProductType}
+          />
+        )}
 
         <Field label="Product type" optional>
           {(props) => (

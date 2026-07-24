@@ -88,6 +88,16 @@ export interface CollectionRule {
   value: string;
 }
 
+/** How a collection's products are ordered on the storefront. */
+export type CollectionSort =
+  | "manual"
+  | "alpha_asc"
+  | "alpha_desc"
+  | "price_asc"
+  | "price_desc"
+  | "created_desc"
+  | "created_asc";
+
 export interface Collection {
   id: string;
   title: string;
@@ -95,8 +105,16 @@ export interface Collection {
   description: string;
   type: CollectionType;
   rules: CollectionRule[];
+  /** Drives the home hero, the collection hero and the editorial tiles. */
   image_url: string | null;
+  seo_title: string;
+  seo_description: string;
+  /** Only `manual` consults product_collections.position. */
+  sort_order: CollectionSort;
+  /** Null = staged but not live. See 0012_collection_parity.sql. */
+  published_at: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Location {

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Collection, Location, ShopSettings } from "@/lib/types";
+import { geminiConfigured } from "@/lib/ai/gemini";
 import { getProductFacets } from "../actions";
 import { emptyDraft } from "../draft-mapping";
 import { ProductForm } from "../product-form";
@@ -26,6 +27,7 @@ export default async function NewProductPage() {
       locations={(locations ?? []) as Location[]}
       facets={facets}
       currency={shop?.currency ?? "USD"}
+      aiEnabled={geminiConfigured()}
     />
   );
 }

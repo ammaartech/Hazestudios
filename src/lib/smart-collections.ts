@@ -1,6 +1,22 @@
 import type { CollectionRule, Product } from "./types";
 
-export function productMatchesRules(product: Product, rules: CollectionRule[]) {
+/**
+ * The only fields a rule actually reads.
+ *
+ * Narrower than `Product` on purpose: the collection editor matches against
+ * flattened list rows, and requiring a whole product there would mean either
+ * over-fetching or casting a lie. A full `Product` still satisfies this, so
+ * every existing caller is unaffected.
+ */
+export type MatchableProduct = Pick<
+  Product,
+  "title" | "vendor" | "product_type" | "tags" | "price"
+>;
+
+export function productMatchesRules(
+  product: MatchableProduct,
+  rules: CollectionRule[]
+) {
   if (!rules.length) return false;
   return rules.every((rule) => {
     switch (rule.field) {

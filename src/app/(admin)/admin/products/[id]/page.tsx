@@ -10,6 +10,7 @@ import type {
   ProductVariant,
   ShopSettings,
 } from "@/lib/types";
+import { geminiConfigured } from "@/lib/ai/gemini";
 import { getProductFacets } from "../actions";
 import { draftFromProduct } from "../draft-mapping";
 import { ProductForm } from "../product-form";
@@ -88,6 +89,7 @@ export default async function EditProductPage({
       locations={locationRows}
       facets={facets}
       currency={shop?.currency ?? "USD"}
+      aiEnabled={geminiConfigured()}
     />
   );
 }

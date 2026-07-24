@@ -14,9 +14,21 @@ export async function generateMetadata({
   const { handle } = await params;
   const collection = await getCollectionByHandle(handle);
   if (!collection) return { title: "Collection not found" };
+
+  // The SEO fields override, and fall back to the on-page content — the same
+  // resolution the admin's preview shows, so what is previewed is what ships.
+  const title = collection.seo_title.trim() || collection.title;
+  const description =
+    collection.seo_description.trim() || collection.description.trim();
+
   return {
-    title: collection.title,
-    description: collection.description || undefined,
+    title,
+    description: description || undefined,
+    openGraph: {
+      title,
+      description: description || undefined,
+      images: collection.image_url ? [collection.image_url] : undefined,
+    },
   };
 }
 
