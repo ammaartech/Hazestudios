@@ -45,10 +45,29 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/admin";
-    return NextResponse.redirect(url);
+  if (user) {
+    // Being signed in is not the same as being staff. Shoppers authenticate
+    // against the same Supabase project, so without this check every customer
+    // account would reach the admin shell. RLS would still refuse them the
+    // data, but they would land on a broken, empty admin — and the boundary
+    // belongs at the route, not only at the table.
+    const { data: isStaff } = await supabase.rpc("is_staff");
+
+    if (!isStaff) {
+      const url = request.nextUrl.clone();
+      // Send them where they actually have an account, rather than looping
+      // them through a login screen they have already satisfied.
+      url.pathname = isAuthRoute ? "/account" : "/account";
+      url.searchParams.set("notice", "staff-only");
+      return NextResponse.redirect(url);
+    }
+
+    if (isAuthRoute) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

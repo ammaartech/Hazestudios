@@ -64,8 +64,10 @@ export function ProductCard({
           </div>
         )}
 
+        {/* The badge floats over the photograph, so it belongs to the control
+            layer and takes the glass. The card itself stays hard-edged. */}
         {soldOut && (
-          <span className="meta absolute left-0 top-0 bg-[var(--shop-ink)] px-3 py-1.5 text-[var(--shop-canvas)]">
+          <span className="meta glass glass-dark glass-pill absolute left-3 top-3 px-3 py-1.5">
             Sold out
           </span>
         )}

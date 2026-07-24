@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -61,6 +62,7 @@ export default async function CustomersPage({
                 <TableRow>
                   <TableHead>Customer</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Account</TableHead>
                   <TableHead>Location</TableHead>
                   <TableHead>Orders</TableHead>
                   <TableHead>Amount spent</TableHead>
@@ -79,6 +81,18 @@ export default async function CustomersPage({
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {c.email ?? "—"}
+                    </TableCell>
+                    <TableCell>
+                      {/* Distinguishes a self-service account from a guest or
+                          imported record — it changes what support can tell
+                          them to do (reset a password vs. create an account). */}
+                      {c.user_id ? (
+                        <Badge variant="secondary" className="font-normal">
+                          Registered
+                        </Badge>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Guest</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {[c.default_address?.city, c.default_address?.country]

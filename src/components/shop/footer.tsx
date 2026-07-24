@@ -12,7 +12,9 @@ export function ShopFooter({
 
   return (
     <footer className="mt-24 border-t border-[var(--shop-hairline-soft)] bg-[var(--shop-canvas)]">
-      <div className="px-4 py-16 md:px-8">
+      {/* Extra bottom padding on mobile clears the floating tab bar, including
+          the home-indicator inset on notched phones. */}
+      <div className="px-4 pb-[calc(env(safe-area-inset-bottom,0px)+7rem)] pt-16 md:px-8 md:pb-16">
         <div className="grid gap-12 md:grid-cols-[2fr_1fr_1fr]">
           <div>
             <p className="display text-4xl text-[var(--shop-ink)] md:text-5xl">

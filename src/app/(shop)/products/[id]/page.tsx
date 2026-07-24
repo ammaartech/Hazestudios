@@ -4,7 +4,15 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/shop/product-card";
 import { ProductGallery } from "@/components/shop/product-gallery";
 import { VariantPicker } from "@/components/shop/variant-picker";
+import { ProductViewTracker } from "@/components/shop/product-view-tracker";
+import { SizeGuide } from "@/components/shop/size-guide";
 import { getProduct, getRelatedProducts } from "@/lib/shop/queries";
+import {
+  hasSizeChartData,
+  parseSizeChart,
+  populatedMeasurements,
+  populatedRows,
+} from "@/lib/size-chart";
 
 export const dynamic = "force-dynamic";
 
@@ -38,8 +46,23 @@ export default async function ProductPage({
 
   const related = await getRelatedProducts(product.id, 4);
 
+  // Parsed and pruned here, on the server, so the client component receives
+  // only columns and rows that actually carry values. `null` means there is
+  // nothing worth showing — the toggle may be on over an empty grid.
+  const sizeChart = (() => {
+    if (!product.size_chart_enabled) return null;
+    const chart = parseSizeChart(product.size_chart);
+    if (!hasSizeChartData(chart)) return null;
+    return {
+      chart,
+      measurements: populatedMeasurements(chart),
+      rows: populatedRows(chart),
+    };
+  })();
+
   return (
     <>
+      <ProductViewTracker productId={product.id} productTitle={product.title} />
       <article className="md:grid md:grid-cols-[1.15fr_1fr] md:items-start md:gap-12 lg:gap-20">
         {/* Photography runs to the edge on mobile, and is sticky-free on desktop
             so long descriptions scroll against a stable image column. */}
@@ -63,6 +86,16 @@ export default async function ProductPage({
           <div className="mt-8">
             <VariantPicker product={product} />
           </div>
+
+          {sizeChart && (
+            <div className="mt-6">
+              <SizeGuide
+                chart={sizeChart.chart}
+                measurements={sizeChart.measurements}
+                rows={sizeChart.rows}
+              />
+            </div>
+          )}
 
           {product.description_html && (
             <div className="mt-12 border-t border-[var(--shop-hairline-soft)] pt-8">

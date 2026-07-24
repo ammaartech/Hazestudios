@@ -46,6 +46,7 @@ import { OrganizationSection } from "./sections/organization";
 import { PricingSection } from "./sections/pricing";
 import { SeoSection } from "./sections/seo";
 import { ShippingSection } from "./sections/shipping";
+import { SizeChartSection } from "./sections/size-chart";
 import { StatusSection } from "./sections/status";
 import { VariantsSection } from "./sections/variants";
 
@@ -280,6 +281,9 @@ function ProductFormInner({
           <InventorySection locations={locations} />
           <ShippingSection />
           <VariantsSection locations={locations} currency={currency} />
+          {/* After variants: the chart seeds its rows from the Size option, so
+              it reads better once those values exist. */}
+          <SizeChartSection />
           <SeoSection storeUrl={storeUrl} />
         </div>
 

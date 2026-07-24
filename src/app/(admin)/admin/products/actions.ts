@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { ProductStatus, WeightUnit } from "@/lib/types";
+import type { SizeChart } from "@/lib/size-chart";
 
 export interface ImagePayload {
   id: string;
@@ -70,6 +71,9 @@ export interface ProductPayload {
   variants: VariantPayload[];
   inventory: InventoryPayload[];
   collection_ids: string[];
+  size_chart_enabled: boolean;
+  /** Null when the toggle is off — save_product then clears the stored chart. */
+  size_chart: SizeChart | null;
 }
 
 export type SaveResult =

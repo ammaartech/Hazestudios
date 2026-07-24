@@ -6,6 +6,11 @@ import { toAmount, toNumber } from "@/lib/number-input";
 import type { DraftImage } from "@/components/admin/media-uploader";
 import type { Location, ProductStatus, WeightUnit } from "@/lib/types";
 import {
+  populatedMeasurements,
+  populatedRows,
+  type SizeChart,
+} from "@/lib/size-chart";
+import {
   activeOptions,
   cartesian,
   variantTitle,
@@ -64,6 +69,8 @@ export interface ProductDraft extends Record<string, unknown> {
   collection_ids: string[];
   /** simple-product stock: locationId → quantity */
   inventory: Record<string, number>;
+  size_chart_enabled: boolean;
+  size_chart: SizeChart;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -176,6 +183,26 @@ export function toPayload(draft: ProductDraft, locations: Location[]) {
         : [],
 
     collection_ids: draft.collection_ids,
+
+    size_chart_enabled: draft.size_chart_enabled,
+    // Trim the grid to what was actually filled in, so a column the operator
+    // selected but never completed does not reach the storefront as an empty
+    // one. The editor keeps the wider selection; only the saved chart is pruned.
+    size_chart: draft.size_chart_enabled
+      ? {
+          preset: draft.size_chart.preset,
+          measurements: populatedMeasurements(draft.size_chart),
+          rows: populatedRows(draft.size_chart).map((row) => ({
+            size: row.size.trim(),
+            values: Object.fromEntries(
+              populatedMeasurements(draft.size_chart)
+                .map((key) => [key, (row.values[key] ?? "").trim()])
+                .filter(([, value]) => value !== "")
+            ),
+          })),
+          note: draft.size_chart.note.trim(),
+        }
+      : null,
   };
 }
 

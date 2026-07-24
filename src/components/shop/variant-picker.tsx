@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { ShopProduct, ShopVariant } from "@/lib/shop/queries";
+import { sortOptionValues } from "@/lib/variants";
 import { cn } from "@/lib/utils";
 import { Price } from "./price";
 
@@ -72,6 +73,36 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
   const lowStock =
     selected && selected.available && selected.stock > 0 && selected.stock <= 3;
 
+  /**
+   * Tracks whether the inline CTA is on screen, so the sticky mobile bar can
+   * stand down while it is. An IntersectionObserver rather than a scroll
+   * listener: no per-frame work, and it stays correct when the page reflows.
+   */
+  const inlineCta = useRef<HTMLButtonElement>(null);
+  const [ctaVisible, setCtaVisible] = useState(true);
+
+  useEffect(() => {
+    const node = inlineCta.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setCtaVisible(entry.isIntersecting),
+      // A little bottom margin so the bar swaps in just before the button
+      // clears the fold, rather than at the exact boundary.
+      { rootMargin: "0px 0px -80px 0px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  const ctaLabel = !product.inStock
+    ? "Sold out"
+    : !allChosen && options.length
+      ? `Select ${options.find((o) => !selection[o.name])?.name.toLowerCase()}`
+      : canAdd
+        ? "Add to bag"
+        : "Sold out";
+
   function addToBag() {
     // Cart lands in the next pass — say so rather than silently doing nothing.
     toast.info("Cart is not wired up yet", {
@@ -113,7 +144,7 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
               </legend>
 
               <div className="mt-3 flex flex-wrap gap-2">
-                {option.values.map((value) => {
+                {sortOptionValues(option.name, option.values).map((value) => {
                   const active = selection[option.name] === value;
                   const available = valueAvailable(option.name, value);
 
@@ -127,15 +158,15 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
                         setSelection((prev) => ({ ...prev, [option.name]: value }))
                       }
                       className={cn(
-                        "min-h-11 min-w-[3.25rem] cursor-pointer border px-4 text-sm transition-colors duration-200",
-                        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--shop-ink)]",
+                        "glass-press min-h-12 min-w-14 cursor-pointer rounded-full px-5 text-sm font-medium",
+                        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--shop-ink)",
                         active
-                          ? "border-[var(--shop-ink)] bg-[var(--shop-ink)] text-[var(--shop-canvas)]"
-                          : "border-[var(--shop-hairline)] bg-[var(--shop-canvas)] hover:border-[var(--shop-ink)]",
+                          ? "glass glass-ink"
+                          : "glass glass-on-light text-(--shop-ink)",
                         // Struck-through rather than merely faded, so the
                         // unavailable state doesn't rely on contrast alone.
                         !available &&
-                          "cursor-not-allowed border-[var(--shop-hairline-soft)] text-[var(--shop-stone)] line-through hover:border-[var(--shop-hairline-soft)]"
+                          "cursor-not-allowed text-(--shop-stone) line-through opacity-60"
                       )}
                     >
                       {value}
@@ -166,25 +197,65 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
       </p>
 
       <button
+        ref={inlineCta}
         type="button"
         onClick={addToBag}
         disabled={!canAdd}
         className={cn(
-          "mt-4 min-h-13 w-full cursor-pointer rounded-full px-8 text-base font-medium transition-opacity duration-200",
-          "focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--shop-ink)]",
+          "glass glass-pill glass-press mt-4 min-h-14 w-full cursor-pointer px-8 text-base font-medium",
+          "focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)",
           canAdd
-            ? "bg-[var(--shop-ink)] text-[var(--shop-canvas)] hover:opacity-85"
-            : "cursor-not-allowed bg-[var(--shop-cloud)] text-[var(--shop-stone)]"
+            ? "glass-ink"
+            : "cursor-not-allowed bg-(--shop-cloud) text-(--shop-stone)"
         )}
       >
-        {!product.inStock
-          ? "Sold out"
-          : !allChosen && options.length
-            ? `Select ${options.find((o) => !selection[o.name])?.name.toLowerCase()}`
-            : canAdd
-              ? "Add to bag"
-              : "Sold out"}
+        {ctaLabel}
       </button>
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Sticky mobile buy bar                                              */}
+      {/* ----------------------------------------------------------------- */}
+      {/* Appears only once the inline button has scrolled away, so the two are
+          never on screen together. Sits above the tab bar rather than replacing
+          it — on a product page, buying and navigating are both live actions. */}
+      <div
+        className={cn(
+          "fixed inset-x-0 bottom-0 layer-sticky px-4 pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] md:hidden",
+          "transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+          ctaVisible
+            ? "pointer-events-none translate-y-4 opacity-0"
+            : "translate-y-0 opacity-100"
+        )}
+        aria-hidden={ctaVisible}
+      >
+        <div className="glass glass-pill flex items-center gap-3 p-1.5 pl-5">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[13px] font-medium text-(--shop-ink)">
+              {product.title}
+            </p>
+            <Price
+              amount={price}
+              compareAt={compareAt}
+              className="text-[13px]"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={addToBag}
+            disabled={!canAdd}
+            tabIndex={ctaVisible ? -1 : 0}
+            className={cn(
+              "glass glass-pill glass-press min-h-12 shrink-0 cursor-pointer px-6 text-sm font-medium",
+              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--shop-ink)",
+              canAdd
+                ? "glass-ink"
+                : "cursor-not-allowed bg-(--shop-cloud) text-(--shop-stone)"
+            )}
+          >
+            {ctaLabel}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

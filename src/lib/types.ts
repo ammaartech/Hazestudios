@@ -35,6 +35,10 @@ export interface Product {
   seo_title: string;
   seo_description: string;
   published_at: string | null;
+  /** Shows the size guide on the storefront product page. */
+  size_chart_enabled: boolean;
+  /** Free-form jsonb — run it through `parseSizeChart` before use. */
+  size_chart: unknown;
   created_at: string;
   updated_at: string;
 }
@@ -113,6 +117,8 @@ export interface InventoryLevel {
 
 export interface Customer {
   id: string;
+  /** Linked auth account; null for guest and imported records. */
+  user_id: string | null;
   first_name: string;
   last_name: string;
   email: string | null;

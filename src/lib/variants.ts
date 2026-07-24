@@ -170,3 +170,47 @@ export function remapOverrides(
   }
   return next;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Display ordering                                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Canonical garment size order. Stored lowercase and unspaced so "2XL", "2xl"
+ * and "XXL" all land in the same place.
+ */
+const SIZE_ORDER = [
+  "xxs", "2xs", "xs", "s", "m", "l", "xl",
+  "xxl", "2xl", "xxxl", "3xl", "4xl",
+];
+
+function sizeRank(value: string): number {
+  return SIZE_ORDER.indexOf(value.trim().toLowerCase().replace(/\s+/g, ""));
+}
+
+/**
+ * Order option values for display.
+ *
+ * Size axes are stored in whatever order the operator typed them, which is how
+ * a product ends up offering "S, M, L, XS, XL" — correct data, unreadable
+ * control. Sorting happens at render time only: the stored order is left alone,
+ * because it is also the variant order in the admin.
+ *
+ * Deliberately conservative. Anything not fully recognised — a mixed set, or a
+ * non-size axis like Colour, where the operator's sequence is a real editorial
+ * choice — is returned untouched.
+ */
+export function sortOptionValues(name: string, values: string[]): string[] {
+  if (!/size/i.test(name) || values.length < 2) return values;
+
+  if (values.every((v) => sizeRank(v) !== -1)) {
+    return [...values].sort((a, b) => sizeRank(a) - sizeRank(b));
+  }
+
+  // Waist/numeric sizing: 28, 30, 32…
+  if (values.every((v) => Number.isFinite(Number(v.trim())) && v.trim() !== "")) {
+    return [...values].sort((a, b) => Number(a) - Number(b));
+  }
+
+  return values;
+}

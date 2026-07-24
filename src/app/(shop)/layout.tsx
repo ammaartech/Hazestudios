@@ -1,5 +1,7 @@
 import { ShopHeader } from "@/components/shop/header";
 import { ShopFooter } from "@/components/shop/footer";
+import { AnalyticsTracker } from "@/components/shop/analytics-tracker";
+import { GlassTabBar } from "@/components/shop/glass-tab-bar";
 import { getCollections, getStoreName } from "@/lib/shop/queries";
 
 /**
@@ -24,11 +26,16 @@ export default async function ShopLayout({
       >
         Skip to content
       </a>
+      <AnalyticsTracker />
       <ShopHeader storeName={storeName} collections={collections} />
       <main id="main" className="flex-1">
         {children}
       </main>
       <ShopFooter storeName={storeName} collections={collections} />
+      {/* Mobile navigation. Rendered after the footer so it is last in the tab
+          order, and the footer carries matching bottom padding so the floating
+          bar never covers the final row of links. */}
+      <GlassTabBar collections={collections} />
     </div>
   );
 }

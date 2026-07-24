@@ -1,13 +1,13 @@
-import { ComingSoon } from "@/components/admin/coming-soon";
+import { getLiveSnapshot } from "@/lib/analytics/queries";
+import { LiveView } from "./live-view";
 
 export const metadata = { title: "Live View" };
+export const dynamic = "force-dynamic";
 
-export default function Page() {
-  return (
-    <ComingSoon
-      title="Live View"
-      phase="Phase S (Storefront)"
-      description="A real-time map of active visitors arrives once the storefront starts receiving traffic."
-    />
-  );
+export default async function Page() {
+  // Server-render the first snapshot so the page opens with real numbers; the
+  // client takes over polling from there.
+  const initial = await getLiveSnapshot();
+
+  return <LiveView initial={initial} />;
 }

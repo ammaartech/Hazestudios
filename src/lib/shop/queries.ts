@@ -33,7 +33,7 @@ export interface ShopVariant extends ProductVariant {
 }
 
 const PRODUCT_COLUMNS =
-  "id,title,handle,description_html,status,vendor,product_type,category,tags,price,compare_at_price,cost_per_item,sku,barcode,track_inventory,continue_selling,requires_shipping,weight,weight_unit,country_of_origin,hs_code,has_variants,seo_title,seo_description,published_at,created_at,updated_at";
+  "id,title,handle,description_html,status,vendor,product_type,category,tags,price,compare_at_price,cost_per_item,sku,barcode,track_inventory,continue_selling,requires_shipping,weight,weight_unit,country_of_origin,hs_code,has_variants,seo_title,seo_description,published_at,size_chart_enabled,size_chart,created_at,updated_at";
 
 /**
  * Stock is summed across locations. A product that doesn't track inventory is

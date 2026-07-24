@@ -21,7 +21,9 @@ export default async function HomePage() {
       {/* ------------------------------------------------------------------ */}
       {/* Full-bleed campaign hero                                            */}
       {/* ------------------------------------------------------------------ */}
-      <section className="relative isolate flex min-h-[78vh] items-end overflow-hidden bg-[var(--shop-cloud)] md:min-h-[88vh]">
+      {/* Pulled up under the sticky header, which is transparent at scroll-top
+          so the photograph runs edge to edge behind it. */}
+      <section className="relative isolate -mt-14 flex min-h-[86vh] items-end overflow-hidden bg-[var(--shop-cloud)] md:-mt-16 md:min-h-[92vh]">
         {hero?.image_url && (
           <Image
             src={hero.image_url}
@@ -40,13 +42,13 @@ export default async function HomePage() {
           aria-hidden
         />
 
-        <div className="relative w-full px-4 pb-12 md:px-8 md:pb-16">
+        <div className="relative w-full px-4 pb-14 md:px-8 md:pb-16">
           {hero && (
             <p className="meta mb-5 text-white/80">
               {hero.type === "smart" ? "Curated" : "New release"}
             </p>
           )}
-          <h1 className="display max-w-[14ch] text-[clamp(3rem,11vw,9rem)] text-white">
+          <h1 className="display max-w-[14ch] text-balance text-[clamp(2.75rem,11vw,7.5rem)] text-white">
             {hero?.title ?? "Hazestudios"}
           </h1>
           {hero?.description && (
@@ -57,7 +59,9 @@ export default async function HomePage() {
           {hero && (
             <Link
               href={`/collections/${hero.handle}`}
-              className="mt-8 inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-full bg-white px-8 text-sm font-medium text-[var(--shop-ink)] transition-colors duration-200 hover:bg-white/85 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+              /* Glass over photography: the one place the material can do its
+                 full job, refracting the image it sits on. */
+              className="glass glass-dark glass-pill glass-press mt-9 inline-flex min-h-13 cursor-pointer items-center gap-2.5 px-8 text-sm font-medium text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
             >
               Shop the drop
               <ArrowRight className="size-4" aria-hidden />
@@ -129,10 +133,10 @@ export default async function HomePage() {
                       {collection.description}
                     </p>
                   )}
-                  <span className="meta mt-5 inline-flex items-center gap-2 text-white">
+                  <span className="meta glass glass-dark glass-pill mt-6 inline-flex min-h-10 items-center gap-2 px-5 text-white transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-0.5">
                     Explore
                     <ArrowRight
-                      className="size-3.5 transition-transform duration-200 group-hover:translate-x-1"
+                      className="size-3.5 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1"
                       aria-hidden
                     />
                   </span>

@@ -130,6 +130,38 @@
 }
 
 /* ---------------------------------------------------------------------------
+   Data-visualisation tokens
+   ---------------------------------------------------------------------------
+   Chart series colours live apart from the shadcn `--chart-*` slots because
+   they answer to a different constraint: colour-vision separation, not brand.
+   The three categorical slots are assigned in fixed order and never cycled;
+   they were validated against the actual card surfaces (#ffffff light,
+   oklch(0.205 0 0) dark) for lightness band, chroma floor, CVD separation and
+   normal-vision separation. The dark values are the same three hues re-stepped
+   for the dark surface, not an automatic flip.
+
+   Aqua sits at 2.82:1 on white, below the 3:1 bar, so anything painted with it
+   ships a visible label — see the donut legend, which prints name and value.
+--------------------------------------------------------------------------- */
+:root {
+  --viz-series-1: #2a78d6; /* blue  — primary/default single series */
+  --viz-series-2: #eb6834; /* orange */
+  --viz-series-3: #1baf7a; /* aqua */
+  --viz-grid: #e1e0d9;
+  --viz-axis: #c3c2b7;
+  --viz-muted: #898781;
+}
+
+.dark {
+  --viz-series-1: #3987e5;
+  --viz-series-2: #d95926;
+  --viz-series-3: #199e70;
+  --viz-grid: #2c2c2a;
+  --viz-axis: #383835;
+  --viz-muted: #898781;
+}
+
+/* ---------------------------------------------------------------------------
    Storefront theme
    ---------------------------------------------------------------------------
    Adapted from design-md/nike/DESIGN.md: pure black/white with a single soft
@@ -172,6 +204,61 @@
   --shop-hairline-soft: #e5e5e5;
   --shop-sale: #d30005;
   --shop-success: #007d48;
+
+  /* -------------------------------------------------------------------------
+     Liquid Glass
+     -------------------------------------------------------------------------
+     Apple's framing: Liquid Glass is "a distinct functional layer that sits
+     above apps". So it is scoped to the *control* stratum — header, tab bar,
+     CTAs, pills, sheets — and never to content. Photography and editorial type
+     stay hard-edged and opaque; the glass is what floats over them.
+
+     The material is built from five stacked effects, because one blur is not
+     glass:
+       1. tint      — a translucent base that reads on any backdrop
+       2. blur      — the refraction of what is behind
+       3. saturate  — pulls colour through the glass; without it blur reads as
+                      fog, and this single value is most of the "Apple" feel
+       4. specular  — a 1px gradient rim, bright on the top edge and faintly
+                      bounced on the bottom, mimicking light on a curved lens
+       5. shadow    — wide, soft and cheap, so the panel floats rather than sits
+
+     Note the honest constraint: over pure white, blur returns pure white and
+     glass is invisible. Panels that sit on the white content plane therefore
+     lean on the specular rim and tint (see `.glass-on-light`), while panels
+     over photography get the full treatment.
+  ------------------------------------------------------------------------- */
+  --glass-blur: 20px;
+  --glass-saturate: 180%;
+
+  /* Light-environment glass: over imagery, and over the white content plane. */
+  --glass-tint: rgba(255, 255, 255, 0.62);
+  --glass-tint-strong: rgba(255, 255, 255, 0.8);
+  --glass-rim-top: rgba(255, 255, 255, 0.85);
+  --glass-rim-bottom: rgba(255, 255, 255, 0.3);
+  --glass-edge: rgba(17, 17, 17, 0.08);
+  --glass-shadow: 0 8px 32px -8px rgba(17, 17, 17, 0.18),
+    0 2px 8px -2px rgba(17, 17, 17, 0.08);
+
+  /* Dark-environment glass: over photography scrims and the ink CTA.
+     The alpha is set by contrast, not by taste. Dark glass has to carry white
+     text on its worst-case backdrop — the white product page — where 0.55
+     measured 4.17:1 and failed. 0.62 lands at 5.29:1 while still letting 38%
+     of what is behind it through, so it reads as glass rather than as paint. */
+  --glass-dark-tint: rgba(17, 17, 17, 0.62);
+  --glass-dark-rim-top: rgba(255, 255, 255, 0.35);
+  --glass-dark-rim-bottom: rgba(255, 255, 255, 0.08);
+
+  /* Motion. Exponential ease-out only — glass settles, it never bounces. */
+  --glass-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --glass-duration: 420ms;
+
+  /* Semantic z-scale, so no surface ever needs an arbitrary 9999. */
+  --z-sticky: 30;
+  --z-tabbar: 40;
+  --z-drawer: 50;
+  --z-sheet: 60;
+  --z-toast: 70;
 }
 
 @layer base {
@@ -213,5 +300,188 @@
   }
   html {
     @apply font-sans;
+  }
+}
+/* ===========================================================================
+   Liquid Glass — the storefront's control layer
+   ===========================================================================
+   Scoped to `.shop`. The admin keeps its opaque chrome; an operations tool has
+   no business being translucent.
+
+   Every panel here is *floating* — it sits above content, never contains it.
+   Content keeps `--radius: 0px`; glass is the one place the storefront is
+   allowed a curve, because a lens has no corners.
+=========================================================================== */
+@layer components {
+  /* The base material. Composition order matters: the rim (::before) must
+     paint above the tint but below the content, hence the isolate + z-index. */
+  .shop .glass {
+    position: relative;
+    isolation: isolate;
+    background-color: var(--glass-tint);
+    box-shadow: var(--glass-shadow);
+    /* Fallback for engines without backdrop-filter: a more opaque tint, so the
+       panel stays legible instead of turning into a transparent smear. */
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .shop .glass {
+      background-color: var(--glass-tint-strong);
+    }
+    .shop .glass-dark {
+      background-color: rgba(17, 17, 17, 0.9);
+    }
+  }
+
+  /* The specular rim. A 1px gradient ring — bright where light would catch the
+     top curve of the lens, faint where it bounces back off the bottom. This is
+     the detail that separates glass from a blurred rectangle, so it is a real
+     masked ring rather than a flat `border`, which cannot hold a gradient. */
+  .shop .glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      to bottom,
+      var(--glass-rim-top),
+      rgba(255, 255, 255, 0.12) 42%,
+      rgba(255, 255, 255, 0) 62%,
+      var(--glass-rim-bottom)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Dark glass — over photography scrims, and for the primary CTA. */
+  .shop .glass-dark {
+    background-color: var(--glass-dark-tint);
+    color: var(--shop-canvas);
+    --glass-rim-top: var(--glass-dark-rim-top);
+    --glass-rim-bottom: var(--glass-dark-rim-bottom);
+  }
+
+  /* Primary control on the white content plane.
+     Same reasoning as `.glass-on-light`, carried through to the dark material:
+     glass needs a backdrop to refract, and flat white gives it none. A
+     translucent ink tint over white can only resolve to mid-grey (#6b6b6b),
+     which reads as a disabled button rather than the primary action — so here
+     the material goes fully opaque and keeps its glass character in the
+     specular rim, the shadow and the press response instead.
+     `.glass-dark` stays translucent, but only where it has photography to sit
+     on: the hero CTA, collection tiles and the sold-out badge. */
+  .shop .glass-ink {
+    background-color: var(--shop-ink);
+    color: var(--shop-canvas);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    /* A lit edge on near-black needs far less brightness than on glass, or the
+       rim reads as a white outline rather than a highlight. */
+    --glass-rim-top: rgba(255, 255, 255, 0.26);
+    --glass-rim-bottom: rgba(255, 255, 255, 0.05);
+  }
+
+  /* Glass sitting on the white content plane, where blur has nothing to refract.
+     Drops the blur cost entirely and carries the material on rim + edge alone —
+     honest about the constraint rather than paying for an invisible filter. */
+  .shop .glass-on-light {
+    -webkit-backdrop-filter: saturate(var(--glass-saturate));
+    backdrop-filter: saturate(var(--glass-saturate));
+    background-color: rgba(255, 255, 255, 0.72);
+    box-shadow:
+      inset 0 0 0 1px var(--glass-edge),
+      var(--glass-shadow);
+  }
+
+  /* Semantic stacking order for the floating layer.
+     Written as real classes rather than `z-(--token)` utilities: those tokens
+     live on `.shop`, not in `@theme`, so Tailwind never generates a rule for
+     them and the element silently ships with no z-index at all. */
+  .shop .layer-sticky {
+    z-index: var(--z-sticky);
+  }
+  .shop .layer-tabbar {
+    z-index: var(--z-tabbar);
+  }
+  .shop .layer-drawer {
+    z-index: var(--z-drawer);
+  }
+  .shop .layer-sheet {
+    z-index: var(--z-sheet);
+  }
+
+  /* A lens has no corners. */
+  .shop .glass-pill {
+    border-radius: 999px;
+  }
+  .shop .glass-panel {
+    border-radius: 28px;
+  }
+
+  /* Pressable glass. Apple's controls compress under the finger and settle back
+     on release; the scale is small enough to feel physical, not cartoonish. */
+  .shop .glass-press {
+    transition:
+      transform 220ms var(--glass-ease),
+      background-color var(--glass-duration) var(--glass-ease),
+      box-shadow var(--glass-duration) var(--glass-ease);
+    will-change: transform;
+  }
+  .shop .glass-press:active {
+    transform: scale(0.96);
+  }
+  .shop .glass-press:disabled:active {
+    transform: none;
+  }
+
+  /* The travelling highlight behind an active tab / selected pill. Because it is
+     one element that moves rather than a class toggled per item, the selection
+     appears to flow between positions — the "dynamically morph" behaviour. */
+  .shop .glass-indicator {
+    transition:
+      transform var(--glass-duration) var(--glass-ease),
+      width var(--glass-duration) var(--glass-ease);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shop .glass-press:active {
+      transform: none;
+    }
+  }
+}
+
+/* Sheets and panels rise into place rather than appearing. Paired with the
+   exponential ease so they decelerate hard at the end, the way a real panel
+   settles against a stop. */
+@keyframes glass-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes glass-rise {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 }

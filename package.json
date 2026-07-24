@@ -12,7 +12,8 @@
     "db:migrate": "node scripts/migrate.mjs up",
     "db:migrate:dry": "node scripts/migrate.mjs up --dry",
     "db:verify": "node scripts/verify-product-save.mjs",
-    "verify:variants": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-variant-remap.mjs"
+    "verify:variants": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-variant-remap.mjs",
+    "build:worldmask": "node scripts/build-world-mask.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -51,10 +52,13 @@
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "d3-geo": "^3.1.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "pg": "^8.22.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "topojson-client": "^3.1.0",
+    "typescript": "^5",
+    "world-atlas": "^2.0.2"
   }
 }

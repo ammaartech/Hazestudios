@@ -1,4 +1,5 @@
 import { fromNumber } from "@/lib/number-input";
+import { EMPTY_SIZE_CHART, parseSizeChart } from "@/lib/size-chart";
 import type {
   InventoryLevel,
   Location,
@@ -44,6 +45,8 @@ export const emptyDraft: ProductDraft = {
   variantOverrides: {},
   collection_ids: [],
   inventory: {},
+  size_chart_enabled: false,
+  size_chart: { ...EMPTY_SIZE_CHART },
 };
 
 /** Deterministic option keys, so a server render and its hydration agree. */
@@ -156,5 +159,7 @@ export function draftFromProduct({
     variantOverrides,
     collection_ids: collectionIds,
     inventory: simpleInventory,
+    size_chart_enabled: product.size_chart_enabled,
+    size_chart: parseSizeChart(product.size_chart),
   };
 }
