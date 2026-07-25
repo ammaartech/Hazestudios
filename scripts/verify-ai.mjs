@@ -12,15 +12,14 @@
  * Reads a couple of real uploaded product images from the database and prints
  * what the model proposes, asserting the response is well-formed.
  */
-import { readFileSync } from "node:fs";
 import pg from "pg";
-import { dbConfig } from "./db-config.mjs";
+import { dbConfig, loadEnv } from "./db-config.mjs";
 import { classifyProductImages, geminiConfigured } from "../src/lib/ai/gemini.ts";
 
-for (const line of readFileSync(".env.local", "utf8").split("\n")) {
-  const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
-  if (m) process.env[m[1]] ??= m[2].trim();
-}
+// The shared reader rather than an inline one: it strips the surrounding quotes
+// that SUPABASE_DB_URL needs when the password contains a '#' or a '$', and it
+// resolves .env.local relative to the repo instead of the current directory.
+loadEnv();
 
 if (!geminiConfigured()) {
   console.log("GEMINI_API_KEY not set — skipping (this is fine).");

@@ -18,15 +18,14 @@
  * Cleans up after itself; safe to run against a live database.
  */
 
-import { readFileSync } from "node:fs";
 import pg from "pg";
 import { createClient } from "@supabase/supabase-js";
-import { dbConfig } from "./db-config.mjs";
+import { dbConfig, loadEnv } from "./db-config.mjs";
 
-for (const line of readFileSync(".env.local", "utf8").split("\n")) {
-  const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
-  if (m) process.env[m[1]] ??= m[2].trim();
-}
+// The shared reader rather than an inline one: it strips the surrounding quotes
+// that SUPABASE_DB_URL needs when the password contains a '#' or a '$', and it
+// resolves .env.local relative to the repo instead of the current directory.
+loadEnv();
 
 const c = new pg.Client(dbConfig());
 await c.connect();

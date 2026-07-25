@@ -3,6 +3,7 @@ import { FileText } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { REPORTS } from "@/lib/analytics/report-definitions";
 import { ReportCatalog } from "./report-catalog";
+import { AskAi } from "./ask-ai";
 
 export const metadata = { title: "Reports" };
 export const dynamic = "force-dynamic";
@@ -39,6 +40,7 @@ export default async function ReportsPage() {
       </div>
 
       <div className="px-4 py-5 md:px-8">
+        <AskAi />
         <ReportCatalog reports={REPORTS} createdBy={storeName} />
       </div>
     </div>

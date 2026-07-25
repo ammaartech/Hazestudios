@@ -15,8 +15,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\package.json": {
-    "mtime": 1784926562.2744617,
-    "ast_hash": "75afa1f09f08309c8aa373f611ccb81e",
+    "mtime": 1784969331.8498805,
+    "ast_hash": "2eef3d15a2858034041dafff5baa0a34",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\postcss.config.mjs": {
@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.impeccable\\hook.cache.json": {
-    "mtime": 1784926562.4354067,
-    "ast_hash": "75794b49bc12de859955f688d0129f18",
+    "mtime": 1784969438.0694015,
+    "ast_hash": "084ce43b117238a8f14a84c241625d4c",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\db-config.mjs": {
@@ -355,8 +355,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\analytics\\reports\\page.tsx": {
-    "mtime": 1784872835.5389624,
-    "ast_hash": "662bfffc770023be30e5cd357790190f",
+    "mtime": 1784968324.7728345,
+    "ast_hash": "a49de2e423c3b2a6d32eb471590df462",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\analytics\\reports\\report-controls.tsx": {
@@ -1825,8 +1825,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\verify-cart.mjs": {
-    "mtime": 1784908882.9947097,
-    "ast_hash": "4abd84f69ebe6b81ab2f73152cc78f55",
+    "mtime": 1784969415.095676,
+    "ast_hash": "b006e2b5b6579c935abc21c52b62f809",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\account\\account-shell.tsx": {
@@ -1980,8 +1980,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\verify-collections.mjs": {
-    "mtime": 1784908997.813873,
-    "ast_hash": "52414674ce593d12c2696c23c11f3b7f",
+    "mtime": 1784969422.9287877,
+    "ast_hash": "6c3206670baf9c4690aebdcab4ccb2c1",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\collections\\collection-data.ts": {
@@ -2035,13 +2035,48 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\verify-ai.mjs": {
-    "mtime": 1784926534.55603,
-    "ast_hash": "c32aed5f967838069c5b3ad7219cdbcc",
+    "mtime": 1784969407.8507655,
+    "ast_hash": "55d7f2c3980290db14ab293da18f7811",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\ai\\gemini.ts": {
     "mtime": 1784926439.235663,
     "ast_hash": "33044de2837095e237ed04b7dea86e14",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\verify-sql-reports.mjs": {
+    "mtime": 1784969437.925861,
+    "ast_hash": "92e2dfb3377d5e1065951730f224ac43",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\analytics\\reports\\ask-actions.ts": {
+    "mtime": 1784968234.0700397,
+    "ast_hash": "34f6e7514a3c303c311de793c958e1c6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\analytics\\reports\\ask-ai.tsx": {
+    "mtime": 1784968548.0223756,
+    "ast_hash": "89474854e27af88d3659d111a3eba38f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\ai\\text-to-sql.ts": {
+    "mtime": 1784968198.4615026,
+    "ast_hash": "7eaa6db99bcedc6cc89765868b08086e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\analytics\\sql-guard.ts": {
+    "mtime": 1784968705.6083164,
+    "ast_hash": "d8ab07f7d9a89863f56f9146ec97d37e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\db\\readonly.ts": {
+    "mtime": 1784968714.1671484,
+    "ast_hash": "058626dc095c2cab715111a7296dabb6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\seed-demo-data.mjs": {
+    "mtime": 1784969325.3728042,
+    "ast_hash": "be86cf50e007b19e2d732036907409ee",
     "semantic_hash": ""
   }
 }

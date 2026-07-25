@@ -16,6 +16,9 @@
     "verify:cart": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-cart.mjs",
     "verify:collections": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-collections.mjs",
     "verify:ai": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-ai.mjs",
+    "verify:sql": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-sql-reports.mjs",
+    "seed:demo": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed-demo-data.mjs",
+    "seed:demo:clean": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed-demo-data.mjs --clean",
     "build:worldmask": "node scripts/build-world-mask.mjs"
   },
   "dependencies": {
@@ -38,6 +41,7 @@
     "lucide-react": "^1.25.0",
     "next": "16.2.10",
     "next-themes": "^0.4.6",
+    "pg": "^8.22.0",
     "radix-ui": "^1.6.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -58,7 +62,6 @@
     "d3-geo": "^3.1.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
-    "pg": "^8.22.0",
     "tailwindcss": "^4",
     "topojson-client": "^3.1.0",
     "typescript": "^5",
