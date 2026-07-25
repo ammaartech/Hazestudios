@@ -179,6 +179,27 @@ export interface Order {
   location_id: string | null;
   created_at: string;
   closed_at: string | null;
+
+  /* Added in 0014_checkout.sql. Denormalised onto the order rather than read
+     through customer_id, because an order is a contract: it has to keep saying
+     where it was going after the customer edits their profile. */
+  email: string;
+  phone: string;
+  shipping_address: Record<string, string>;
+  /** Empty object means "same as shipping". */
+  billing_address: Record<string, string>;
+  shipping_total: number;
+  tax_total: number;
+  payment_method: string;
+  /** Bearer token for the storefront order status page; null on admin orders. */
+  checkout_token: string | null;
+  source: string;
+
+  /* Marketing capture — consent and attribution as facts about this purchase. */
+  marketing_opt_in: boolean;
+  utm: Record<string, string>;
+  referrer: string;
+  landing_path: string;
 }
 
 export interface OrderItem {

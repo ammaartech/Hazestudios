@@ -85,6 +85,11 @@ export function CartDrawer() {
 
   const empty = cart.lines.length === 0;
 
+  // Same gate the cart page applies: a sold-out line has to be dealt with
+  // before checkout will accept the bag, and place_order() would refuse it.
+  const canCheckout =
+    cart.count > 0 && cart.lines.every((line) => line.available);
+
   return (
     <div className="fixed inset-0 layer-sheet">
       <button
@@ -185,20 +190,38 @@ export function CartDrawer() {
                 Shipping and taxes calculated at checkout.
               </p>
 
-              <Link
-                href="/cart"
-                onClick={closeDrawer}
-                className="glass glass-pill glass-press glass-ink mt-4 flex min-h-14 cursor-pointer items-center justify-center px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
-              >
-                View bag
-              </Link>
-              <button
-                type="button"
-                onClick={closeDrawer}
-                className="glass-press mt-2 min-h-11 w-full cursor-pointer rounded-full text-sm text-(--shop-mute) transition-colors hover:text-(--shop-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--shop-ink)"
-              >
-                Keep shopping
-              </button>
+              {/* Checkout leads, and the bag becomes the secondary route. The
+                  drawer already shows the lines and lets them be edited, so
+                  sending shoppers to /cart first was a step that changed
+                  nothing. Sold-out lines still have to be resolved there,
+                  though — which is the one case the primary action points at
+                  the bag instead. */}
+              {canCheckout ? (
+                <Link
+                  href="/checkout"
+                  onClick={closeDrawer}
+                  className="glass glass-pill glass-press glass-ink mt-4 flex min-h-14 cursor-pointer items-center justify-center px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
+                >
+                  Checkout
+                </Link>
+              ) : (
+                <Link
+                  href="/cart"
+                  onClick={closeDrawer}
+                  className="glass glass-pill glass-press glass-ink mt-4 flex min-h-14 cursor-pointer items-center justify-center px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
+                >
+                  Review bag
+                </Link>
+              )}
+              {canCheckout && (
+                <Link
+                  href="/cart"
+                  onClick={closeDrawer}
+                  className="glass-press mt-2 flex min-h-11 cursor-pointer items-center justify-center rounded-full text-sm text-(--shop-mute) transition-colors hover:text-(--shop-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--shop-ink)"
+                >
+                  View bag
+                </Link>
+              )}
             </footer>
           </>
         )}

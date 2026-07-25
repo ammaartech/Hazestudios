@@ -10,6 +10,8 @@
 
 const SESSION_KEY = "haze_session_key";
 const SEEN_KEY = "haze_seen_before";
+const LANDING_KEY = "haze_landing";
+const REFERRER_KEY = "haze_referrer";
 
 export type TrackEventType =
   | "page_view"
@@ -48,6 +50,50 @@ export function getSessionKey(): string | null {
   }
 }
 
+export interface Landing {
+  /** First path of this session, query string included — where the UTM lives. */
+  landingPath: string;
+  referrer: string;
+}
+
+/**
+ * Where this session began.
+ *
+ * Recorded on first call and never overwritten, so it survives the shopper
+ * browsing six products before checking out — by the time the order is placed,
+ * `window.location` is `/checkout` and `document.referrer` is the cart, neither
+ * of which is the campaign that brought them.
+ *
+ * `track()` calls this on every hit, which means the first page view of the
+ * session is what gets stored. That is exactly the definition of a landing page.
+ */
+export function getLanding(): Landing {
+  const empty = { landingPath: "", referrer: "" };
+  if (typeof window === "undefined") return empty;
+
+  try {
+    let landingPath = sessionStorage.getItem(LANDING_KEY);
+    let referrer = sessionStorage.getItem(REFERRER_KEY);
+
+    if (landingPath === null) {
+      landingPath = window.location.pathname + window.location.search;
+      sessionStorage.setItem(LANDING_KEY, landingPath);
+    }
+    if (referrer === null) {
+      // An internal referrer is a previous page of this same visit, not a
+      // source — storing it would attribute every order to the store itself.
+      const raw = document.referrer;
+      referrer =
+        raw && !raw.startsWith(window.location.origin) ? raw.slice(0, 512) : "";
+      sessionStorage.setItem(REFERRER_KEY, referrer);
+    }
+
+    return { landingPath, referrer };
+  } catch {
+    return empty;
+  }
+}
+
 /** localStorage outlives the session, so it answers "new vs returning". */
 function isReturning(): boolean {
   try {
@@ -62,6 +108,10 @@ function isReturning(): boolean {
 export function track(type: TrackEventType, options: TrackOptions = {}) {
   const sessionKey = getSessionKey();
   if (!sessionKey) return;
+
+  // Pins the landing page on the first hit of the session, which is why this
+  // runs before the beacon is assembled rather than only at checkout.
+  getLanding();
 
   const body = JSON.stringify({
     sessionKey,

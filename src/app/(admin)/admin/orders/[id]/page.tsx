@@ -170,6 +170,23 @@ export default async function OrderDetailPage({
                     </span>
                   </div>
                 )}
+                {/* Present on every storefront order since 0014; admin-created
+                    orders still default both to zero, so they stay hidden there
+                    rather than adding two "—" rows to every draft. */}
+                {Number(order.shipping_total) > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Shipping</span>
+                    <span className="tabular-nums">
+                      {formatMoney(order.shipping_total)}
+                    </span>
+                  </div>
+                )}
+                {Number(order.tax_total) > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tax</span>
+                    <span className="tabular-nums">{formatMoney(order.tax_total)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>
                   <span className="tabular-nums">{formatMoney(order.total)}</span>
@@ -249,7 +266,7 @@ export default async function OrderDetailPage({
               {customer ? (
                 <div className="space-y-1">
                   <Link
-                    href={`/customers/${customer.id}`}
+                    href={`/admin/customers/${customer.id}`}
                     className="font-medium text-primary hover:underline"
                   >
                     {`${customer.first_name} ${customer.last_name}`.trim() ||
@@ -267,6 +284,128 @@ export default async function OrderDetailPage({
               )}
             </CardContent>
           </Card>
+
+          {/* Contact on the order, not on the customer. These are the values
+              captured at purchase and are what the parcel and the receipt have
+              to match, even after the customer record moves on. */}
+          {(order.email || order.shipping_address?.address1) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Delivery</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                {order.email && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Contact</p>
+                    <p>{order.email}</p>
+                    {order.phone && <p>{order.phone}</p>}
+                  </div>
+                )}
+
+                {order.shipping_address?.address1 && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Ship to</p>
+                    <address className="not-italic leading-relaxed">
+                      {[
+                        order.shipping_address.first_name,
+                        order.shipping_address.last_name,
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      <br />
+                      {order.shipping_address.address1}
+                      {order.shipping_address.address2 && (
+                        <>
+                          <br />
+                          {order.shipping_address.address2}
+                        </>
+                      )}
+                      <br />
+                      {[
+                        order.shipping_address.city,
+                        order.shipping_address.province,
+                        order.shipping_address.postal_code,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
+                      <br />
+                      {order.shipping_address.country}
+                    </address>
+                  </div>
+                )}
+
+                {Object.keys(order.billing_address ?? {}).length > 0 && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Bill to</p>
+                    <address className="not-italic leading-relaxed">
+                      {order.billing_address.address1}
+                      <br />
+                      {[
+                        order.billing_address.city,
+                        order.billing_address.postal_code,
+                        order.billing_address.country,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </address>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Where this order came from. Only rendered for orders that carry
+              attribution — an admin-created order has none by definition, and a
+              card of empty rows is worse than no card. */}
+          {(order.source === "storefront" || order.marketing_opt_in) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Attribution</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Source</span>
+                  <span className="capitalize">{order.source}</span>
+                </div>
+
+                {Object.entries(order.utm ?? {}).map(([key, value]) => (
+                  <div key={key} className="flex justify-between gap-3">
+                    <span className="text-muted-foreground capitalize">{key}</span>
+                    <span className="truncate" title={value}>
+                      {value}
+                    </span>
+                  </div>
+                ))}
+
+                {order.referrer && (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground">Referrer</span>
+                    <span className="truncate" title={order.referrer}>
+                      {order.referrer.replace(/^https?:\/\/(www\.)?/, "")}
+                    </span>
+                  </div>
+                )}
+
+                {order.landing_path && (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground">Landed on</span>
+                    <span className="truncate" title={order.landing_path}>
+                      {order.landing_path}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-between gap-3 border-t pt-2">
+                  <span className="text-muted-foreground">Email marketing</span>
+                  {order.marketing_opt_in ? (
+                    <Badge variant="secondary">Opted in</Badge>
+                  ) : (
+                    <span className="text-muted-foreground">Declined</span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {order.note && (
             <Card>

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { toast } from "sonner";
 import { ArrowRight, ShoppingBag } from "lucide-react";
 import { formatMoney } from "@/lib/format";
 import { useCart } from "./cart-provider";
@@ -114,24 +113,28 @@ export function CartView() {
               </p>
             )}
 
-            {/* Checkout is the next piece of work. The button is real and
-                correctly gated rather than hidden, so the flow up to this point
-                is testable end to end — but it says what it is. */}
-            <button
-              type="button"
-              disabled={!canCheckout || isPending}
-              onClick={() =>
-                toast.info("Checkout is not wired up yet", {
-                  description: `${cart.count} ${
-                    cart.count === 1 ? "item" : "items"
-                  } · ${formatMoney(cart.subtotal, cart.currency)}`,
-                })
-              }
-              className="glass glass-pill glass-press glass-ink mt-6 flex min-h-14 w-full cursor-pointer items-center justify-center gap-2 px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink) disabled:cursor-not-allowed disabled:bg-(--shop-cloud) disabled:text-(--shop-stone)"
-            >
-              Checkout
-              <ArrowRight className="size-4" aria-hidden />
-            </button>
+            {/* A link, not a button with an onClick: checkout is a page, so it
+                should be openable in a new tab and reachable without JavaScript.
+                When the bag cannot be checked out the anchor is swapped for a
+                disabled button — an <a> has no disabled state worth trusting. */}
+            {canCheckout ? (
+              <Link
+                href="/checkout"
+                className="glass glass-pill glass-press glass-ink mt-6 flex min-h-14 w-full cursor-pointer items-center justify-center gap-2 px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
+              >
+                Checkout
+                <ArrowRight className="size-4" aria-hidden />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="glass glass-pill glass-ink mt-6 flex min-h-14 w-full cursor-not-allowed items-center justify-center gap-2 bg-(--shop-cloud) px-8 text-base font-medium text-(--shop-stone)"
+              >
+                Checkout
+                <ArrowRight className="size-4" aria-hidden />
+              </button>
+            )}
 
             <Link
               href="/"

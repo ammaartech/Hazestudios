@@ -47,6 +47,31 @@ function deviceTypeFrom(userAgent: string) {
   return "desktop";
 }
 
+/**
+ * Campaign parameters off the landing URL.
+ *
+ * Only the five canonical `utm_*` keys are kept — the rest of a real-world
+ * query string is click ids and session junk, which carries no reporting value
+ * and plenty of privacy liability. Mirrors `readUtm()` in the checkout action,
+ * which snapshots the same shape onto the order.
+ */
+function utmFrom(path: string): Record<string, string> {
+  const start = path.indexOf("?");
+  if (start === -1) return {};
+
+  try {
+    const params = new URLSearchParams(path.slice(start));
+    const utm: Record<string, string> = {};
+    for (const key of ["source", "medium", "campaign", "term", "content"]) {
+      const value = params.get(`utm_${key}`);
+      if (value) utm[key] = value.slice(0, 128);
+    }
+    return utm;
+  } catch {
+    return {};
+  }
+}
+
 function hostOf(referrer: string) {
   if (!referrer) return "";
   try {
@@ -126,6 +151,10 @@ export async function POST(request: Request) {
         referrer,
         referrer_host: hostOf(referrer),
         landing_path: path,
+        // Captured only on the session's first hit: the campaign is a property
+        // of how the visit began, and a later page without utm parameters must
+        // not blank it.
+        utm: utmFrom(path),
         device_type: deviceTypeFrom(userAgent),
         user_agent: userAgent.slice(0, 512),
         page_views: payload.heartbeat ? 0 : 1,
