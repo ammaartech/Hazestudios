@@ -245,44 +245,23 @@ export function BrandMarquee() {
                 key={i}
                 className="flex items-center gap-3 whitespace-nowrap text-lg font-semibold uppercase tracking-[0.03em] md:text-xl"
               >
-<<<<<<< HEAD
                 <Star />
                 {BRAND_MARQUEE.word}
               </span>
             ))}
-=======
-                <Image
-                  src={frame.thumb}
-                  alt=""
-                  width={120}
-                  height={150}
-                  className="aspect-[4/5] w-12 shrink-0 rounded-[3px] object-cover"
-                />
-                <span className="min-w-0">
-                  <span className="block truncate text-[0.6875rem] font-semibold leading-tight text-[var(--shop-ink)]">
-                    {tag.title}
-                  </span>
-                  <Price
-                    amount={tag.price}
-                    compareAt={tag.compareAt}
-                    className="mt-1 text-[0.6875rem] text-[var(--shop-charcoal)]"
-                  />
-                </span>
-              </Link>
-            )}
-          </figure>
-        );
-      })}
-    </section>
+          </div>
+        ))}
+      </div>
+    </Link>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* Mosaic                                                                      */
+/* Editorial banner                                                            */
 /* -------------------------------------------------------------------------- */
 
-/** Three editorial doors into the catalogue, closing the page above the footer. */
-export function Mosaic() {
+/** The full-bleed campaign image that closes the Haze Studios break. */
+export function EditorialBanner() {
   return (
     <section className="mt-20 grid gap-2 px-2 md:mt-28 md:grid-cols-3">
       <h2 className="sr-only">Shop by category</h2>
@@ -290,9 +269,7 @@ export function Mosaic() {
         <Link
           key={tile.handle}
           href={`/collections/${tile.handle}`}
-          /* Three tiles stack on a phone, so a height tuned for one column on a
-             desktop turns into three screens of scrolling on a handset. */
-          className="group relative isolate flex min-h-[20rem] items-center justify-center overflow-hidden bg-[var(--shop-cloud)] p-8 text-center focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white sm:min-h-[24rem] md:min-h-[26rem] lg:min-h-[32rem]"
+          className="group relative isolate flex min-h-[26rem] items-center justify-center overflow-hidden bg-[var(--shop-cloud)] p-8 text-center focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white"
         >
           <Image
             src={tile.image}
@@ -312,42 +289,9 @@ export function Mosaic() {
             <span className="meta mt-5 inline-block border-b border-white/70 pb-1 text-white transition-colors duration-300 group-hover:border-white">
               {tile.cta}
             </span>
->>>>>>> e42a8b0 (ui updates, refering suha demo, inputting produts, inputting invectory, fixed instagram link)
           </div>
-        ))}
-      </div>
-    </Link>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Editorial banner                                                            */
-/* -------------------------------------------------------------------------- */
-
-/** The full-bleed campaign image that closes the Haze Studios break. */
-export function EditorialBanner() {
-  return (
-    <section aria-labelledby="editorial-banner">
-      <div className="px-4 pb-8 pt-14 text-center md:px-8 md:pt-20">
-        <Eyebrow>{EDITORIAL_BANNER.eyebrow}</Eyebrow>
-        <h2
-          id="editorial-banner"
-          className="display mt-2.5 text-[clamp(1.5rem,3.5vw,2.25rem)] uppercase"
-        >
-          {EDITORIAL_BANNER.heading}
-        </h2>
-      </div>
-
-      <Link href={EDITORIAL_BANNER.href} className="block cursor-pointer">
-        <Image
-          src={EDITORIAL_BANNER.image}
-          alt={EDITORIAL_BANNER.alt}
-          width={2000}
-          height={800}
-          sizes="100vw"
-          className="aspect-[2/1] w-full object-cover md:aspect-[2.5/1]"
-        />
-      </Link>
+        </Link>
+      ))}
     </section>
   );
 }
