@@ -1,3 +1,4 @@
+import { AnnouncementBar } from "@/components/shop/announcement-bar";
 import { ShopHeader } from "@/components/shop/header";
 import { ShopFooter } from "@/components/shop/footer";
 import { AnalyticsTracker } from "@/components/shop/analytics-tracker";
@@ -37,11 +38,14 @@ export default async function ShopLayout({
           Skip to content
         </a>
         <AnalyticsTracker />
+        {/* Above the sticky header, so the offers scroll away with the page
+            rather than permanently spending a strip of every screen. */}
+        <AnnouncementBar />
         <ShopHeader storeName={storeName} collections={collections} />
         <main id="main" className="flex-1">
           {children}
         </main>
-        <ShopFooter storeName={storeName} collections={collections} />
+        <ShopFooter storeName={storeName} />
         {/* Mobile navigation. Rendered after the footer so it is last in the tab
             order, and the footer carries matching bottom padding so the floating
             bar never covers the final row of links. */}

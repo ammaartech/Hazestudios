@@ -309,6 +309,33 @@ export async function getRelatedProducts(
   return hydrate((data ?? []) as Product[]);
 }
 
+/**
+ * Free-text product search over title, type and vendor.
+ *
+ * `%` and `_` are escaped before the term reaches `ilike`, so a shopper typing
+ * "100% cotton" searches for that string rather than for a wildcard. Postgres
+ * treats a lone `\` in a LIKE pattern as an escape, so it is doubled first.
+ */
+export async function searchProducts(term: string, limit = 24): Promise<ShopProduct[]> {
+  const query = term.trim();
+  if (query.length < 2) return [];
+
+  const escaped = query.replace(/\\/g, "\\\\").replace(/[%_]/g, (c) => `\\${c}`);
+  const pattern = `%${escaped}%`;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("products")
+    .select(PRODUCT_COLUMNS)
+    .eq("status", "active")
+    .or(
+      `title.ilike.${pattern},product_type.ilike.${pattern},vendor.ilike.${pattern}`
+    )
+    .limit(limit);
+
+  return hydrate((data ?? []) as Product[]);
+}
+
 export async function getStoreName(): Promise<string> {
   const supabase = await createClient();
   const { data } = await supabase

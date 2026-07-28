@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
@@ -12,10 +13,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ImportDialog } from "./import-dialog";
 
 /** Header controls that sit left of "Add product": Export, Import, More actions. */
-export function ProductListActions() {
+export function ProductListActions({ currency = "USD" }: { currency?: string }) {
   const router = useRouter();
+  const [importing, setImporting] = useState(false);
 
   return (
     <>
@@ -26,13 +29,18 @@ export function ProductListActions() {
       >
         Export
       </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => toast.info("Product import isn't wired up in this build yet.")}
-      >
+      <Button variant="outline" size="sm" onClick={() => setImporting(true)}>
         Import
       </Button>
+
+      <ImportDialog
+        open={importing}
+        onOpenChange={setImporting}
+        currency={currency}
+        // The dialog stays open on its results screen; the list underneath is
+        // refreshed now so it is already correct when the operator closes it.
+        onImported={() => router.refresh()}
+      />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="gap-1.5">

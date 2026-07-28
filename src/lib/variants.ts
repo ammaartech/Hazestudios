@@ -12,6 +12,12 @@ export interface OptionDraft {
   key: string;
   name: string;
   values: string[];
+  /**
+   * Metaobject the values came from, on options created by a CSV import. The
+   * algebra below never reads it — it is carried so that editing an imported
+   * product's sizes does not throw away the link its colours were drawn from.
+   */
+  linked_to?: string;
 }
 
 /**

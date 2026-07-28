@@ -10,6 +10,7 @@ const SECTIONS: { label: string; href: string; placeholder?: boolean }[] = [
   { label: "Locations", href: "/admin/settings/locations" },
   { label: "Brand", href: "/admin/settings/brand" },
   { label: "Policies", href: "/admin/settings/policies" },
+  { label: "Qikink", href: "/admin/settings/qikink" },
   { label: "Payments", href: "/admin/settings/payments", placeholder: true },
   { label: "Checkout", href: "/admin/settings/checkout", placeholder: true },
   { label: "Shipping and delivery", href: "/admin/settings/shipping", placeholder: true },

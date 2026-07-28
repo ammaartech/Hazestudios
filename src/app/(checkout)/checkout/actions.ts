@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { clearCartCookie, readCartToken } from "@/lib/shop/cart";
@@ -168,7 +169,7 @@ export async function placeOrder(
     };
   }
 
-  const result = data as { checkout_token?: string } | null;
+  const result = data as { checkout_token?: string; order_id?: string } | null;
   if (!result?.checkout_token) {
     return {
       error: "Something went wrong placing your order. Please try again.",
@@ -179,6 +180,31 @@ export async function placeOrder(
   // The cart row is already gone, deleted inside the transaction. Dropping the
   // cookie stops the next request resurrecting an empty one.
   await clearCartCookie();
+
+  // Hand the order to the print supplier, if auto-send is on.
+  //
+  // Deliberately outside the transaction and after the response: fulfillment is
+  // a downstream consequence of the order, not a condition of it. Qikink being
+  // slow, rate-limited or down must never cost a shopper their checkout, and a
+  // failed push is already recorded on qikink_fulfillments for the operator to
+  // retry from the order page. `after` runs it once the redirect is on its way,
+  // so nobody waits on two HTTP calls to another provider.
+  if (result.order_id) {
+    const orderId = result.order_id;
+    after(async () => {
+      try {
+        const { getQikinkConfig } = await import("@/lib/qikink/config");
+        const config = await getQikinkConfig();
+        if (!config?.autoSend) return;
+        const { pushOrderToQikink } = await import("@/lib/qikink/fulfillment");
+        await pushOrderToQikink(orderId);
+      } catch {
+        // Swallowed on purpose. The order is placed and the shopper has been
+        // redirected; there is no one left to tell, and pushOrderToQikink has
+        // already persisted anything worth reading.
+      }
+    });
+  }
 
   // Throws a control-flow exception, so nothing below runs. The confirmation
   // page lives under the ordinary storefront shell on purpose: the shopper has

@@ -11,6 +11,7 @@ import type {
 // Type-only import: erased at compile time, so pulling the draft shape in here
 // does not drag the client module across the server boundary.
 import type {
+  MetafieldDraft,
   OptionDraft,
   ProductDraft,
   VariantOverride,
@@ -33,6 +34,7 @@ export const emptyDraft: ProductDraft = {
   track_inventory: true,
   continue_selling: false,
   requires_shipping: true,
+  taxable: true,
   weight: "",
   weight_unit: "kg",
   country_of_origin: "",
@@ -47,11 +49,41 @@ export const emptyDraft: ProductDraft = {
   inventory: {},
   size_chart_enabled: false,
   size_chart: { ...EMPTY_SIZE_CHART },
+  metafields: [],
 };
 
 /** Deterministic option keys, so a server render and its hydration agree. */
 function optionKey(productId: string, index: number) {
   return `${productId}-option-${index}`;
+}
+
+/** Same reasoning as `optionKey` — derived, not random. */
+function metafieldKey(productId: string, index: number) {
+  return `${productId}-metafield-${index}`;
+}
+
+/**
+ * `metafields` is jsonb, so a hand-edited row could be a number, a nested
+ * object, or null. Everything is rendered as text in the editor, so everything
+ * is coerced to text here rather than crashing the form on an unexpected shape.
+ */
+function metafieldDrafts(
+  productId: string,
+  metafields: Record<string, unknown> | null | undefined
+): MetafieldDraft[] {
+  if (!metafields || typeof metafields !== "object") return [];
+  return Object.entries(metafields)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value], i) => ({
+      id: metafieldKey(productId, i),
+      key,
+      value:
+        value == null
+          ? ""
+          : typeof value === "string"
+            ? value
+            : JSON.stringify(value),
+    }));
 }
 
 export function draftFromProduct({
@@ -115,6 +147,7 @@ export function draftFromProduct({
       key: optionKey(product.id, i),
       name: o.name,
       values: o.values,
+      linked_to: o.linked_to,
     }));
 
   return {
@@ -139,6 +172,7 @@ export function draftFromProduct({
     track_inventory: product.track_inventory,
     continue_selling: product.continue_selling,
     requires_shipping: product.requires_shipping,
+    taxable: product.taxable,
     weight: fromNumber(product.weight != null ? Number(product.weight) : null),
     weight_unit: product.weight_unit,
     country_of_origin: product.country_of_origin,
@@ -161,5 +195,6 @@ export function draftFromProduct({
     inventory: simpleInventory,
     size_chart_enabled: product.size_chart_enabled,
     size_chart: parseSizeChart(product.size_chart),
+    metafields: metafieldDrafts(product.id, product.metafields),
   };
 }

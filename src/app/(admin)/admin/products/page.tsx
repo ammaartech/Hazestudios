@@ -37,7 +37,10 @@ export default async function ProductsPage({
     query = query.ilike("title", `%${q}%`);
   }
 
-  const { data } = await query;
+  const [{ data }, { data: shop }] = await Promise.all([
+    query,
+    supabase.from("shop_settings").select("currency").single(),
+  ]);
   const products = (data ?? []) as ProductRow[];
 
   // Flatten each row so the client table stays a pure renderer.
@@ -58,7 +61,7 @@ export default async function ProductsPage({
   return (
     <div>
       <PageHeader title="Products">
-        <ProductListActions />
+        <ProductListActions currency={shop?.currency ?? "USD"} />
         <Button asChild>
           <Link href="/admin/products/new">Add product</Link>
         </Button>

@@ -42,6 +42,7 @@ import {
 import { BasicsSection } from "./sections/basics";
 import { InventorySection } from "./sections/inventory";
 import { MediaSection } from "./sections/media";
+import { MetafieldsSection } from "./sections/metafields";
 import { OrganizationSection } from "./sections/organization";
 import { PricingSection } from "./sections/pricing";
 import { SeoSection } from "./sections/seo";
@@ -287,6 +288,9 @@ function ProductFormInner({
           {/* After variants: the chart seeds its rows from the Size option, so
               it reads better once those values exist. */}
           <SizeChartSection />
+          {/* Custom data last but one, matching where Shopify files it: it is
+              store-specific, and everything above applies to every product. */}
+          <MetafieldsSection facets={facets} />
           <SeoSection storeUrl={storeUrl} />
         </div>
 

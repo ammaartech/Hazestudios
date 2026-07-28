@@ -14,6 +14,8 @@ export interface ImagePayload {
 export interface OptionPayload {
   name: string;
   values: string[];
+  /** Preserved from an import; the editor has no control for it. */
+  linked_to: string;
 }
 
 export interface InventoryPayload {
@@ -36,6 +38,7 @@ export interface VariantPayload {
   requires_shipping: boolean;
   track_inventory: boolean;
   continue_selling: boolean;
+  taxable: boolean;
   available: boolean;
   image_id: string | null;
   inventory: InventoryPayload[];
@@ -59,6 +62,7 @@ export interface ProductPayload {
   track_inventory: boolean;
   continue_selling: boolean;
   requires_shipping: boolean;
+  taxable: boolean;
   weight: number | null;
   weight_unit: WeightUnit;
   country_of_origin: string;
@@ -66,6 +70,8 @@ export interface ProductPayload {
   seo_title: string;
   seo_description: string;
   published_at: string | null;
+  /** Replaced wholesale on save — the editor always sends the complete set. */
+  metafields: Record<string, string>;
   images: ImagePayload[];
   options: OptionPayload[];
   variants: VariantPayload[];
@@ -231,12 +237,18 @@ export interface ProductFacets {
   vendors: string[];
   types: string[];
   categories: string[];
+  /** Metafield keys already in use, most-used first — the Metafields card
+   *  suggests these so a store does not accumulate `custom.badge` alongside
+   *  `custom.Badge`. */
+  metafield_keys: string[];
 }
 
 /** Autocomplete sources for the Organization card. */
 export async function getProductFacets(): Promise<ProductFacets> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("product_facets");
-  if (error || !data) return { tags: [], vendors: [], types: [], categories: [] };
+  if (error || !data) {
+    return { tags: [], vendors: [], types: [], categories: [], metafield_keys: [] };
+  }
   return data as ProductFacets;
 }

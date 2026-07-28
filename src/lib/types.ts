@@ -27,6 +27,8 @@ export interface Product {
   /** allow orders past zero stock */
   continue_selling: boolean;
   requires_shipping: boolean;
+  /** Charge tax on this product at checkout. */
+  taxable: boolean;
   weight: number | null;
   weight_unit: WeightUnit;
   country_of_origin: string;
@@ -39,6 +41,12 @@ export interface Product {
   size_chart_enabled: boolean;
   /** Free-form jsonb — run it through `parseSizeChart` before use. */
   size_chart: unknown;
+  /**
+   * Namespaced custom fields, flat: `{ "custom.badge": "PRE-ORDER" }`.
+   * Populated by the CSV import from Shopify's metafield columns and editable
+   * in the product editor's Metafields card.
+   */
+  metafields: Record<string, string>;
   created_at: string;
   updated_at: string;
 }
@@ -57,6 +65,12 @@ export interface ProductOption {
   name: string;
   values: string[];
   position: number;
+  /**
+   * Shopify metaobject this option's values are drawn from, e.g.
+   * `product.metafields.shopify.color-pattern`. Empty for a plain text option.
+   * Carried through imports so a swatch source is not lost on a round trip.
+   */
+  linked_to: string;
 }
 
 export interface ProductVariant {
@@ -76,6 +90,7 @@ export interface ProductVariant {
   requires_shipping: boolean;
   track_inventory: boolean;
   continue_selling: boolean;
+  taxable: boolean;
   /** unchecked in the variants table = not sold, but kept for later */
   available: boolean;
   image_id: string | null;

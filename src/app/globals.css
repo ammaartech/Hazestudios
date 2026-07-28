@@ -481,6 +481,88 @@
       transform: none;
     }
   }
+
+  /* -------------------------------------------------------------------------
+     Rail — the horizontal product carousel
+     -------------------------------------------------------------------------
+     A scroll container, not a transform slider. Scroll-snap gives the arrows
+     something native to drive, keeps the trackpad and touch gestures the ones
+     the shopper already knows, and leaves the rail keyboard-reachable and
+     screen-reader-linear for free. The arrows are an affordance over it, not
+     the mechanism.
+  ------------------------------------------------------------------------- */
+  .shop .rail {
+    display: grid;
+    grid-auto-flow: column;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    /* Bleeds to the viewport edge so the last card is visibly cut off, which is
+       what tells a shopper there is more to the right. */
+    scroll-padding-inline: var(--rail-gutter, 1rem);
+  }
+  .shop .rail::-webkit-scrollbar {
+    display: none;
+  }
+  .shop .rail > * {
+    scroll-snap-align: start;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shop .rail {
+      scroll-behavior: auto;
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+     Marquee — the announcement bar
+     -------------------------------------------------------------------------
+     Two identical tracks translate as one; when the first has travelled its own
+     width the animation restarts, and the second is sitting exactly where the
+     first began. The seam is therefore never visible and no measurement is
+     needed at runtime.
+  ------------------------------------------------------------------------- */
+  .shop .marquee {
+    display: flex;
+    overflow: hidden;
+    user-select: none;
+  }
+  .shop .marquee__track {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--marquee-gap, 2.5rem);
+    padding-inline-end: var(--marquee-gap, 2.5rem);
+    min-width: 100%;
+    animation: marquee var(--marquee-duration, 38s) linear infinite;
+  }
+  .shop .marquee:hover .marquee__track {
+    animation-play-state: paused;
+  }
+
+  /* Motion that runs forever with no way to stop it is the exact case the
+     reduced-motion query exists for: the bar becomes a static, scrollable row. */
+  @media (prefers-reduced-motion: reduce) {
+    .shop .marquee {
+      overflow-x: auto;
+    }
+    .shop .marquee__track {
+      animation: none;
+    }
+    .shop .marquee__track ~ .marquee__track {
+      display: none;
+    }
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
 }
 
 /* Sheets and panels rise into place rather than appearing. Paired with the

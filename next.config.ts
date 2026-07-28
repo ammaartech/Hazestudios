@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
             },
           ])
         : []),
+      // Imported catalogues keep pointing at the source CDN: a Shopify product
+      // export carries image URLs, not image files, so a product imported by
+      // CSV has no copy in our own bucket and would render as a broken tile
+      // without this. Products created here still upload to Supabase Storage.
+      { protocol: "https", hostname: "cdn.shopify.com" },
       // Placeholder catalog photography from the seed migration. Remove once
       // real product shots are uploaded to the product-images bucket.
       { protocol: "https", hostname: "picsum.photos" },

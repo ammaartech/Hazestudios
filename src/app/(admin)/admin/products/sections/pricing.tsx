@@ -1,13 +1,15 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 import { useFields } from "@/lib/form-store";
 import { currencySymbol, formatMoney } from "@/lib/format";
 import { toNumber } from "@/lib/number-input";
 import { useProductStore, type ProductDraft } from "../product-draft";
 import { Field, MoneyInput } from "./fields";
 
-const KEYS = ["price", "compare_at_price", "cost_per_item"] as const;
+const KEYS = ["price", "compare_at_price", "cost_per_item", "taxable"] as const;
 
 export function PricingSection({ currency = "USD" }: { currency?: string }) {
   const store = useProductStore();
@@ -99,6 +101,26 @@ export function PricingSection({ currency = "USD" }: { currency?: string }) {
             </div>
           </dl>
         </div>
+
+        <Separator />
+
+        {/* Shopify's "Charge tax on this product". Kept here rather than in
+            Shipping because it is a property of the money, not the parcel —
+            digital goods still need it and never ship. */}
+        <label className="flex cursor-pointer items-start gap-2.5">
+          <Checkbox
+            checked={values.taxable}
+            onCheckedChange={(v) => store.set("taxable", v === true)}
+            className="mt-0.5"
+          />
+          <span className="text-sm leading-snug">
+            Charge tax on this product
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              Uncheck for items your store does not collect tax on, such as gift
+              wrapping or a service.
+            </span>
+          </span>
+        </label>
       </CardContent>
     </Card>
   );

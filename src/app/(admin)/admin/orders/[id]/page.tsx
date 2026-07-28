@@ -25,6 +25,9 @@ import {
   MarkPaidButton,
   RefundDialog,
 } from "./order-actions";
+import { getQikinkStatus } from "@/lib/qikink/config";
+import { getFulfillment } from "@/lib/qikink/fulfillment";
+import { QikinkCard } from "./qikink-card";
 
 export const metadata = { title: "Order" };
 export const dynamic = "force-dynamic";
@@ -58,6 +61,14 @@ export default async function OrderDetailPage({
   ]);
 
   if (!orderData) notFound();
+
+  // Read after the order exists: both go through the service-role client, and
+  // there is no point paying for them on a 404.
+  const [qikinkStatus, qikinkFulfillment] = await Promise.all([
+    getQikinkStatus(),
+    getFulfillment(id),
+  ]);
+
   const order = orderData as Order & { customers: Customer | null };
   const items = (itemsData ?? []) as OrderItem[];
   const fulfillments = (fulfillmentsData ?? []) as Fulfillment[];
@@ -200,6 +211,16 @@ export default async function OrderDetailPage({
               </div>
             </CardContent>
           </Card>
+
+          {/* Only once the integration is switched on — an unconfigured store
+              should not carry a card for a supplier it does not use. */}
+          {qikinkStatus.enabled && qikinkStatus.configured && (
+            <QikinkCard
+              orderId={order.id}
+              fulfillment={qikinkFulfillment}
+              isDraft={order.is_draft}
+            />
+          )}
 
           {fulfillments.length > 0 && (
             <Card>

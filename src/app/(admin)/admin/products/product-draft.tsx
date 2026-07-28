@@ -34,6 +34,20 @@ export type { OptionDraft, VariantOverride, VariantRow } from "@/lib/variants";
 /* -------------------------------------------------------------------------- */
 
 /**
+ * A metafield while it is being edited.
+ *
+ * An array of pairs rather than the `Record` the database stores: a record
+ * keyed by the metafield key cannot represent a half-typed key, so renaming
+ * `custom.badge` would destroy and recreate the row on every keystroke and the
+ * input would lose focus each time. The stable `id` is what React keys on.
+ */
+export interface MetafieldDraft {
+  id: string;
+  key: string;
+  value: string;
+}
+
+/**
  * Money and weight live as strings, not numbers. A numeric state field fights
  * the input: typing "10." or clearing the box round-trips through NaN and the
  * cursor jumps. Parsing happens once, at save.
@@ -56,6 +70,7 @@ export interface ProductDraft extends Record<string, unknown> {
   track_inventory: boolean;
   continue_selling: boolean;
   requires_shipping: boolean;
+  taxable: boolean;
   weight: string;
   weight_unit: WeightUnit;
   country_of_origin: string;
@@ -71,6 +86,7 @@ export interface ProductDraft extends Record<string, unknown> {
   inventory: Record<string, number>;
   size_chart_enabled: boolean;
   size_chart: SizeChart;
+  metafields: MetafieldDraft[];
 }
 
 /* -------------------------------------------------------------------------- */
@@ -128,6 +144,7 @@ export function toPayload(draft: ProductDraft, locations: Location[]) {
     track_inventory: draft.track_inventory,
     continue_selling: draft.continue_selling,
     requires_shipping: draft.requires_shipping,
+    taxable: draft.taxable,
     weight: draft.requires_shipping ? toNumber(draft.weight) : null,
     weight_unit: draft.weight_unit,
     country_of_origin: draft.country_of_origin.trim(),
@@ -135,6 +152,16 @@ export function toPayload(draft: ProductDraft, locations: Location[]) {
     seo_title: draft.seo_title.trim(),
     seo_description: draft.seo_description.trim(),
     published_at: draft.status === "active" ? (draft.published_at ?? new Date().toISOString()) : null,
+
+    // A half-filled row is an in-progress edit, not data. Dropping the blanks
+    // here rather than blocking the save keeps an abandoned row from making the
+    // whole product unsaveable. Later keys win, so a duplicated key collapses
+    // to one entry instead of being rejected.
+    metafields: Object.fromEntries(
+      draft.metafields
+        .map((m) => [m.key.trim(), m.value.trim()] as const)
+        .filter(([key, value]) => key !== "" && value !== "")
+    ),
 
     images: draft.images.map((img) => ({
       id: img.id,
@@ -145,6 +172,7 @@ export function toPayload(draft: ProductDraft, locations: Location[]) {
     options: activeOptions(draft.options).map((o) => ({
       name: o.name.trim(),
       values: o.values,
+      linked_to: o.linked_to ?? "",
     })),
 
     variants: variants.map((v) => ({
@@ -162,6 +190,7 @@ export function toPayload(draft: ProductDraft, locations: Location[]) {
       requires_shipping: draft.requires_shipping,
       track_inventory: draft.track_inventory,
       continue_selling: draft.continue_selling,
+      taxable: draft.taxable,
       available: v.available,
       image_id: v.image_id,
       // Always send every location, so a location zeroed in the UI actually
