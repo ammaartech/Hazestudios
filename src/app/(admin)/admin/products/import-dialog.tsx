@@ -48,7 +48,7 @@ const EMPTY_TOTALS: ImportTotals = {
 export function ImportDialog({
   open,
   onOpenChange,
-  currency = "USD",
+  currency = "INR",
   onImported,
 }: {
   open: boolean;

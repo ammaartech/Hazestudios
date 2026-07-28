@@ -85,7 +85,7 @@ export function RailCard({
       </div>
 
       {product.swatches.length > 0 && (
-        <ul className="mt-3.5 flex flex-wrap justify-center gap-1.5">
+        <ul className="mt-3.5 flex flex-wrap gap-1.5">
           {product.swatches.map((swatch, i) => (
             <li key={swatch.value}>
               <button
@@ -131,14 +131,22 @@ export function RailCard({
           className="mt-1.5 justify-center text-sm text-[var(--shop-charcoal)]"
         />
 
-        {product.labels.length > 0 && (
-          <p className="mt-2 flex justify-center gap-2 text-[0.625rem] uppercase tracking-[0.1em] text-[var(--shop-stone)]">
-            {product.labels.map((label) => (
-              <span key={label}>{label}</span>
-            ))}
-          </p>
-        )}
       </div>
+
+      {/* Spec chips — fabric weight, composition. Outlined and left-aligned so
+          they read as a datasheet under the card rather than as more copy. */}
+      {product.labels.length > 0 && (
+        <ul className="mt-3 flex flex-wrap gap-1.5">
+          {product.labels.map((label) => (
+            <li
+              key={label}
+              className="border border-[var(--shop-hairline)] px-2 py-1 text-[0.625rem] uppercase tracking-[0.08em] text-[var(--shop-charcoal)]"
+            >
+              {label}
+            </li>
+          ))}
+        </ul>
+      )}
     </article>
   );
 }

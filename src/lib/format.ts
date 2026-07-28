@@ -1,16 +1,27 @@
-export function formatMoney(amount: number | null | undefined, currency = "USD") {
-  return new Intl.NumberFormat("en-US", {
+/**
+ * The store's default currency. Callers that know better — an order settled in
+ * another currency, a price list — pass their own; everything else formats in
+ * the shop's own money rather than guessing.
+ */
+export const DEFAULT_CURRENCY = "INR";
+export const DEFAULT_LOCALE = "en-IN";
+
+export function formatMoney(
+  amount: number | null | undefined,
+  currency = DEFAULT_CURRENCY
+) {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: "currency",
     currency,
   }).format(Number(amount ?? 0));
 }
 
 /** Just the symbol, for use as an input prefix where a full format would fight the caret. */
-export function currencySymbol(currency = "USD") {
+export function currencySymbol(currency = DEFAULT_CURRENCY) {
   return (
-    new Intl.NumberFormat("en-US", { style: "currency", currency })
+    new Intl.NumberFormat(DEFAULT_LOCALE, { style: "currency", currency })
       .formatToParts(0)
-      .find((p) => p.type === "currency")?.value ?? "$"
+      .find((p) => p.type === "currency")?.value ?? "₹"
   );
 }
 

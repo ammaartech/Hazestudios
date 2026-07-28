@@ -74,8 +74,8 @@ function ProductFormInner({
   collections,
   locations,
   facets,
-  currency = "USD",
-  storeUrl = "hazestudios.com",
+  currency = "INR",
+  storeUrl = "fogstores.com",
   aiEnabled = false,
 }: Omit<ProductFormProps, "initial">) {
   const router = useRouter();

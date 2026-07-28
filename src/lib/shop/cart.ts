@@ -67,7 +67,7 @@ export const EMPTY_CART: Cart = {
   lines: [],
   count: 0,
   subtotal: 0,
-  currency: "USD",
+  currency: "INR",
   removed: [],
 };
 
@@ -315,7 +315,7 @@ export async function getCart(): Promise<Cart> {
       lines,
       count: lines.reduce((n, l) => n + (l.available ? l.quantity : 0), 0),
       subtotal: lines.reduce((n, l) => n + l.lineTotal, 0),
-      currency: "USD",
+      currency: "INR",
       // One message per distinct reason, however many lines hit it.
       removed: [...new Set(removed)],
     };

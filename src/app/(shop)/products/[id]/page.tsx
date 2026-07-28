@@ -124,7 +124,7 @@ export default async function ProductPage({
         <section className="mt-28 px-4 md:mt-36 md:px-8">
           <div className="flex items-end justify-between gap-6">
             <h2 className="display text-[clamp(1.5rem,3.5vw,2.5rem)]">
-              More from Hazestudios
+              More from Fogstores
             </h2>
             <Link
               href="/"

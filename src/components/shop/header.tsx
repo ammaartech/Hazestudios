@@ -8,6 +8,11 @@ import type { Collection } from "@/lib/types";
 import { resolveNav, type ResolvedGroup } from "@/lib/shop/nav";
 import { cn } from "@/lib/utils";
 import { useCart } from "./cart-provider";
+import {
+  ScrambleText,
+  scrambleDuration,
+  usePrefersReducedMotion,
+} from "./scramble-text";
 
 /**
  * Storefront header.
@@ -101,7 +106,7 @@ export function ShopHeader({
           <div className="pointer-events-none absolute inset-x-0 flex justify-center">
             <Link
               href="/"
-              className="display pointer-events-auto text-base tracking-[0.02em] text-[var(--shop-ink)] md:text-lg"
+              className="display pointer-events-auto text-base font-semibold uppercase tracking-[0.06em] text-[var(--shop-ink)] md:text-lg"
             >
               {storeName}
             </Link>
@@ -255,6 +260,17 @@ function MenuItem({
   );
 }
 
+/**
+ * How far apart the labels start tumbling, and the ceiling on that stagger.
+ *
+ * The panel should read its collections out one after another, but a menu that
+ * takes a second to become legible is a menu that is broken. Capping the
+ * cascade keeps a twelve-link group finishing in roughly the same time as a
+ * four-link one — under 900ms including the longest label's own tumble.
+ */
+const STAGGER_MS = 60;
+const STAGGER_CAP_MS = 300;
+
 function MenuPanel({
   group,
   onEnter,
@@ -264,6 +280,10 @@ function MenuPanel({
   onEnter: () => void;
   onLeave: () => void;
 }) {
+  // The stagger is motion in the same sense the tumble is, so it goes away with
+  // it rather than leaving a reader waiting for sub-copy that will never move.
+  const reduced = usePrefersReducedMotion();
+
   return (
     <div
       onMouseEnter={onEnter}
@@ -273,31 +293,48 @@ function MenuPanel({
     >
       <ul
         className={cn(
-          "px-8 py-8",
+          // Centred on the bar and held to a max width: the panel is the same
+          // surface as the wordmark above it, and centred text that runs the
+          // full width of an ultrawide screen stops being a list you can scan.
+          "mx-auto w-full px-8 py-8 text-center",
           // Sub-copy needs room to breathe, so those menus span the bar in
-          // columns; a plain list stays a single narrow column at the left edge.
+          // columns; a plain list stays a single narrow column.
           group.wide
-            ? "grid grid-cols-2 gap-x-8 gap-y-6 md:grid-cols-3 lg:grid-cols-4"
-            : "flex flex-col gap-4"
+            ? "grid max-w-5xl grid-cols-2 gap-x-8 gap-y-6 md:grid-cols-3 lg:grid-cols-4"
+            : "flex max-w-sm flex-col items-center gap-4"
         )}
       >
-        {group.links.map((link) => (
-          <li key={link.href}>
-            <Link
-              href={link.href}
-              className="group/link inline-block cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--shop-ink)]"
-            >
-              <span className="text-[0.9375rem] text-[var(--shop-ink)] transition-opacity duration-200 group-hover/link:opacity-60">
-                {link.label}
-              </span>
-              {link.note && (
-                <span className="mt-1.5 block text-sm text-[var(--shop-mute)]">
-                  {link.note}
-                </span>
-              )}
-            </Link>
-          </li>
-        ))}
+        {group.links.map((link, i) => {
+          const start = reduced ? 0 : Math.min(i * STAGGER_MS, STAGGER_CAP_MS);
+          return (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                className="group/link inline-block cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--shop-ink)]"
+              >
+                <ScrambleText
+                  text={link.label}
+                  delay={start}
+                  className="block text-[0.9375rem] text-[var(--shop-ink)] transition-opacity duration-200 group-hover/link:opacity-60"
+                />
+                {/* Sub-copy is the explanation, not the headline, so it waits
+                    for its own label to land instead of competing with it. */}
+                {link.note && (
+                  <span
+                    className="mt-1.5 block text-sm text-[var(--shop-mute)]"
+                    style={{
+                      animation: `glass-rise 240ms var(--glass-ease) ${
+                        reduced ? 0 : scrambleDuration(link.label, start)
+                      }ms both`,
+                    }}
+                  >
+                    {link.note}
+                  </span>
+                )}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

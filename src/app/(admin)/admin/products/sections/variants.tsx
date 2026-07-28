@@ -37,7 +37,7 @@ const KEYS = [
 
 export function VariantsSection({
   locations,
-  currency = "USD",
+  currency = "INR",
 }: {
   locations: Location[];
   currency?: string;

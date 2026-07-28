@@ -458,7 +458,7 @@ export async function getSalesBreakdown(
     previousSeries: [],
     byProduct: [],
     byChannel: [],
-    currency: "USD",
+    currency: "INR",
     configured: false,
   };
 
@@ -499,7 +499,7 @@ export async function getSalesBreakdown(
         .slice(0, 10),
       // Single channel until POS or social selling actually writes orders.
       byChannel: [{ name: "Online Store", revenue: current.totals.totalSales }],
-      currency: current.orders[0]?.currency ?? "USD",
+      currency: current.orders[0]?.currency ?? "INR",
       configured: true,
     };
   } catch {

@@ -48,7 +48,7 @@ export default async function CollectionPage({
       {/* Editorial header — full-bleed when the collection has artwork, plain
           type when it doesn't, so an image-less collection still reads well. */}
       {collection.image_url ? (
-        <section className="relative isolate flex min-h-[46vh] items-end overflow-hidden bg-[var(--shop-cloud)] md:min-h-[56vh]">
+        <section className="relative isolate flex min-h-[46dvh] items-end overflow-hidden bg-[var(--shop-cloud)] md:min-h-[56dvh]">
           <Image
             src={collection.image_url}
             alt=""

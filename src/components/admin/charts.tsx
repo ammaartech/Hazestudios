@@ -16,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, DEFAULT_LOCALE } from "@/lib/format";
 
 /**
  * Chart set for the admin dashboards.
@@ -39,9 +39,9 @@ const MUTED = "var(--viz-muted)";
 
 const CATEGORICAL = [SERIES_1, SERIES_2, SERIES_3];
 
-/** Compact axis money: "₹1.5K" beats "₹1,500.00" on a 40px gutter. */
+/** Compact axis money: "₹1.5L" beats "₹1,50,000.00" on a 40px gutter. */
 function compactMoney(value: number, currency: string) {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: "currency",
     currency,
     notation: "compact",
@@ -63,7 +63,7 @@ function ChartTooltip({
   payload,
   label,
   money,
-  currency = "USD",
+  currency = "INR",
 }: {
   active?: boolean;
   payload?: TooltipEntry[];
@@ -111,7 +111,7 @@ export interface TrendPoint {
 export function TrendAreaChart({
   data,
   money = true,
-  currency = "USD",
+  currency = "INR",
   height = 260,
   compareLabel,
 }: {
@@ -201,7 +201,7 @@ export function TrendAreaChart({
 export function TrendLineChart({
   data,
   money = true,
-  currency = "USD",
+  currency = "INR",
   height = 200,
 }: {
   data: TrendPoint[];
@@ -289,7 +289,7 @@ export function OrdersBarChart({
 /** Horizontal ranked bars — the right form for "which product sold most". */
 export function RankedBarChart({
   data,
-  currency = "USD",
+  currency = "INR",
 }: {
   data: { name: string; value: number }[];
   currency?: string;
@@ -339,7 +339,7 @@ export function RankedBarChart({
  */
 export function ChannelDonut({
   data,
-  currency = "USD",
+  currency = "INR",
 }: {
   data: { name: string; value: number }[];
   currency?: string;
@@ -371,12 +371,7 @@ export function ChannelDonut({
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-lg font-semibold">
-            {new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency,
-              notation: "compact",
-              maximumFractionDigits: 1,
-            }).format(total)}
+            {compactMoney(total, currency)}
           </span>
         </div>
       </div>

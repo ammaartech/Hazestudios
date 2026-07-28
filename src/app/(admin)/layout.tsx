@@ -7,8 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 // The root layout now identifies as the storefront, so the admin restates its own.
 export const metadata: Metadata = {
   title: {
-    default: "Hazestudios Admin",
-    template: "%s · Hazestudios Admin",
+    default: "Fogstores Admin",
+    template: "%s · Fogstores Admin",
   },
 };
 
@@ -17,7 +17,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  let storeName = "Hazestudios";
+  let storeName = "Fogstores";
   let userEmail = "Not signed in";
 
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) {

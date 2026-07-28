@@ -1,32 +1,43 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono, Archivo } from "next/font/google";
+import { Geist_Mono, Rubik, Space_Mono, Work_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const inter = Inter({
+/**
+ * The storefront's three faces, matching the Fogstores type system:
+ * Work Sans sets body copy and navigation, Rubik sets headings, and Space Mono
+ * sets the uppercase eyebrows — the announcement ticker and the small caps
+ * labels that introduce each editorial block.
+ */
+const workSans = Work_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
 });
 
+const rubik = Rubik({
+  variable: "--font-display",
+  subsets: ["latin"],
+});
+
+const spaceMono = Space_Mono({
+  variable: "--font-subheading",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
+// Retained for the admin, which keeps its own monospace for tabular figures.
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
-// Display face for the storefront's oversized editorial lockups. A neo-grotesque
-// stands in for Nike's proprietary Futura ND / Helvetica Now Display pairing.
-const archivo = Archivo({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800", "900"],
-});
-
 export const metadata: Metadata = {
   title: {
-    default: "Hazestudios",
-    template: "%s · Hazestudios",
+    default: "Fogstores",
+    template: "%s · Fogstores",
   },
-  description: "Hazestudios — ready-to-wear, cut and finished in limited runs.",
+  description:
+    "Fogstores — mini-skirts, boots, studs and all things hot. Fall 2026.",
 };
 
 export default function RootLayout({
@@ -37,7 +48,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${geistMono.variable} ${archivo.variable} h-full antialiased`}
+      className={`${workSans.variable} ${geistMono.variable} ${rubik.variable} ${spaceMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {children}

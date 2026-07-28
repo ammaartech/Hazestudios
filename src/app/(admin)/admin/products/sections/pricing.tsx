@@ -11,7 +11,7 @@ import { Field, MoneyInput } from "./fields";
 
 const KEYS = ["price", "compare_at_price", "cost_per_item", "taxable"] as const;
 
-export function PricingSection({ currency = "USD" }: { currency?: string }) {
+export function PricingSection({ currency = "INR" }: { currency?: string }) {
   const store = useProductStore();
   const values = useFields<ProductDraft, (typeof KEYS)[number]>(store, KEYS);
   const symbol = currencySymbol(currency);

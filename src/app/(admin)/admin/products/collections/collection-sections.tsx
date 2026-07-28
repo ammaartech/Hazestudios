@@ -485,7 +485,7 @@ function CharCount({ value, max }: { value: string; max: number }) {
   );
 }
 
-export function SeoSection({ storeUrl = "hazestudios.com" }: { storeUrl?: string }) {
+export function SeoSection({ storeUrl = "fogstores.com" }: { storeUrl?: string }) {
   const store = useCollectionStore();
   const v = useFields<CollectionDraft, (typeof SEO_KEYS)[number]>(store, SEO_KEYS);
   const [editingHandle, setEditingHandle] = useState(false);

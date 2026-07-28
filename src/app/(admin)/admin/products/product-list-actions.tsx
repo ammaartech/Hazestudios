@@ -16,7 +16,7 @@ import {
 import { ImportDialog } from "./import-dialog";
 
 /** Header controls that sit left of "Add product": Export, Import, More actions. */
-export function ProductListActions({ currency = "USD" }: { currency?: string }) {
+export function ProductListActions({ currency = "INR" }: { currency?: string }) {
   const router = useRouter();
   const [importing, setImporting] = useState(false);
 

@@ -141,7 +141,7 @@ export function OrganizationSection({
               value={vendor}
               onChange={setVendor}
               options={facets.vendors}
-              placeholder="e.g. Hazestudios"
+              placeholder="e.g. Fogstores"
             />
           )}
         </Field>

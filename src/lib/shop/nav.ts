@@ -29,9 +29,13 @@ export function resolveNav(collections: Collection[]): ResolvedGroup[] {
 
   const groups = NAV.map((group: NavGroup): ResolvedGroup => {
     const links = group.children
-      .filter((child) => byHandle.has(child.handle))
+      // An authored landing page has no collection behind it to look up, so it
+      // is kept as written; everything else has to exist and be published.
+      .filter((child) => child.page || byHandle.has(child.handle))
       .map((child) => ({
-        label: byHandle.get(child.handle)!.title,
+        label: child.page
+          ? child.label
+          : byHandle.get(child.handle)!.title,
         href: `/collections/${child.handle}`,
         note: child.note,
       }));

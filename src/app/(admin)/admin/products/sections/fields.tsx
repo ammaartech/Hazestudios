@@ -10,6 +10,7 @@ import {
   InputGroupText,
 } from "@/components/ui/input-group";
 import { cn } from "@/lib/utils";
+import { currencySymbol } from "@/lib/format";
 
 /**
  * Labelled field wrapper. Labels are persistent, never placeholder-as-label,
@@ -81,7 +82,7 @@ export function Field({
 export function MoneyInput({
   value,
   onChange,
-  symbol = "$",
+  symbol = currencySymbol(),
   placeholder = "0.00",
   className,
   ...props

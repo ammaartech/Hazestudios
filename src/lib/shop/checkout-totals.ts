@@ -64,7 +64,7 @@ export const DEFAULT_CHECKOUT_SETTINGS: CheckoutSettings = {
   flatRate: 0,
   freeThreshold: null,
   taxRate: 0,
-  currency: "USD",
+  currency: "INR",
 };
 
 /**

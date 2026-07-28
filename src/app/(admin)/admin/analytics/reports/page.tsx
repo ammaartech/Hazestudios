@@ -9,7 +9,7 @@ export const metadata = { title: "Reports" };
 export const dynamic = "force-dynamic";
 
 export default async function ReportsPage() {
-  let storeName = "Hazestudios";
+  let storeName = "Fogstores";
 
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
     try {

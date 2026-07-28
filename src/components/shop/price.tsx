@@ -9,11 +9,12 @@ import { cn } from "@/lib/utils";
 export function Price({
   amount,
   compareAt,
-  currency = "USD",
+  currency,
   className,
 }: {
   amount: number;
   compareAt?: number | null;
+  /** Omit to format in the store's own currency. */
   currency?: string;
   className?: string;
 }) {

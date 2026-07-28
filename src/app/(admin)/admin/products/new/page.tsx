@@ -26,7 +26,7 @@ export default async function NewProductPage() {
       collections={(collections ?? []) as Collection[]}
       locations={(locations ?? []) as Location[]}
       facets={facets}
-      currency={shop?.currency ?? "USD"}
+      currency={shop?.currency ?? "INR"}
       aiEnabled={geminiConfigured()}
     />
   );

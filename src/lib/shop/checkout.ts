@@ -46,7 +46,7 @@ export async function getCheckoutSettings(): Promise<CheckoutSettings> {
           ? null
           : number(checkout.free_threshold, 0),
       taxRate: number(checkout.tax_rate, 0),
-      currency: (data.currency as string) ?? "USD",
+      currency: (data.currency as string) ?? "INR",
     };
   } catch {
     return DEFAULT_CHECKOUT_SETTINGS;

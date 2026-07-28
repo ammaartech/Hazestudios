@@ -119,7 +119,7 @@ export async function askForReport(question: string): Promise<AskResult> {
   // Staff gate, before any spend. The admin shell blocks non-staff at the
   // route, but this endpoint is reachable directly.
   let timezone = FALLBACK_TIMEZONE;
-  let currency = "USD";
+  let currency = "INR";
   try {
     const supabase = await createClient();
     const { data: isStaff } = await supabase.rpc("is_staff");

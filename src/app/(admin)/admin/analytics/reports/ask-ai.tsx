@@ -20,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { DEFAULT_LOCALE } from "@/lib/format";
 import { CsvExportButton } from "./report-controls";
 import { askForReport, type AskResult } from "./ask-actions";
 
@@ -325,7 +326,7 @@ function formatCell(
   if (value === null) return <span className="text-muted-foreground">—</span>;
   if (kind === "boolean") return value ? "Yes" : "No";
   if (kind === "number" && typeof value === "number") {
-    return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
+    return value.toLocaleString(DEFAULT_LOCALE, { maximumFractionDigits: 2 });
   }
   return String(value);
 }

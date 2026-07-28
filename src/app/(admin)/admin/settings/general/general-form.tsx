@@ -89,7 +89,7 @@ export function GeneralForm({ settings }: { settings: ShopSettings }) {
               id="currency"
               value={currency}
               onChange={(e) => setCurrency(e.target.value.toUpperCase())}
-              placeholder="USD"
+              placeholder="INR"
             />
           </div>
           <div className="space-y-2">

@@ -13,8 +13,8 @@ export default async function HelpPage({
 }) {
   const { order } = await searchParams;
 
-  let supportEmail = "hello@hazestudios.com";
-  let storeName = "Hazestudios";
+  let supportEmail = "hello@fogstores.com";
+  let storeName = "Fogstores";
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
     try {
       const supabase = await createClient();

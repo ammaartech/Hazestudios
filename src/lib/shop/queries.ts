@@ -342,5 +342,5 @@ export async function getStoreName(): Promise<string> {
     .from("shop_settings")
     .select("store_name")
     .maybeSingle();
-  return data?.store_name ?? "Hazestudios";
+  return data?.store_name ?? "Fogstores";
 }

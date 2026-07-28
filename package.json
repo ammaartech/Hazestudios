@@ -19,6 +19,8 @@
     "verify:sql": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-sql-reports.mjs",
     "verify:csv": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-product-csv.mjs",
     "import:products": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/import-products.mjs",
+    "import:collections": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/import-collections.mjs",
+    "import:inventory": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/import-inventory.mjs",
     "seed:demo": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed-demo-data.mjs",
     "seed:demo:clean": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed-demo-data.mjs --clean",
     "build:worldmask": "node scripts/build-world-mask.mjs"

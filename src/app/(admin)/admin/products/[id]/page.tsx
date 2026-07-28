@@ -88,7 +88,7 @@ export default async function EditProductPage({
       collections={(collections ?? []) as Collection[]}
       locations={locationRows}
       facets={facets}
-      currency={shop?.currency ?? "USD"}
+      currency={shop?.currency ?? "INR"}
       aiEnabled={geminiConfigured()}
     />
   );

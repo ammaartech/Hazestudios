@@ -30,7 +30,10 @@ export default async function ShopLayout({
 
   return (
     <CartProvider seed={cart}>
-      <div className="shop flex min-h-screen flex-col bg-[var(--shop-canvas)] text-[var(--shop-ink)]">
+      {/* `dvh`, not `vh`: on mobile Safari and Chrome `100vh` is the height with
+          the URL bar hidden, so a `vh`-sized shell is taller than the screen on
+          load and the page starts with a scroll it did not ask for. */}
+      <div className="shop flex min-h-dvh flex-col bg-[var(--shop-canvas)] text-[var(--shop-ink)]">
         <a
           href="#main"
           className="meta sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-[var(--shop-ink)] focus:px-4 focus:py-3 focus:text-[var(--shop-canvas)]"

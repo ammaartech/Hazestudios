@@ -17,7 +17,10 @@ function Track({ messages, "aria-hidden": hidden }: {
       {messages.map(({ icon, text }, i) => {
         const Icon = ICONS[icon];
         return (
-          <span key={`${text}-${i}`} className="meta flex items-center gap-2.5 whitespace-nowrap">
+          <span
+            key={`${text}-${i}`}
+            className="subheading flex items-center gap-2.5 whitespace-nowrap"
+          >
             <Icon className="size-3.5 shrink-0 opacity-70" aria-hidden />
             {text}
           </span>

@@ -60,7 +60,7 @@ export default function LoginPage() {
             <Store className="size-5" />
           </span>
           <span className="text-xl font-semibold tracking-tight">
-            Hazestudios
+            Fogstores
           </span>
         </div>
         <Card>

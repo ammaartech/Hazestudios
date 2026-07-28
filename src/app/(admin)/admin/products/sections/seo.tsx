@@ -31,7 +31,7 @@ function plainText(html: string): string {
     .trim();
 }
 
-export function SeoSection({ storeUrl = "hazestudios.com" }: { storeUrl?: string }) {
+export function SeoSection({ storeUrl = "fogstores.com" }: { storeUrl?: string }) {
   const store = useProductStore();
   const v = useFields<ProductDraft, (typeof KEYS)[number]>(store, KEYS);
   const [editingHandle, setEditingHandle] = useState(false);

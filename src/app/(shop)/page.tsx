@@ -1,78 +1,100 @@
 import Link from "next/link";
-import { ARRIVALS, CAROUSELS, LOOKBOOK, TAB_CAROUSEL } from "@/lib/shop/home-content";
+import {
+  FEATURED_BOTTOM,
+  FEATURED_TOP,
+  MOST_TRENDING_EYEBROW,
+  REEL,
+  type FeaturedCollection as FeaturedConfig,
+} from "@/lib/shop/home-content";
 import {
   getCollectionByHandle,
   getProduct,
   getProductsInCollection,
 } from "@/lib/shop/queries";
 import { toRailProduct, type RailProduct } from "@/lib/shop/swatches";
-import { ProductRail } from "@/components/shop/product-rail";
-import { TabCarousel, type CarouselTab } from "@/components/shop/tab-carousel";
+import { FeaturedCollection } from "@/components/shop/featured-collection";
+import { ShoppableReel, type ReelItem } from "@/components/shop/shoppable-reel";
 import {
-  Arrivals,
-  Divider,
+  BrandMarquee,
+  EditorialBanner,
   Hero,
-  Lookbook,
-  Mosaic,
-  SectionHeading,
-  type ArrivalTag,
+  SectionIntro,
+  ShopTheLook,
+  ShortcutRow,
 } from "@/components/shop/home-sections";
 
 export const dynamic = "force-dynamic";
 
+interface ResolvedBlock {
+  config: FeaturedConfig;
+  heading: string;
+  products: RailProduct[];
+}
+
 /**
- * Resolves one authored carousel to the products behind it.
+ * Resolves one authored collection block to the products behind it.
  *
- * A missing or unpublished collection returns null rather than an empty rail:
+ * A missing or unpublished collection returns null rather than an empty block:
  * the section is then skipped entirely, so the page closes up around it instead
  * of leaving a heading with nothing underneath.
  */
-async function loadRail(handle: string): Promise<
-  { title: string; products: RailProduct[] } | null
-> {
-  const collection = await getCollectionByHandle(handle);
+async function loadBlock(config: FeaturedConfig): Promise<ResolvedBlock | null> {
+  const collection = await getCollectionByHandle(config.handle);
   if (!collection) return null;
 
   const products = await getProductsInCollection(collection);
   if (!products.length) return null;
 
-  return { title: collection.title, products: products.map(toRailProduct) };
+  return {
+    config,
+    heading: config.heading ?? collection.title,
+    products: products.slice(0, config.limit).map(toRailProduct),
+  };
 }
 
 export default async function HomePage() {
   // One pass over every section's data. They are independent reads, so they go
   // out together rather than waterfalling down the page.
-  const [tabRails, carouselRails, arrivalProducts] = await Promise.all([
-    Promise.all(TAB_CAROUSEL.tabs.map((tab) => loadRail(tab.handle))),
-    Promise.all(CAROUSELS.map((section) => loadRail(section.handle))),
-    Promise.all(ARRIVALS.frames.map((frame) => getProduct(frame.handle))),
+  const [topBlocks, bottomBlocks, reelProducts] = await Promise.all([
+    Promise.all(FEATURED_TOP.map(loadBlock)),
+    Promise.all(FEATURED_BOTTOM.map(loadBlock)),
+    Promise.all(REEL.cards.map((card) => getProduct(card.handle))),
   ]);
 
-  // The authored label wins where given, so a tab can read "Tees" while the
-  // collection behind it is called something longer; otherwise the collection
-  // names its own tab.
-  const tabs: CarouselTab[] = TAB_CAROUSEL.tabs.flatMap((tab, i) => {
-    const rail = tabRails[i];
-    return rail ? [{ label: tab.label ?? rail.title, products: rail.products }] : [];
+  // A reel card whose product no longer resolves is dropped rather than shown
+  // with a blank tag. Where no customer clip has been uploaded the card falls
+  // back to the product's own photography, so the row stays full while the
+  // user-generated media is being cut.
+  const reelItems: ReelItem[] = REEL.cards.flatMap((card, i) => {
+    const product = reelProducts[i];
+    if (!product) return [];
+
+    const [primary] = product.images;
+    const media = card.media ?? primary?.url;
+    if (!media) return [];
+
+    return [
+      {
+        handle: product.handle || product.id,
+        title: product.title,
+        price: product.price,
+        compareAt: product.compare_at_price,
+        media,
+        video: card.video ?? false,
+        // The chip identifies which product a customer's clip is tagged to. On
+        // a card still falling back to the product's own shot it would be that
+        // same photograph twice over, so it is left off until the clip lands.
+        thumb: card.media ? (primary?.url ?? null) : null,
+        caption: card.caption,
+      },
+    ];
   });
 
-  const arrivalTags: ArrivalTag[] = arrivalProducts.flatMap((product) =>
-    product
-      ? [
-          {
-            handle: product.handle || product.id,
-            title: product.title,
-            price: product.price,
-            compareAt: product.compare_at_price,
-          },
-        ]
-      : []
-  );
-
-  const hasCarousels = carouselRails.some(Boolean);
+  const blocks = [...topBlocks, ...bottomBlocks].filter(Boolean);
 
   return (
     <>
+      <ShortcutRow />
       <Hero />
 
       <TabCarousel
@@ -136,13 +158,13 @@ export default async function HomePage() {
 
       {/* A fresh install with no catalogue: the editorial above still renders,
           but nothing is buyable, so say so rather than leaving empty rails. */}
-      {!tabs.length && !hasCarousels && (
+      {!blocks.length && !reelItems.length && (
         <section className="px-4 py-24 text-center md:px-8">
           <h2 className="display text-[clamp(1.5rem,4vw,2.5rem)]">
             Nothing to shop yet
           </h2>
           <p className="mx-auto mt-4 max-w-md text-sm text-[var(--shop-mute)]">
-            The home page carousels point at collections that are missing or
+            The home page sections point at collections that are missing or
             empty. Publish them in the admin, or change the handles in{" "}
             <code className="text-[var(--shop-charcoal)]">
               src/lib/shop/home-content.ts

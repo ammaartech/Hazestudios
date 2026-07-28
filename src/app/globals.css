@@ -9,8 +9,9 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
   --font-display: var(--font-display);
+  --font-subheading: var(--font-subheading);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -261,28 +262,74 @@
   --z-toast: 70;
 }
 
+/* ---------------------------------------------------------------------------
+   Storefront layout containment
+   ---------------------------------------------------------------------------
+   The shell is a column flexbox, and a flex item's automatic minimum size is
+   its min-content width — not zero. So a single wide descendant (a rail of
+   cards, a long unbreakable string, an image that resists shrinking) can push
+   `main` past the viewport, taking the whole document with it. The page then
+   scrolls sideways and, because `.shop` is only as wide as the viewport while
+   the canvas behind it is not, the overflow shows as a band of bare `body`
+   background down one side. Zooming out just makes the band easier to see.
+
+   `min-width: 0` restores the intended behaviour: the column stretches to the
+   viewport and its contents fit inside it.
+
+   `overflow-x: clip` is the backstop for anything that still escapes. `clip`
+   rather than `hidden` on purpose — `hidden` would make this a scroll
+   container and break the sticky header; `clip` does not, and it is the one
+   overflow value that may pair with a visible vertical axis.
+--------------------------------------------------------------------------- */
+.shop {
+  width: 100%;
+  overflow-x: clip;
+}
+.shop > * {
+  min-width: 0;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
 
-  /* Oversized display lockups: tight leading and slightly negative tracking are
-     what make the type read as editorial rather than as a big heading. */
+  /* Section headings, set in Rubik. Case is authored rather than forced: the
+     campaign lockups run title case ("Siren Muse"), the merchandising headings
+     run caps ("BEST SELLERS"), and one section is deliberately lowercase. */
   .shop .display {
     font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
-    line-height: 0.86;
-    letter-spacing: -0.03em;
-    text-transform: uppercase;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+  }
+
+  /* The oversized editorial lockups — hero type only, where the tight leading
+     of a two-line campaign headline is the point. */
+  .shop .display-xl {
+    line-height: 0.92;
+    letter-spacing: -0.02em;
     font-weight: 700;
   }
 
-  /* Small uppercase metadata — nav, eyebrows, sizes, price labels. */
+  /* Small uppercase metadata — nav, buttons, sizes, price labels. Work Sans. */
   .shop .meta {
     font-size: 0.6875rem;
     line-height: 1.4;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    font-weight: 500;
+    font-weight: 600;
+  }
+
+  /* The Space Mono eyebrow: the announcement ticker and the caps label that
+     introduces each editorial block ("FOGSTORES X SUMMER SANDS"). */
+  .shop .subheading {
+    font-family: var(--font-subheading), ui-monospace, monospace;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 400;
   }
 
   /* The one animation primitive the storefront uses, for image reveals. */
@@ -553,6 +600,47 @@
     .shop .marquee__track ~ .marquee__track {
       display: none;
     }
+  }
+
+  /* -------------------------------------------------------------------------
+     Reveal — scroll-driven section entrances
+     -------------------------------------------------------------------------
+     Driven by `animation-timeline: view()`, so the browser ties the animation
+     to the element's own progress through the scrollport. That runs on the
+     compositor: no scroll listener, no layout reads, nothing on the main
+     thread to stutter while the page is moving.
+
+     Only `opacity` and `transform` are animated — the two properties that can
+     be composited without repainting. `will-change` is deliberately absent;
+     a scroll timeline already promotes the layer for the window it is active,
+     and setting it on every section would pin dozens of layers into memory.
+
+     Progressive enhancement, and in the safe direction: where `view()` is not
+     supported the rule never applies and the content is simply visible. There
+     is no JS fallback to hydrate and therefore no way for a section to end up
+     stuck at `opacity: 0`.
+  ------------------------------------------------------------------------- */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .shop .reveal {
+        animation: reveal-rise linear both;
+        animation-timeline: view();
+        /* Finishes well before the section is centred, so it reads as
+           settling into place rather than as something still arriving. */
+        animation-range: entry 0% cover 28%;
+      }
+    }
+  }
+}
+
+@keyframes reveal-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 28px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
   }
 }
 

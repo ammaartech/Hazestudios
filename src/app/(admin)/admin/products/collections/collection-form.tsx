@@ -44,7 +44,7 @@ export function CollectionForm(props: CollectionFormProps) {
 
 function CollectionFormInner({
   products,
-  storeUrl = "hazestudios.com",
+  storeUrl = "fogstores.com",
 }: Omit<CollectionFormProps, "initial">) {
   const router = useRouter();
   const store = useCollectionStore();

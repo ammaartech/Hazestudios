@@ -61,7 +61,7 @@ export default async function ProductsPage({
   return (
     <div>
       <PageHeader title="Products">
-        <ProductListActions currency={shop?.currency ?? "USD"} />
+        <ProductListActions currency={shop?.currency ?? "INR"} />
         <Button asChild>
           <Link href="/admin/products/new">Add product</Link>
         </Button>
