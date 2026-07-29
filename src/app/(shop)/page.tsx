@@ -97,64 +97,37 @@ export default async function HomePage() {
       <ShortcutRow />
       <Hero />
 
-      <TabCarousel
-        heading={TAB_CAROUSEL.heading}
-        subheading={TAB_CAROUSEL.subheading}
-        tabs={tabs}
-      />
+      <SectionIntro eyebrow={MOST_TRENDING_EYEBROW} />
+      <ShopTheLook />
 
-      <SectionHeading>{LOOKBOOK.heading}</SectionHeading>
-      <Lookbook />
-
-      <Divider />
-
-      <SectionHeading>{ARRIVALS.heading}</SectionHeading>
-      <Arrivals tags={arrivalTags} />
-
-      {hasCarousels && (
-        <div className="mt-20 flex flex-col gap-20 md:mt-28 md:gap-28">
-          {CAROUSELS.map((section, i) => {
-            const rail = carouselRails[i];
-            if (!rail) return null;
-            const heading = section.heading ?? rail.title;
-
-            return (
-              <section key={section.handle} aria-labelledby={`rail-${section.handle}`}>
-                <div className="px-4 text-center md:px-8">
-                  <h2
-                    id={`rail-${section.handle}`}
-                    className="display text-[clamp(1.75rem,4vw,2.75rem)]"
-                  >
-                    {heading}
-                  </h2>
-                  {section.subheading && (
-                    <p className="mt-3 text-sm text-[var(--shop-mute)]">
-                      {section.subheading}
-                    </p>
-                  )}
-                </div>
-
-                <div className="mt-10">
-                  <ProductRail products={rail.products} label={heading} />
-                </div>
-
-                {section.cta && (
-                  <div className="mt-10 text-center">
-                    <Link
-                      href={`/collections/${section.handle}`}
-                      className="meta inline-block cursor-pointer border-b border-[var(--shop-ink)] pb-1 transition-opacity duration-200 hover:opacity-60"
-                    >
-                      {section.cta}
-                    </Link>
-                  </div>
-                )}
-              </section>
-            );
-          })}
-        </div>
+      {topBlocks.map(
+        (block) =>
+          block && (
+            <FeaturedCollection
+              key={block.config.handle}
+              config={block.config}
+              heading={block.heading}
+              products={block.products}
+            />
+          )
       )}
 
-      <Mosaic />
+      <ShoppableReel items={reelItems} />
+
+      <BrandMarquee />
+      <EditorialBanner />
+
+      {bottomBlocks.map(
+        (block) =>
+          block && (
+            <FeaturedCollection
+              key={block.config.handle}
+              config={block.config}
+              heading={block.heading}
+              products={block.products}
+            />
+          )
+      )}
 
       {/* A fresh install with no catalogue: the editorial above still renders,
           but nothing is buyable, so say so rather than leaving empty rails. */}

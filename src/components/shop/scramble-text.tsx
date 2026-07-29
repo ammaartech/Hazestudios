@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 /**
  * Lottery-tumbler text.
@@ -39,21 +39,24 @@ export function scrambleDuration(text: string, delay = 0) {
 /**
  * The blanket reduced-motion rule in globals.css collapses animation and
  * transition durations, but it has no reach into a rAF loop — JS motion has to
- * opt out of itself. Reading the query in an effect rather than at module scope
- * keeps the first render identical on the server and the client.
+ * opt out of itself. The query is read as an external store so the server
+ * render and the first client render agree (the server snapshot is `false`),
+ * and changes to the OS setting propagate without an extra render pass.
  */
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+
+function subscribeReducedMotion(onChange: () => void) {
+  const query = window.matchMedia(REDUCED_MOTION_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
 export function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(query.matches);
-    const onChange = (event: MediaQueryListEvent) => setReduced(event.matches);
-    query.addEventListener("change", onChange);
-    return () => query.removeEventListener("change", onChange);
-  }, []);
-
-  return reduced;
+  return useSyncExternalStore(
+    subscribeReducedMotion,
+    () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
+    () => false
+  );
 }
 
 function tumble(text: string, locked: number) {
@@ -88,12 +91,12 @@ export function ScrambleText({
   // agree, and a reader who never gets the animation never sees a flicker.
   const [display, setDisplay] = useState(text);
   const reduced = usePrefersReducedMotion();
+  // At rest the settled string is derived rather than written back into state,
+  // so the effect below only ever runs the animation.
+  const settled = !play || reduced;
 
   useEffect(() => {
-    if (!play || reduced) {
-      setDisplay(text);
-      return;
-    }
+    if (settled) return;
 
     let frame = 0;
     let start = 0;
@@ -130,7 +133,7 @@ export function ScrambleText({
 
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [text, play, delay, reduced]);
+  }, [text, delay, settled]);
 
   // Split on whitespace once so the scrambling copy can be laid out word by
   // word. Each word reserves its own box from the settled string, which means
@@ -139,20 +142,19 @@ export function ScrambleText({
   // takes. Rubik and Work Sans are proportional, so the reservation is not
   // optional.
   const words = useMemo(() => {
+    const parts = text.split(/(\s+)/).filter(Boolean);
+    const out: { value: string; start: number; space: boolean }[] = [];
     let offset = 0;
-    return text
-      .split(/(\s+)/)
-      .filter(Boolean)
-      .map((value) => {
-        const start = offset;
-        offset += value.length;
-        return { value, start, space: !value.trim() };
-      });
+    for (const value of parts) {
+      out.push({ value, start: offset, space: !value.trim() });
+      offset += value.length;
+    }
+    return out;
   }, [text]);
 
   // At rest there is nothing to stack, and a plain node keeps the label
   // selectable and readable to assistive tech without a duplicate copy of it.
-  if (display === text) {
+  if (settled || display === text) {
     return <span className={className}>{text}</span>;
   }
 

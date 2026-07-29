@@ -2,8 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   BRAND_MARQUEE,
-  EDITORIAL_BANNER,
   HERO,
+  MOSAIC,
   SHOP_THE_LOOK,
   SHORTCUTS,
   type HeroContent,

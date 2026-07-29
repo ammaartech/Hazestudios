@@ -80,7 +80,6 @@ create index if not exists orders_cancelled_idx
 -- The store sells in India and shop_settings.currency is already INR; the
 -- column default was the last place still minting dollars.
 alter table orders alter column currency set default 'INR';
-alter table carts  alter column currency set default 'INR';
 
 comment on column orders.order_name is
   'Verbatim identifier from the source system (e.g. FOG7577). Null for orders created in-app, which display as #<order_number>.';

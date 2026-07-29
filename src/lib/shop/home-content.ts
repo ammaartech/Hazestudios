@@ -94,12 +94,7 @@ export const NAV: NavGroup[] = [
   {
     label: "Men",
     children: [
-<<<<<<< HEAD
       { label: "Haze Studios", handle: "haze-studios", page: true },
-=======
-      // `hazestudios`, not `haze-studios` — the hyphenated handle 404s.
-      { label: "Haze Studios", handle: "hazestudios" },
->>>>>>> e42a8b0 (ui updates, refering suha demo, inputting produts, inputting invectory, fixed instagram link)
       { label: "Racing Jackets", handle: "jackets" },
     ],
   },
@@ -149,123 +144,14 @@ export const NEWSLETTER = {
 /* Home page — section 1: the shortcut row                                     */
 /* -------------------------------------------------------------------------- */
 
-<<<<<<< HEAD
-=======
-/**
- * Campaign artwork is referenced straight off the Shopify CDN rather than
- * copied into `public/`. The catalogue behind this storefront was imported from
- * a Shopify export, so every product already renders from that origin (see the
- * `cdn.shopify.com` entry in `next.config.ts`) — pointing the editorial frames
- * at the same place keeps the home page and the product pages showing the same
- * photography, and re-shooting a section is a URL change rather than a binary.
- *
- * `&width=` is Shopify's own transform, so each frame pulls a crop sized for
- * its slot instead of a full-resolution original.
- */
-const CDN = "https://cdn.shopify.com/s/files/1/0633/6105/6992/files";
-
-export const HERO = {
-  eyebrow: "Fogstores",
-  heading: "Siren Muse",
-  body: "Mini-skirts, boots and studs. The edit everyone is asking about.",
-  cta: { label: "Shop Siren Muse", handle: "fall-2025" },
-  /** Two crops: the desktop banner is wide, the mobile one is square. */
-  image: `${CDN}/Saumya_Tank_and_Hailey_Skirt_10.jpg?v=1760198387&width=2000`,
-  imageMobile: `${CDN}/Saumya_Tank_and_Hailey_Skirt_10.jpg?v=1760198387&width=900`,
-};
-
-export interface CarouselSection {
-  /** Falls back to the collection's own title when omitted. */
-  heading?: string;
-  subheading?: string;
-  handle: string;
-  /** Renders the trailing "Shop Now" link under the carousel. */
-  cta?: string;
-}
-
->>>>>>> e42a8b0 (ui updates, refering suha demo, inputting produts, inputting invectory, fixed instagram link)
 /**
  * The two square shortcuts that sit between the header and the campaign banner.
  * Deliberately short: this row is a shortcut to the two highest-intent
  * destinations, not a second navigation.
  */
-<<<<<<< HEAD
 export const SHORTCUTS = [
   { label: "Sale", href: "/collections/limited-offers" },
   { label: "Men", href: "/collections/haze-studios" },
-=======
-export const TAB_CAROUSEL = {
-  heading: "Shop by category",
-  subheading: "Our favorite picks for the season",
-  tabs: [
-    { handle: "tops", label: "Tops" },
-    { handle: "best-sellers", label: "Best Sellers" },
-    { handle: "bottoms", label: "Bottoms" },
-    { handle: "fall-2024", label: "Fall 2024" },
-  ] as { handle: string; label?: string }[],
-};
-
-export const LOOKBOOK = {
-  heading: "Most trending",
-  /**
-   * Four frames. The two that name a handle get a glass "shop the …" button
-   * over the image; the other two are pure styling shots.
-   */
-  frames: [
-    {
-      image: `${CDN}/Hazel_Top_and_Hailey_Skirt_8_35a1312b-61bf-4edc-aea2-c551b5968e05.jpg?v=1760198467&width=1000`,
-      alt: "Hazel top styled with the Hailey black belt skirt",
-    },
-    {
-      image: `${CDN}/Saumya_Tank_and_Hailey_Skirt_10.jpg?v=1760198387&width=1000`,
-      alt: "Model wearing the I'm Out Of My Mind yellow tank top",
-      cta: "Shop the look",
-      handle: "i-m-out-of-my-mind-yellow-tank-top",
-    },
-    {
-      image: `${CDN}/1a3fb29549b078036e154365f8c7a7ee.jpg?v=1769864605&width=1000`,
-      alt: "Model wearing the beaded Midnight top",
-      cta: "Shop the set",
-      handle: "beaded-ibiza-top",
-    },
-    {
-      image: `${CDN}/JenaStudBoots.jpg?v=1760377847&width=1000`,
-      alt: "Jena stud boots",
-    },
-  ],
-};
-
-export const ARRIVALS = {
-  heading: "New arrivals",
-  /**
-   * Two full-bleed frames, each with a product tag pinned to a bottom corner.
-   * The tag's price is read from Supabase — only the handle is authored here.
-   */
-  frames: [
-    {
-      image: `${CDN}/417947355_1280176176008672_8716161203192785911_n.jpg?v=1709802872&width=1600`,
-      alt: "Annie black corset dress",
-      thumb: `${CDN}/417947355_1280176176008672_8716161203192785911_n.jpg?v=1709802872&width=240`,
-      handle: "annie-black-corset-dress",
-      align: "left" as const,
-    },
-    {
-      image: `${CDN}/e59fee53-74fd-4e51-8c94-a9afbcb7ea7d.jpg?v=1779866661&width=1600`,
-      alt: "Butterfly denim",
-      thumb: `${CDN}/e59fee53-74fd-4e51-8c94-a9afbcb7ea7d.jpg?v=1779866661&width=240`,
-      // Shopify's handle is `untitled-may27_06-02-41`; the import slugifies the
-      // underscore away, and the database's handle is the one that resolves.
-      handle: "untitled-may27-06-02-41",
-      align: "right" as const,
-    },
-  ],
-};
-
-/** The two plain carousels below the arrivals grid. */
-export const CAROUSELS: CarouselSection[] = [
-  { handle: "fall-2025", heading: "Festival Edit", cta: "Shop Now" },
-  { handle: "shell-and-sequins", heading: "Summer Collection", cta: "Shop Now" },
->>>>>>> e42a8b0 (ui updates, refering suha demo, inputting produts, inputting invectory, fixed instagram link)
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -282,7 +168,6 @@ export interface HeroContent {
   imageMobile: string;
 }
 
-<<<<<<< HEAD
 export const HERO: HeroContent = {
   eyebrow: "Fogstores",
   heading: "Siren Muse",
@@ -334,7 +219,33 @@ export const SHOP_THE_LOOK: LookFrame[] = [
     alt: "Cherry red cowboy boots",
     handle: "cherry-red-cowboy-boots",
     cta: "Shop the look",
-=======
+  },
+];
+
+/* -------------------------------------------------------------------------- */
+/* Home page — the closing mosaic                                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Campaign artwork referenced straight off the Shopify CDN rather than copied
+ * into `public/`. The catalogue behind this storefront was imported from a
+ * Shopify export, so every product already renders from that origin (see the
+ * `cdn.shopify.com` entry in `next.config.ts`). `&width=` is Shopify's own
+ * transform, so each frame pulls a crop sized for its slot.
+ */
+const CDN = "https://cdn.shopify.com/s/files/1/0633/6105/6992/files";
+
+export interface MosaicTile {
+  eyebrow: string;
+  heading: string;
+  body: string;
+  cta: string;
+  /** Collection handle, resolved to `/collections/<handle>`. */
+  handle: string;
+  image: string;
+  alt: string;
+}
+
 /**
  * The Haze Studios block that closes the page — the menswear label carried
  * alongside Fogstores, split into the three doors the campaign uses.
@@ -345,7 +256,7 @@ export const MOSAIC: MosaicTile[] = [
     heading: "Campus Fits",
     body: "The full menswear label",
     cta: "Shop Now",
-    handle: "hazestudios",
+    handle: "haze-studios",
     image: `${CDN}/White_Back_a78c26a8-6cb4-4e49-85dc-6f859917592b.png?v=1773642913&width=1200`,
     alt: "Boomy oversized tee, back view",
   },
@@ -366,7 +277,6 @@ export const MOSAIC: MosaicTile[] = [
     handle: "haze-tees",
     image: `${CDN}/Back_White_W_685889af-8401-400c-a84f-f78138a06964.png?v=1729192763&width=1200`,
     alt: "Blond graphic tee, back view",
->>>>>>> e42a8b0 (ui updates, refering suha demo, inputting produts, inputting invectory, fixed instagram link)
   },
 ];
 
@@ -477,14 +387,5 @@ export const REEL = {
 /** The orange ticker that separates the two halves of the page. */
 export const BRAND_MARQUEE = {
   word: "Haze",
-  href: "/collections/haze-studios",
-};
-
-/** The full-bleed campaign image under it. */
-export const EDITORIAL_BANNER = {
-  eyebrow: "Fogstores × Haze Studios",
-  heading: "Why should girls have all the fun?",
-  image: "/fogstores/banner-not-cute.png",
-  alt: "Haze Studios outerwear — studded hoodie and graphic hood",
   href: "/collections/haze-studios",
 };
