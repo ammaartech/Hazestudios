@@ -62,12 +62,22 @@ export default async function CollectionPage({
             className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"
             aria-hidden
           />
+          {/* On load rather than on scroll: the header is the first thing on
+              screen, and its artwork is the page's largest paint. Only the type
+              animates — see the hero note in globals.css. */}
           <div className="relative w-full px-4 pb-10 md:px-8 md:pb-14">
-            <h1 className="display max-w-[16ch] text-[clamp(2.5rem,8vw,6.5rem)] text-white">
+            <h1
+              className="display max-w-[16ch] text-[clamp(2.5rem,8vw,6.5rem)] text-white"
+              data-hero-in
+            >
               {collection.title}
             </h1>
             {collection.description && (
-              <p className="mt-5 max-w-lg text-base leading-relaxed text-white/85">
+              <p
+                className="mt-5 max-w-lg text-base leading-relaxed text-white/85"
+                data-hero-in
+                style={{ ["--reveal-index" as string]: 1 }}
+              >
                 {collection.description}
               </p>
             )}
@@ -75,11 +85,15 @@ export default async function CollectionPage({
         </section>
       ) : (
         <section className="border-b border-[var(--shop-hairline-soft)] px-4 pb-10 pt-16 md:px-8 md:pt-24">
-          <h1 className="display text-[clamp(2.5rem,8vw,6.5rem)]">
+          <h1 className="display text-[clamp(2.5rem,8vw,6.5rem)]" data-hero-in>
             {collection.title}
           </h1>
           {collection.description && (
-            <p className="mt-5 max-w-lg text-base leading-relaxed text-[var(--shop-mute)]">
+            <p
+              className="mt-5 max-w-lg text-base leading-relaxed text-[var(--shop-mute)]"
+              data-hero-in
+              style={{ ["--reveal-index" as string]: 1 }}
+            >
               {collection.description}
             </p>
           )}
@@ -94,7 +108,17 @@ export default async function CollectionPage({
         {products.length ? (
           <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 md:gap-x-6 lg:grid-cols-4">
             {products.map((product, i) => (
-              <ProductCard key={product.id} product={product} priority={i < 4} />
+              /* The cascade is per row, not per grid. Passing the running index
+                 into a collection of sixty pieces would have the bottom row
+                 waiting on everything above it, long after the shopper has
+                 scrolled past. The widest arrangement is four columns, so the
+                 index wraps there and every row opens left to right. */
+              <ProductCard
+                key={product.id}
+                product={product}
+                priority={i < 4}
+                revealIndex={i % 4}
+              />
             ))}
           </div>
         ) : (

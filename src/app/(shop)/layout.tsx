@@ -5,6 +5,7 @@ import { AnalyticsTracker } from "@/components/shop/analytics-tracker";
 import { GlassTabBar } from "@/components/shop/glass-tab-bar";
 import { CartProvider } from "@/components/shop/cart-provider";
 import { CartDrawer } from "@/components/shop/cart-drawer";
+import { RevealObserver } from "@/components/shop/reveal-observer";
 import { getCollections, getStoreName } from "@/lib/shop/queries";
 import { getCart } from "@/lib/shop/cart";
 
@@ -41,6 +42,10 @@ export default async function ShopLayout({
           Skip to content
         </a>
         <AnalyticsTracker />
+        {/* Arms every `data-reveal` in the subtree from one observer. Mounted
+            inside `.shop` because that is the root it looks for, and before the
+            content so it is observing by the time the first section commits. */}
+        <RevealObserver />
         {/* Above the sticky header, so the offers scroll away with the page
             rather than permanently spending a strip of every screen. */}
         <AnnouncementBar />

@@ -603,44 +603,228 @@
   }
 
   /* -------------------------------------------------------------------------
-     Reveal — scroll-driven section entrances
+     Reveal — scroll-triggered section entrances
      -------------------------------------------------------------------------
-     Driven by `animation-timeline: view()`, so the browser ties the animation
-     to the element's own progress through the scrollport. That runs on the
-     compositor: no scroll listener, no layout reads, nothing on the main
-     thread to stutter while the page is moving.
+     Every entrance on the storefront is one animation, `reveal-in`, whose
+     start state is read from custom properties. A variant is therefore just a
+     different set of numbers rather than a different keyframe block, which is
+     what lets the mobile overrides below restate the whole vocabulary in six
+     declarations instead of duplicating it.
 
-     Only `opacity` and `transform` are animated — the two properties that can
-     be composited without repainting. `will-change` is deliberately absent;
-     a scroll timeline already promotes the layer for the window it is active,
-     and setting it on every section would pin dozens of layers into memory.
+     Only `opacity` and `transform` are animated — the two properties the
+     compositor can handle without a repaint. The offsets are composed into a
+     *single* `translate3d(...) scale(...)`, so each element resolves to one
+     matrix per frame rather than a stack of transforms to multiply out.
 
-     Progressive enhancement, and in the safe direction: where `view()` is not
-     supported the rule never applies and the content is simply visible. There
-     is no JS fallback to hydrate and therefore no way for a section to end up
-     stuck at `opacity: 0`.
+     `will-change` is deliberately absent. A running transform/opacity
+     animation is promoted by the browser for exactly as long as it needs to
+     be, whereas declaring the hint up front would pin a layer for every
+     unrevealed card on the page — dozens of compositor layers held in memory
+     on the device least able to spare them.
+
+     The hidden state is scoped to `.shop[data-reveal-active]`, an attribute
+     only `<RevealObserver />` sets. Nothing here applies until the observer is
+     live, so there is no arrangement of failures that leaves content stranded
+     at `opacity: 0`.
   ------------------------------------------------------------------------- */
+  .shop [data-reveal] {
+    --reveal-x: 0px;
+    --reveal-y: 34px;
+    --reveal-scale: 1;
+    --reveal-duration: 1000ms;
+    --reveal-stagger: 95ms;
+    --reveal-index: 0;
+  }
+
+  .shop [data-reveal="fade"] {
+    --reveal-y: 0px;
+  }
+  /* Lateral entrances, for content that belongs to one side of a split. */
+  .shop [data-reveal="left"] {
+    --reveal-x: -44px;
+    --reveal-y: 0px;
+  }
+  .shop [data-reveal="right"] {
+    --reveal-x: 44px;
+    --reveal-y: 0px;
+  }
+  /* Photography settling back to its own scale, rather than sliding. */
+  .shop [data-reveal="zoom"] {
+    --reveal-y: 14px;
+    --reveal-scale: 1.06;
+  }
+  .shop [data-reveal="media"] {
+    --reveal-y: 0px;
+    --reveal-scale: 1.06;
+    /* The curtain covers the full height of a tile, so it is given longer than
+       a rise of a few dozen pixels — the same speed over a much greater
+       distance would read as a wipe rather than as something being uncovered. */
+    --reveal-duration: 1240ms;
+  }
+
+  .shop[data-reveal-active] [data-reveal] {
+    opacity: 0;
+  }
+
+  .shop[data-reveal-active] [data-reveal][data-reveal-in] {
+    animation: reveal-in var(--reveal-duration) var(--glass-ease) both;
+    animation-delay: calc(var(--reveal-index) * var(--reveal-stagger));
+  }
+
+  /* The one entrance that is not pure transform: a curtain drawn up the frame,
+     for the full-bleed editorial tiles. `clip-path` is composited on desktop
+     GPUs but is a repaint on a good deal of mobile hardware, so the phone keeps
+     the transform-only fallback above and loses nothing but a flourish. */
+  @media (min-width: 768px) {
+    .shop[data-reveal-active] [data-reveal="media"][data-reveal-in] {
+      animation-name: reveal-media;
+    }
+  }
+
+  /* -----------------------------------------------------------------------
+     Mobile
+     -----------------------------------------------------------------------
+     Not the desktop motion scaled down — a different set of decisions.
+
+     Travel is cut to roughly half. On a phone an element crosses the whole
+     viewport in a flick, so a 34px rise that reads as considered on a desktop
+     reads as lag on a handset, and the longer the distance the more of the
+     screen the compositor is pushing pixels across.
+
+     Lateral entrances become vertical. `.shop` clips its horizontal overflow,
+     so a card arriving from 44px off-screen spends its first frames behind the
+     edge of a 390px viewport — the animation is paid for and not seen. Vertical
+     is also the axis the shopper is already moving along.
+
+     Durations and stagger both come down: the same timings that feel unhurried
+     on a large screen feel unresponsive on a small one, where the content
+     under the thumb is the whole page.
+  ----------------------------------------------------------------------- */
+  @media (max-width: 767px) {
+    .shop [data-reveal] {
+      --reveal-y: 20px;
+      --reveal-duration: 760ms;
+      --reveal-stagger: 68ms;
+    }
+    .shop [data-reveal="left"],
+    .shop [data-reveal="right"] {
+      --reveal-x: 0px;
+      --reveal-y: 20px;
+    }
+    .shop [data-reveal="zoom"],
+    .shop [data-reveal="media"] {
+      --reveal-y: 12px;
+      --reveal-scale: 1.03;
+      /* Restated rather than inherited. `media`'s longer duration is set at the
+         same specificity as the block above, so today it is only source order
+         keeping the phone off it — and the phone has no curtain to draw, just a
+         3% scale, which does not want a second and a quarter to travel. */
+      --reveal-duration: 760ms;
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+     Hero lockup — an entrance on load, not on scroll
+     -------------------------------------------------------------------------
+     The campaign type is already on screen when the page arrives, so there is
+     nothing to wait for and no observer involved: the animation is declared in
+     CSS and runs as the markup is parsed. That keeps it off the hydration path
+     entirely, which matters here more than anywhere else on the page — the
+     banner is the LCP element, and hiding it until JavaScript has booted would
+     charge the whole store's largest paint for a fade.
+
+     The photograph itself is never animated for the same reason. Only the
+     words over it move.
+  ------------------------------------------------------------------------- */
+  .shop [data-hero-in] {
+    --reveal-x: 0px;
+    --reveal-y: 26px;
+    --reveal-scale: 1;
+    animation: reveal-in 1120ms var(--glass-ease) both;
+    /* The offset holds the first line back until the banner has actually
+       painted, so the lockup opens on the image rather than over a grey box. */
+    animation-delay: calc(var(--reveal-index, 0) * 105ms + 150ms);
+  }
+
+  @media (max-width: 767px) {
+    .shop [data-hero-in] {
+      --reveal-y: 16px;
+      animation-duration: 860ms;
+      animation-delay: calc(var(--reveal-index, 0) * 78ms + 120ms);
+    }
+  }
+
+  /* -------------------------------------------------------------------------
+     Scroll-reveal text — the editorial heading that lights up word by word
+     -------------------------------------------------------------------------
+     Driven by `animation-timeline: view()`: each word's opacity is tied to its
+     own progress through the scrollport, which the browser resolves on the
+     compositor. No scroll listener, no per-frame layout reads, nothing on the
+     main thread while the page is moving.
+
+     The cascade comes from the range, not from a delay — scroll timelines have
+     no time axis for `animation-delay` to act on. Each word starts a little
+     later into the section's travel than the one before it, so the sentence
+     resolves left to right as the block rises.
+
+     Desktop only, and gated behind `@supports`. A phone would be asked to hold
+     a compositor layer per word for a heading it scrolls past in half a second;
+     it gets the section entrance instead. Note the dimmed state is declared
+     *inside* both guards — outside them the words have no opacity rule at all,
+     so anything that cannot run this reads perfectly ordinary text.
+  ------------------------------------------------------------------------- */
+  .shop .reveal-text__word {
+    /* Its own box, so the word can carry an opacity of its own. */
+    display: inline-block;
+  }
+
   @supports (animation-timeline: view()) {
-    @media (prefers-reduced-motion: no-preference) {
-      .shop .reveal {
-        animation: reveal-rise linear both;
+    @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+      .shop .reveal-text__word {
+        opacity: 0.14;
+        animation: reveal-word linear both;
         animation-timeline: view();
-        /* Finishes well before the section is centred, so it reads as
-           settling into place rather than as something still arriving. */
-        animation-range: entry 0% cover 28%;
+        --reveal-word-offset: calc(
+          var(--reveal-word) / var(--reveal-words) * 34%
+        );
+        animation-range: cover calc(12% + var(--reveal-word-offset)) cover
+          calc(34% + var(--reveal-word-offset));
       }
     }
   }
 }
 
-@keyframes reveal-rise {
+@keyframes reveal-in {
   from {
     opacity: 0;
-    transform: translate3d(0, 28px, 0);
+    transform: translate3d(var(--reveal-x), var(--reveal-y), 0)
+      scale(var(--reveal-scale));
   }
   to {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes reveal-media {
+  from {
+    opacity: 0;
+    transform: scale(var(--reveal-scale));
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes reveal-word {
+  from {
+    opacity: 0.14;
+  }
+  to {
+    opacity: 1;
   }
 }
 

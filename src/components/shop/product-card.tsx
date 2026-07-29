@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ShopProduct } from "@/lib/shop/queries";
 import { cn } from "@/lib/utils";
 import { Price } from "./price";
+import { revealProps } from "./reveal";
 
 /**
  * The photograph is the card — no border, no radius, no shadow. The only chrome
@@ -11,11 +12,18 @@ import { Price } from "./price";
 export function ProductCard({
   product,
   priority = false,
+  revealIndex = 0,
   className,
 }: {
   product: ShopProduct;
   /** Set on above-the-fold cards so the LCP image isn't lazy-loaded. */
   priority?: boolean;
+  /**
+   * Position in the entrance cascade. Callers pass the column rather than the
+   * running index: a grid staggered end to end would leave the last row of a
+   * long collection waiting on every card above it.
+   */
+  revealIndex?: number;
   className?: string;
 }) {
   const [primary, secondary] = product.images;
@@ -29,6 +37,7 @@ export function ProductCard({
         "group block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--shop-ink)]",
         className
       )}
+      {...revealProps("rise", revealIndex)}
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-[var(--shop-cloud)]">
         {primary ? (

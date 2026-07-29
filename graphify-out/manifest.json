@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.impeccable\\hook.cache.json": {
-    "mtime": 1785276659.0928676,
-    "ast_hash": "a03cdfc02ee8dedf1b8823f1f62f8cb8",
+    "mtime": 1785304744.9172003,
+    "ast_hash": "ff2bfd61e8306867803d69b3fc0d5b0b",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\db-config.mjs": {
@@ -795,13 +795,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\collections\\[handle]\\page.tsx": {
-    "mtime": 1785275134.9181256,
-    "ast_hash": "54475df256b1b64a06f6ea5e7ee528dc",
+    "mtime": 1785304416.0786102,
+    "ast_hash": "1ce79037ba4ab28d7546ff3ae61d693c",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\layout.tsx": {
-    "mtime": 1785275134.920444,
-    "ast_hash": "3c1690281b040b11cb471f824621c6be",
+    "mtime": 1785304211.109216,
+    "ast_hash": "eb6af12d68738d78922c4a85a54618bb",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\page.tsx": {
@@ -825,8 +825,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\footer.tsx": {
-    "mtime": 1785180203.8991106,
-    "ast_hash": "f305d2ff8325f2aaa9a85fcf139a01e6",
+    "mtime": 1785304524.034006,
+    "ast_hash": "e92b720517bee9507f5f294417d32b71",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\header.tsx": {
@@ -840,8 +840,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\product-card.tsx": {
-    "mtime": 1784889570.9887247,
-    "ast_hash": "3de5aa0511eb6ae23958f90438121427",
+    "mtime": 1785304387.2572849,
+    "ast_hash": "fe91a5ab5be2d99ae6a863d043f8fc7c",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\product-gallery.tsx": {
@@ -2255,18 +2255,18 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\featured-collection.tsx": {
-    "mtime": 1785271222.8940403,
-    "ast_hash": "e7f01699111a7a90f492c84637e97a40",
+    "mtime": 1785304738.4908955,
+    "ast_hash": "545500e2c03d42ed92905127683dc6c4",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\haze-studios-sections.tsx": {
-    "mtime": 1785273318.4109616,
-    "ast_hash": "12793a178faff6285acbe45382fd5f7f",
+    "mtime": 1785304493.749691,
+    "ast_hash": "2126a4477f5c17faa5e1fd74a4e53cc4",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\home-sections.tsx": {
-    "mtime": 1785275905.5452585,
-    "ast_hash": "c6cae557d1d84e5f1e3d5a546f318821",
+    "mtime": 1785304719.8439682,
+    "ast_hash": "f47402526fcd22491ef3835cac39bff2",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\newsletter-form.tsx": {
@@ -2285,8 +2285,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\rail-card.tsx": {
-    "mtime": 1785271348.2650492,
-    "ast_hash": "bb6a36c7fd39308c14ee92eea6fa9d22",
+    "mtime": 1785304335.2297194,
+    "ast_hash": "bcf39eb2e2adf15e5edd647abf1c6579",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\scramble-text.tsx": {
@@ -2295,8 +2295,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\shoppable-reel.tsx": {
-    "mtime": 1785271415.524533,
-    "ast_hash": "17d10135fbf1d68e443fdcc201224eb1",
+    "mtime": 1785304744.5228028,
+    "ast_hash": "3fb50b441d1f62b533ed4a8d217e047e",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\tab-carousel.tsx": {
@@ -2532,6 +2532,161 @@
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\public\\haze\\tile-couple-tees.webp": {
     "mtime": 1785179488.212,
     "ast_hash": "f823db0db843414632f547112d1e3c14",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.agents\\skills\\animate\\examples\\animate-height.tsx": {
+    "mtime": 1785303598.9182749,
+    "ast_hash": "a92803e3386d6ce0f8e2d6b267e67f92",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.agents\\skills\\animate\\examples\\app-store-card.tsx": {
+    "mtime": 1785303598.9192698,
+    "ast_hash": "01395d0f875d8ccd88f93e848eb2e793",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.agents\\skills\\animate\\examples\\card-hover.tsx": {
+    "mtime": 1785303598.9202626,
+    "ast_hash": "252ec9f2cba3fa02f4cb4e097a02a5c4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.agents\\skills\\animate\\examples\\feedback-popover.tsx": {
+    "mtime": 1785303598.9210227,
+    "ast_hash": "7aefbb4261f8764ea2decc05d913d740",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.agents\\skills\\animate\\examples\\multi-step-flow.tsx": {
+    "mtime": 1785303598.9210227,
+    "ast_hash": "52535da3cb40507c35ebe7b29d2e1adb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.agents\\skills\\animate\\examples\\shared-layout.tsx": {
+    "mtime": 1785303598.9210227,
+    "ast_hash": "1f22b7663fa966f4c11be0c756f625f8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.agents\\skills\\animate\\examples\\text-reveal.tsx": {
+    "mtime": 1785303598.9222896,
+    "ast_hash": "0fbbcfbf6cdf1dd060060e553358930c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.agents\\skills\\animate\\examples\\toast-stacking.tsx": {
+    "mtime": 1785303598.9222896,
+    "ast_hash": "ce5cb18efd0990be59584b9fd0011a6d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.claude\\skills\\animate\\examples\\animate-height.tsx": {
+    "mtime": 1785303598.9182749,
+    "ast_hash": "a92803e3386d6ce0f8e2d6b267e67f92",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.claude\\skills\\animate\\examples\\app-store-card.tsx": {
+    "mtime": 1785303598.9192698,
+    "ast_hash": "01395d0f875d8ccd88f93e848eb2e793",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.claude\\skills\\animate\\examples\\card-hover.tsx": {
+    "mtime": 1785303598.9202626,
+    "ast_hash": "252ec9f2cba3fa02f4cb4e097a02a5c4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.claude\\skills\\animate\\examples\\feedback-popover.tsx": {
+    "mtime": 1785303598.9210227,
+    "ast_hash": "7aefbb4261f8764ea2decc05d913d740",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.claude\\skills\\animate\\examples\\multi-step-flow.tsx": {
+    "mtime": 1785303598.9210227,
+    "ast_hash": "52535da3cb40507c35ebe7b29d2e1adb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.claude\\skills\\animate\\examples\\shared-layout.tsx": {
+    "mtime": 1785303598.9210227,
+    "ast_hash": "1f22b7663fa966f4c11be0c756f625f8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.claude\\skills\\animate\\examples\\text-reveal.tsx": {
+    "mtime": 1785303598.9222896,
+    "ast_hash": "0fbbcfbf6cdf1dd060060e553358930c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.claude\\skills\\animate\\examples\\toast-stacking.tsx": {
+    "mtime": 1785303598.9222896,
+    "ast_hash": "ce5cb18efd0990be59584b9fd0011a6d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\skills-lock.json": {
+    "mtime": 1785303600.5291414,
+    "ast_hash": "087c7eb7c099b1b8e1b05f44358b3322",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\reveal-observer.tsx": {
+    "mtime": 1785304150.494411,
+    "ast_hash": "19f13974187432b83ee28f260d8b6756",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\reveal.tsx": {
+    "mtime": 1785304130.516627,
+    "ast_hash": "8b1ae303bdd5e9e97b9f95413765fd59",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.agents\\skills\\animate\\README.md": {
+    "mtime": 1785303598.9162588,
+    "ast_hash": "c7c48494387e370350a7e1008ffb871f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.agents\\skills\\animate\\SKILL.md": {
+    "mtime": 1785303598.9172685,
+    "ast_hash": "db0b8d2cae845c0821c8258be7d22a6f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.agents\\skills\\animate\\references\\css-animations.md": {
+    "mtime": 1785303598.923659,
+    "ast_hash": "b0febee3a52df8f59b028c415db1975e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.agents\\skills\\animate\\references\\easing-and-timing.md": {
+    "mtime": 1785303598.924708,
+    "ast_hash": "7d232ace3d57ffe6016597706c9160a4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.agents\\skills\\animate\\references\\framer-motion.md": {
+    "mtime": 1785303598.925965,
+    "ast_hash": "f79d40b8236f34814accca8b0a76cdaa",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.agents\\skills\\animate\\references\\performance-accessibility.md": {
+    "mtime": 1785303598.925965,
+    "ast_hash": "6bbb22238eefca5a8b212a6e85c9974d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.claude\\skills\\animate\\README.md": {
+    "mtime": 1785303598.9162588,
+    "ast_hash": "c7c48494387e370350a7e1008ffb871f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.claude\\skills\\animate\\SKILL.md": {
+    "mtime": 1785303598.9172685,
+    "ast_hash": "db0b8d2cae845c0821c8258be7d22a6f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.claude\\skills\\animate\\references\\css-animations.md": {
+    "mtime": 1785303598.923659,
+    "ast_hash": "b0febee3a52df8f59b028c415db1975e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.claude\\skills\\animate\\references\\easing-and-timing.md": {
+    "mtime": 1785303598.924708,
+    "ast_hash": "7d232ace3d57ffe6016597706c9160a4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.claude\\skills\\animate\\references\\framer-motion.md": {
+    "mtime": 1785303598.925965,
+    "ast_hash": "f79d40b8236f34814accca8b0a76cdaa",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.claude\\skills\\animate\\references\\performance-accessibility.md": {
+    "mtime": 1785303598.925965,
+    "ast_hash": "6bbb22238eefca5a8b212a6e85c9974d",
     "semantic_hash": ""
   }
 }

@@ -4,6 +4,7 @@ import type { RailProduct } from "@/lib/shop/swatches";
 import { cn } from "@/lib/utils";
 import { Eyebrow } from "./home-sections";
 import { RailCard } from "./rail-card";
+import { Reveal, ScrollRevealText, revealProps } from "./reveal";
 
 /**
  * A merchandised collection block: a heading, a row of four products, and a way
@@ -34,17 +35,27 @@ export function FeaturedCollection({
 
   return (
     <section aria-labelledby={headingId} className="pt-14 md:pt-20">
+      {/* Label, heading and body are revealed as three beats rather than one
+          block. The heading runs its own word-by-word timeline, so a parent
+          fading in across all three would swallow it; staggering the siblings
+          keeps that effect intact and still opens the section as a unit. */}
       {centred ? (
         <div className="px-4 pb-8 text-center md:px-8">
-          {config.eyebrow && <Eyebrow>{config.eyebrow}</Eyebrow>}
+          {config.eyebrow && (
+            <Eyebrow {...revealProps("fade")}>{config.eyebrow}</Eyebrow>
+          )}
           <h2
             id={headingId}
             className="display mt-2.5 text-[clamp(1.5rem,3.5vw,2.25rem)] uppercase"
+            {...revealProps("rise", 1)}
           >
-            {heading}
+            <ScrollRevealText text={heading} />
           </h2>
           {config.body && (
-            <p className="mx-auto mt-3 max-w-lg text-sm text-[var(--shop-mute)]">
+            <p
+              className="mx-auto mt-3 max-w-lg text-sm text-[var(--shop-mute)]"
+              {...revealProps("rise", 2)}
+            >
               {config.body}
             </p>
           )}
@@ -52,26 +63,36 @@ export function FeaturedCollection({
       ) : (
         <div className="px-4 pb-8 md:px-8">
           {config.eyebrow && (
-            <Eyebrow className="pb-6 text-center">{config.eyebrow}</Eyebrow>
+            <Eyebrow className="pb-6 text-center" {...revealProps("fade")}>
+              {config.eyebrow}
+            </Eyebrow>
           )}
           <div className="flex items-end justify-between gap-6">
             <div>
               <h2
                 id={headingId}
                 className="display text-[clamp(1.5rem,3.5vw,2.25rem)] uppercase"
+                {...revealProps("rise", 1)}
               >
-                {heading}
+                <ScrollRevealText text={heading} />
               </h2>
               {config.body && (
-                <p className="mt-3 max-w-lg text-sm text-[var(--shop-mute)]">
+                <p
+                  className="mt-3 max-w-lg text-sm text-[var(--shop-mute)]"
+                  {...revealProps("rise", 2)}
+                >
                   {config.body}
                 </p>
               )}
             </div>
             {config.cta && (
+              /* The shelf layout puts the link at the far end of the heading
+                 row, so it comes in from that edge rather than up from below —
+                 the motion points back at where the element sits. */
               <Link
                 href={href}
                 className="meta hidden shrink-0 cursor-pointer border-b border-[var(--shop-ink)] pb-1 text-[var(--shop-ink)] transition-opacity duration-200 hover:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--shop-ink)] sm:block"
+                {...revealProps("right", 1)}
               >
                 {config.cta}
               </Link>
@@ -87,12 +108,21 @@ export function FeaturedCollection({
         )}
       >
         {products.map((product, i) => (
-          <RailCard key={product.id} product={product} priority={i < 2} />
+          <RailCard
+            key={product.id}
+            product={product}
+            priority={i < 2}
+            revealIndex={i}
+          />
         ))}
       </div>
 
       {config.cta && (
-        <div className={cn("px-4 pt-10 md:px-8", centred ? "text-center" : "sm:hidden")}>
+        <Reveal
+          variant="rise"
+          index={1}
+          className={cn("px-4 pt-10 md:px-8", centred ? "text-center" : "sm:hidden")}
+        >
           <Link
             href={href}
             className={cn(
@@ -104,7 +134,7 @@ export function FeaturedCollection({
           >
             {config.cta}
           </Link>
-        </div>
+        </Reveal>
       )}
     </section>
   );

@@ -9,6 +9,7 @@ import {
   type HeroContent,
 } from "@/lib/shop/home-content";
 import { cn } from "@/lib/utils";
+import { ScrollRevealText, revealProps } from "./reveal";
 
 /* -------------------------------------------------------------------------- */
 /* Shortcut row                                                                */
@@ -86,10 +87,18 @@ export function Hero({
 
       {overlay && <div className="absolute inset-0 bg-black/30" aria-hidden />}
 
+      {/* The lockup arrives a line at a time, on load rather than on scroll —
+          it is already on screen, and the banner behind it is the page's
+          largest paint, which no entrance is allowed to hold up. Only the words
+          move; the photograph is never animated. */}
       <div className="absolute inset-0 grid place-items-center px-6 text-center">
         <div style={{ textShadow: "0 1px 18px rgba(0,0,0,0.45)" }}>
-          <p className="subheading text-white">{content.eyebrow}</p>
+          <p className="subheading text-white" data-hero-in>
+            {content.eyebrow}
+          </p>
           <h1
+            data-hero-in
+            style={{ ["--reveal-index" as string]: 1 }}
             className={cn(
               "display display-xl mt-3 text-[clamp(2.25rem,6vw,4.25rem)] text-white",
               caps && "uppercase"
@@ -97,13 +106,18 @@ export function Hero({
           >
             {content.heading}
           </h1>
-          <p className="mx-auto mt-3 max-w-md text-sm text-white md:text-base">
+          <p
+            data-hero-in
+            style={{ ["--reveal-index" as string]: 2 }}
+            className="mx-auto mt-3 max-w-md text-sm text-white md:text-base"
+          >
             {content.body}
           </p>
           <Link
             href={content.cta.href}
+            data-hero-in
             className="meta mt-7 inline-flex min-h-11 cursor-pointer items-center bg-[var(--shop-ink)] px-8 text-white transition-opacity duration-300 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-            style={{ textShadow: "none" }}
+            style={{ textShadow: "none", ["--reveal-index" as string]: 3 }}
           >
             {content.cta.label}
           </Link>
@@ -117,16 +131,21 @@ export function Hero({
 /* Section headings                                                            */
 /* -------------------------------------------------------------------------- */
 
-/** The Space Mono caps label that introduces an editorial block. */
+/**
+ * The Space Mono caps label that introduces an editorial block.
+ *
+ * Passes the rest of its props through so callers can hang reveal attributes
+ * on it directly — the label is the first beat of a section's cascade, and
+ * wrapping it in a `<div>` just to carry them would put a block between the
+ * heading and the text it introduces.
+ */
 export function Eyebrow({
   children,
   className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+  ...rest
+}: React.ComponentPropsWithoutRef<"p">) {
   return (
-    <p className={cn("subheading text-[var(--shop-ink)]", className)}>
+    <p {...rest} className={cn("subheading text-[var(--shop-ink)]", className)}>
       {children}
     </p>
   );
@@ -147,10 +166,21 @@ export function SectionIntro({
 }) {
   return (
     <div className={cn("px-4 pb-2 pt-14 text-center md:px-8 md:pt-20", className)}>
-      <Eyebrow>{eyebrow}</Eyebrow>
+      {/* Label and heading are revealed as separate beats rather than as one
+          block, so the cascade reads top to bottom.
+
+          The heading carries both effects. Its own entrance is what a phone and
+          any browser without scroll timelines actually see — without it the
+          label would animate and the heading under it would sit still, which
+          reads as a bug rather than as restraint. Where the word timeline does
+          run the two layer: the line rises in dim, then lights up along it. */}
+      <Eyebrow {...revealProps("fade")}>{eyebrow}</Eyebrow>
       {heading && (
-        <h2 className="display mt-2.5 text-[clamp(1.5rem,3.5vw,2.25rem)]">
-          {heading}
+        <h2
+          className="display mt-2.5 text-[clamp(1.5rem,3.5vw,2.25rem)]"
+          {...revealProps("rise", 1)}
+        >
+          <ScrollRevealText text={heading} />
         </h2>
       )}
     </div>
@@ -174,7 +204,11 @@ export function ShopTheLook() {
     <section aria-label="Shop the look" className="pt-4">
       <div className="rail auto-cols-[74%] gap-2 px-4 sm:auto-cols-[42%] md:grid md:auto-cols-auto md:grid-cols-4 md:overflow-visible md:px-2">
         {SHOP_THE_LOOK.map((frame, i) => (
-          <figure key={frame.image} className="relative isolate">
+          /* Staggered across the row so the looks arrive in reading order.
+             The attributes go on the `<figure>` that is already the grid item —
+             a wrapper here would become the grid cell and the scroll-snap
+             target instead, and the rail would be animating the wrong box. */
+          <figure key={frame.image} className="relative isolate" {...revealProps("rise", i)}>
             <Image
               src={frame.image}
               alt={frame.alt}
@@ -229,6 +263,9 @@ export function BrandMarquee() {
       href={BRAND_MARQUEE.href}
       aria-label={`Shop ${BRAND_MARQUEE.word} Studios`}
       className="mt-14 block cursor-pointer bg-[#fc5432] py-3.5 text-white md:mt-20"
+      /* Opacity only. The strip is a full-bleed band of solid colour, and a
+         band that slid in would drag a visible seam across the page edge. */
+      {...revealProps("fade")}
     >
       <div
         className="marquee"
@@ -265,11 +302,15 @@ export function EditorialBanner() {
   return (
     <section className="mt-20 grid gap-2 px-2 md:mt-28 md:grid-cols-3">
       <h2 className="sr-only">Shop by category</h2>
-      {MOSAIC.map((tile) => (
+      {MOSAIC.map((tile, i) => (
+        /* The tiles already clip their own overflow, so the curtain wipe has
+           something to draw against. Staggered, but only just — three columns
+           arriving in a slow sequence would read as three separate sections. */
         <Link
           key={tile.handle}
           href={`/collections/${tile.handle}`}
           className="group relative isolate flex min-h-[26rem] items-center justify-center overflow-hidden bg-[var(--shop-cloud)] p-8 text-center focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white"
+          {...revealProps("media", i)}
         >
           <Image
             src={tile.image}

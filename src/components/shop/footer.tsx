@@ -6,6 +6,7 @@ import {
   QUICK_LINKS,
 } from "@/lib/shop/home-content";
 import { NewsletterForm } from "./newsletter-form";
+import { revealProps } from "./reveal";
 
 /**
  * Brand marks, drawn inline. lucide dropped its brand set in 1.x, and pulling a
@@ -76,8 +77,11 @@ export function ShopFooter({ storeName }: { storeName: string }) {
       {/* Extra bottom padding on mobile clears the floating tab bar, including
           the home-indicator inset on notched phones. */}
       <div className="px-4 pb-[calc(env(safe-area-inset-bottom,0px)+7rem)] pt-16 md:px-8 md:pb-16 md:pt-20">
+        {/* The four columns open in sequence. Cheap here — the footer is the
+            last thing on the page, so the cascade is never competing with
+            anything the shopper is still reading above it. */}
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
-          <nav aria-labelledby="footer-store">
+          <nav aria-labelledby="footer-store" {...revealProps("rise", 0)}>
             <h2 id="footer-store" className="meta text-white">
               {storeName}
             </h2>
@@ -90,7 +94,7 @@ export function ShopFooter({ storeName }: { storeName: string }) {
             </ul>
           </nav>
 
-          <div>
+          <div {...revealProps("rise", 1)}>
             <h2 className="meta text-white">{NEWSLETTER.heading}</h2>
             <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/65">
               {NEWSLETTER.body}
@@ -100,7 +104,7 @@ export function ShopFooter({ storeName }: { storeName: string }) {
             </div>
           </div>
 
-          <nav aria-labelledby="footer-quick">
+          <nav aria-labelledby="footer-quick" {...revealProps("rise", 2)}>
             <h2 id="footer-quick" className="meta text-white">
               Quick Links
             </h2>
@@ -113,7 +117,7 @@ export function ShopFooter({ storeName }: { storeName: string }) {
             </ul>
           </nav>
 
-          <div>
+          <div {...revealProps("rise", 3)}>
             <h2 className="meta text-white">Brands Instagram</h2>
             <ul className="mt-6 flex flex-col gap-3.5">
               {BRAND_INSTAGRAMS.map((brand) => (

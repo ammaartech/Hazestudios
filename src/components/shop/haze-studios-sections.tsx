@@ -7,6 +7,7 @@ import {
 } from "@/lib/shop/haze-studios-content";
 import { cn } from "@/lib/utils";
 import { Price } from "./price";
+import { revealProps } from "./reveal";
 
 /* -------------------------------------------------------------------------- */
 /* Lookbook                                                                    */
@@ -25,7 +26,11 @@ export function Lookbook() {
     <section aria-label="Lookbook">
       <div className="grid grid-cols-2 gap-3 px-3 md:grid-cols-4 md:gap-2 md:px-2">
         {HAZE_LOOKBOOK.frames.map((frame, i) => (
-          <figure key={frame.image} className="relative isolate">
+          <figure
+            key={frame.image}
+            className="relative isolate"
+            {...revealProps("rise", i)}
+          >
             <Image
               src={frame.image}
               alt={frame.alt}
@@ -72,11 +77,19 @@ export function Arrivals({ tags }: { tags: ArrivalTag[] }) {
 
   return (
     <section aria-label={HAZE_ARRIVALS.eyebrow} className="grid gap-2 px-2 md:grid-cols-2">
-      {HAZE_ARRIVALS.frames.map((frame) => {
+      {HAZE_ARRIVALS.frames.map((frame, i) => {
         const tag = byHandle.get(frame.handle);
 
         return (
-          <figure key={frame.image} className="relative isolate">
+          /* Two columns that open outward from the gutter — each frame arrives
+             from the side it occupies. On a phone they stack, and the mobile
+             rules turn both back into a rise: 44px of lateral travel inside a
+             single-column layout is motion the viewport would clip anyway. */
+          <figure
+            key={frame.image}
+            className="relative isolate"
+            {...revealProps(i === 0 ? "left" : "right")}
+          >
             <Image
               src={frame.image}
               alt={frame.alt}
@@ -132,11 +145,12 @@ export function Tiles() {
     <section className="mt-12 md:mt-16">
       <h2 className="sr-only">Shop by category</h2>
       <div className="rail auto-cols-[86%] gap-2 px-2 md:grid md:auto-cols-auto md:grid-cols-3 md:overflow-visible">
-        {HAZE_TILES.map((tile) => (
+        {HAZE_TILES.map((tile, i) => (
           <Link
             key={tile.href}
             href={tile.href}
             className="group relative isolate flex h-[450px] items-center justify-center overflow-hidden bg-[var(--shop-cloud)] p-8 text-center focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white md:h-[550px]"
+            {...revealProps("media", i)}
           >
             <Image
               src={tile.image}

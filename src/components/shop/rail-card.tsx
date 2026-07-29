@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { RailProduct } from "@/lib/shop/swatches";
 import { cn } from "@/lib/utils";
 import { Price } from "./price";
+import { revealProps } from "./reveal";
 
 const SIZES = "(max-width: 640px) 62vw, (max-width: 1024px) 33vw, 24vw";
 
@@ -21,10 +22,13 @@ const SIZES = "(max-width: 640px) 62vw, (max-width: 1024px) 33vw, 24vw";
 export function RailCard({
   product,
   priority = false,
+  revealIndex = 0,
 }: {
   product: RailProduct;
   /** Set on the first few cards so the rail's LCP image isn't lazy-loaded. */
   priority?: boolean;
+  /** Position in the row's entrance cascade. */
+  revealIndex?: number;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
   const href = `/products/${product.handle}`;
@@ -36,7 +40,10 @@ export function RailCard({
   const hover = active ? null : product.hoverImage;
 
   return (
-    <article className="flex flex-col">
+    /* The attributes sit on the card's own root rather than on a wrapper: in a
+       rail this element is the scroll-snap target, and in the desktop grid it
+       is the grid item — a box around it would take over both roles. */
+    <article className="flex flex-col" {...revealProps("rise", revealIndex)}>
       <div className="relative aspect-[4/5] overflow-hidden bg-[var(--shop-cloud)]">
         <Link
           href={href}

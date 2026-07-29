@@ -4,6 +4,7 @@ import { REEL } from "@/lib/shop/home-content";
 import { cn } from "@/lib/utils";
 import { Eyebrow } from "./home-sections";
 import { Price } from "./price";
+import { ScrollRevealText, revealProps } from "./reveal";
 
 export interface ReelItem {
   handle: string;
@@ -39,18 +40,22 @@ export function ShoppableReel({ items }: { items: ReelItem[] }) {
   return (
     <section aria-labelledby="reel-heading" className="pt-14 md:pt-20">
       <div className="px-4 pb-8 text-center md:px-8">
-        <Eyebrow>{REEL.eyebrow}</Eyebrow>
+        <Eyebrow {...revealProps("fade")}>{REEL.eyebrow}</Eyebrow>
         <h2
           id="reel-heading"
           className="display mt-2.5 text-[clamp(1.5rem,3.5vw,2.25rem)]"
+          {...revealProps("rise", 1)}
         >
-          {REEL.heading}
+          <ScrollRevealText text={REEL.heading} />
         </h2>
       </div>
 
       <ul className="rail auto-cols-[52%] gap-3 px-4 sm:auto-cols-[30%] md:grid md:auto-cols-auto md:grid-cols-6 md:overflow-visible md:px-8">
-        {items.map((item) => (
-          <li key={item.handle}>
+        {items.map((item, i) => (
+          /* Six narrow frames, so the cascade runs over the `<li>` — the snap
+             target on a phone and the grid cell on a desktop, in both cases the
+             box whose position the entrance is describing. */
+          <li key={item.handle} {...revealProps("rise", i)}>
             <Link
               href={`/products/${item.handle}`}
               className="group block cursor-pointer overflow-hidden rounded-[6px] border border-[var(--shop-hairline-soft)] bg-[var(--shop-canvas)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--shop-ink)]"
