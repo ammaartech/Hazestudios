@@ -15,8 +15,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\package.json": {
-    "mtime": 1785393928.5525138,
-    "ast_hash": "76578ad272dd90242e20deff7c35afee",
+    "mtime": 1785443575.3037784,
+    "ast_hash": "02abddb8d0d5a775db6a84c479dcebb6",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\postcss.config.mjs": {
@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.impeccable\\hook.cache.json": {
-    "mtime": 1785438609.525632,
-    "ast_hash": "7c75fefd614ad996f3bbb1bb06955da9",
+    "mtime": 1785443949.178612,
+    "ast_hash": "f2eb75345e8e21cf182938ac6e91b9b7",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\db-config.mjs": {
@@ -2857,6 +2857,11 @@
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\search-spotlight.tsx": {
     "mtime": 1785438609.3342152,
     "ast_hash": "b94d262453851e8058c3a0ac651d45d9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\check-overflow.mjs": {
+    "mtime": 1785443545.3805025,
+    "ast_hash": "89c30e40e5906e3236c65abcbcd840b6",
     "semantic_hash": ""
   }
 }

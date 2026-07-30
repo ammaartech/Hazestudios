@@ -587,6 +587,32 @@ body {
   }
   .shop .rail > * {
     scroll-snap-align: start;
+    /* Every rail item is its own positioning context, and that is a layout
+       guarantee rather than a convenience.
+
+       A scroll container only clips descendants it is an ancestor of *in the
+       containing-block chain*. An `position: absolute` box whose nearest
+       positioned ancestor sits above the rail is laid out against that outer
+       box instead, so the rail's `overflow-x: auto` never applies to it — it
+       keeps the static position it would have had deep inside the scroll
+       content, hundreds of pixels to the right, and contributes that width to
+       the document.
+
+       `.sr-only` is exactly such a box: absolutely positioned, and inside a
+       rail card it usually has no positioned parent at all. A screen-reader
+       label on the fourth product's colour chip was widening the document to
+       ~1.55x the viewport on every phone-width screen. Chrome only leaks it as
+       a `scrollWidth` (`overflow-x: clip` on the root stops the panning), but
+       mobile Safari shrink-to-fits the whole page to that content width — the
+       storefront rendered at ~65% scale with a band of bare white down the
+       right-hand side.
+
+       Anchoring here rather than on the individual card fixes the class of bug
+       instead of one instance: any overlay, badge or visually-hidden label a
+       rail item ever gains is now clipped by the rail that owns it. `relative`
+       with no `z-index` starts no stacking context, so nothing above changes.
+       Verified by `npm run check:overflow`. */
+    position: relative;
   }
 
   @media (prefers-reduced-motion: reduce) {
