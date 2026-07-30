@@ -22,13 +22,18 @@ export function orderStatusLabel(order: Order): {
   if (order.payment_status === "partially_refunded") {
     return { label: "Partially refunded", tone: "warn" };
   }
+  // Voided/restocked are terminal: nothing shipped and nothing is owed. To the
+  // shopper that reads as "Cancelled", never as "Preparing".
+  if (order.payment_status === "voided" || order.fulfillment_status === "restocked") {
+    return { label: "Cancelled", tone: "warn" };
+  }
   if (order.fulfillment_status === "fulfilled") {
     return { label: "Delivered", tone: "done" };
   }
   if (order.fulfillment_status === "partial") {
     return { label: "Partly shipped", tone: "open" };
   }
-  if (order.payment_status === "pending") {
+  if (order.payment_status === "pending" || order.payment_status === "partially_paid") {
     return { label: "Payment pending", tone: "warn" };
   }
   return { label: "Preparing", tone: "open" };

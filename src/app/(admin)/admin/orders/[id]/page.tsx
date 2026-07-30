@@ -99,9 +99,11 @@ export default async function OrderDetailPage({
                   maxAmount={Number(order.total) - refunded}
                 />
               )}
-            {order.fulfillment_status !== "fulfilled" && (
-              <FulfillDialog orderId={order.id} />
-            )}
+            {order.fulfillment_status !== "fulfilled" &&
+              order.fulfillment_status !== "restocked" &&
+              order.payment_status !== "voided" && (
+                <FulfillDialog orderId={order.id} />
+              )}
           </>
         )}
       </PageHeader>

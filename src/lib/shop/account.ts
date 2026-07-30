@@ -89,9 +89,14 @@ export interface AccountOrder extends Order {
  * fulfilled, and not refunded. Everything else is history. Deliberately derived
  * from fulfilment rather than age: a three-month-old unfulfilled order is still
  * an open problem, and burying it under "past" is how support tickets start.
+ *
+ * A voided or restocked order is never coming — it is history no matter how
+ * un-fulfilled it looks, so it must not sit in "open" waiting forever.
  */
 export function isOpenOrder(order: Order): boolean {
   if (order.payment_status === "refunded") return false;
+  if (order.payment_status === "voided") return false;
+  if (order.fulfillment_status === "restocked") return false;
   return order.fulfillment_status !== "fulfilled";
 }
 

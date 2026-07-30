@@ -1,7 +1,17 @@
 export type ProductStatus = "draft" | "active" | "archived";
 export type CollectionType = "manual" | "smart";
-export type PaymentStatus = "pending" | "paid" | "partially_refunded" | "refunded";
-export type FulfillmentStatus = "unfulfilled" | "partial" | "fulfilled";
+export type PaymentStatus =
+  | "pending"
+  | "paid"
+  | "partially_paid"
+  | "partially_refunded"
+  | "refunded"
+  | "voided";
+export type FulfillmentStatus =
+  | "unfulfilled"
+  | "partial"
+  | "fulfilled"
+  | "restocked";
 export type DiscountType = "percentage" | "fixed" | "free_shipping" | "bxgy";
 export type DiscountStatus = "active" | "scheduled" | "expired" | "disabled";
 export type StaffRole = "owner" | "admin" | "staff";
