@@ -190,38 +190,46 @@ export function CartDrawer() {
                 Shipping and taxes calculated at checkout.
               </p>
 
-              {/* Checkout leads, and the bag becomes the secondary route. The
-                  drawer already shows the lines and lets them be edited, so
-                  sending shoppers to /cart first was a step that changed
-                  nothing. Sold-out lines still have to be resolved there,
-                  though — which is the one case the primary action points at
-                  the bag instead. */}
-              {canCheckout ? (
-                <Link
-                  href="/checkout"
-                  onClick={closeDrawer}
-                  className="glass glass-pill glass-press glass-ink mt-4 flex min-h-14 cursor-pointer items-center justify-center px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
-                >
-                  Checkout
-                </Link>
-              ) : (
-                <Link
-                  href="/cart"
-                  onClick={closeDrawer}
-                  className="glass glass-pill glass-press glass-ink mt-4 flex min-h-14 cursor-pointer items-center justify-center px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
-                >
-                  Review bag
-                </Link>
-              )}
+              {/*
+                Both controls are the same material as the tab bar island —
+                `glass-on-light` rather than `glass-ink`. The dark pill was the
+                one painted surface in a shell built entirely out of glass, and
+                inside a panel that is itself glass it read as a slab dropped
+                onto the material rather than as part of it. `glass-on-light` is
+                the idiom here for a control sitting on an already-light surface:
+                it carries the rim and tint without stacking a second
+                backdrop-filter over the panel's own, which would cost a blur
+                pass to refract something already blurred.
+
+                Hierarchy is carried by scale and weight instead of by colour —
+                the bag is a quieter, shorter pill; checkout is full height and
+                medium. Checkout sits second so the primary action is the one
+                nearest the thumb on a phone, where this drawer is a sheet.
+              */}
               {canCheckout && (
                 <Link
                   href="/cart"
                   onClick={closeDrawer}
-                  className="glass-press mt-2 flex min-h-11 cursor-pointer items-center justify-center rounded-full text-sm text-(--shop-mute) transition-colors hover:text-(--shop-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--shop-ink)"
+                  className="glass glass-pill glass-press glass-on-light mt-4 flex min-h-12 cursor-pointer items-center justify-center px-8 text-sm text-(--shop-mute) transition-colors hover:text-(--shop-ink) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
                 >
                   View bag
                 </Link>
               )}
+
+              {/* Sold-out lines can only be resolved on the cart page, so that
+                  is where the primary action points when checkout is barred. */}
+              <Link
+                href={canCheckout ? "/checkout" : "/cart"}
+                onClick={closeDrawer}
+                className={cn(
+                  "glass glass-pill glass-press glass-on-light flex min-h-14 cursor-pointer items-center justify-center px-8 text-base font-medium text-(--shop-ink) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)",
+                  // Tight against the bag pill when both are up; otherwise it
+                  // carries the full gap under the shipping note on its own.
+                  canCheckout ? "mt-2" : "mt-4"
+                )}
+              >
+                {canCheckout ? "Checkout" : "Review bag"}
+              </Link>
             </footer>
           </>
         )}

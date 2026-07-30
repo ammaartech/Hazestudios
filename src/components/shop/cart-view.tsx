@@ -41,7 +41,7 @@ export function CartView() {
         </div>
         <Link
           href="/"
-          className="glass glass-pill glass-press glass-ink flex min-h-14 cursor-pointer items-center px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
+          className="glass glass-pill glass-press glass-on-light flex min-h-14 cursor-pointer items-center px-8 text-base font-medium text-(--shop-ink) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
         >
           Shop the drop
         </Link>
@@ -120,7 +120,7 @@ export function CartView() {
             {canCheckout ? (
               <Link
                 href="/checkout"
-                className="glass glass-pill glass-press glass-ink mt-6 flex min-h-14 w-full cursor-pointer items-center justify-center gap-2 px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
+                className="glass glass-pill glass-press glass-on-light mt-6 flex min-h-14 w-full cursor-pointer items-center justify-center gap-2 px-8 text-base font-medium text-(--shop-ink) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
               >
                 Checkout
                 <ArrowRight className="size-4" aria-hidden />
@@ -129,7 +129,7 @@ export function CartView() {
               <button
                 type="button"
                 disabled
-                className="glass glass-pill glass-ink mt-6 flex min-h-14 w-full cursor-not-allowed items-center justify-center gap-2 bg-(--shop-cloud) px-8 text-base font-medium text-(--shop-stone)"
+                className="glass glass-pill mt-6 flex min-h-14 w-full cursor-not-allowed items-center justify-center gap-2 bg-(--shop-cloud) px-8 text-base font-medium text-(--shop-stone)"
               >
                 Checkout
                 <ArrowRight className="size-4" aria-hidden />
