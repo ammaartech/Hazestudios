@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateCatalog } from "@/lib/shop/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Discount } from "@/lib/types";
 
@@ -53,6 +54,14 @@ async function adjustStock(
         .eq("id", level.id);
     }
   }
+
+  // Every path that moves stock runs through here — placing an order, refunding
+  // one, converting a draft. The storefront serves stock from a shared cache
+  // now, so selling the last unit has to drop that cache or the PDP keeps
+  // offering an item that is gone.
+  revalidateCatalog({
+    ids: items.map((i) => i.product_id).filter(Boolean),
+  });
 }
 
 export async function createOrder(payload: OrderPayload) {

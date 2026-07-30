@@ -14,7 +14,20 @@ import {
   populatedRows,
 } from "@/lib/size-chart";
 
-export const dynamic = "force-dynamic";
+/*
+ * No `dynamic = "force-dynamic"` here any more.
+ *
+ * It was doing nothing this page wanted. A PDP is the most cacheable thing in
+ * the store — the same hoodie for every visitor — and the export declared the
+ * opposite. What actually keeps this route rendering per request is the cart
+ * read in the shop layout, which touches `cookies()`; the config export was
+ * only stopping the page from ever being prerendered once that changes.
+ *
+ * `getProduct` is called twice below, once for metadata and once for the body.
+ * That is deliberate and free: it is wrapped in React `cache`, so the second
+ * call inside the same render pass returns the first call's promise rather than
+ * reaching Supabase again.
+ */
 
 export async function generateMetadata({
   params,

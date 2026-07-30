@@ -11,13 +11,19 @@ import { revealProps } from "./reveal";
  */
 export function ProductCard({
   product,
-  priority = false,
+  eager = false,
   revealIndex = 0,
   className,
 }: {
   product: ShopProduct;
-  /** Set on above-the-fold cards so the LCP image isn't lazy-loaded. */
-  priority?: boolean;
+  /**
+   * Set on above-the-fold cards so their image isn't lazy-loaded. Deliberately
+   * not `fetchPriority="high"`: a grid has several images that could each be
+   * the LCP depending on viewport, and marking them all high priority just
+   * splits the same bandwidth more ways. Skipping the lazy-load round trip is
+   * the win; the ranking is the browser's to make.
+   */
+  eager?: boolean;
   /**
    * Position in the entrance cascade. Callers pass the column rather than the
    * running index: a grid staggered end to end would leave the last row of a
@@ -47,7 +53,7 @@ export function ProductCard({
               alt={primary.alt || product.title}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              priority={priority}
+              loading={eager ? "eager" : "lazy"}
               className={cn(
                 "object-cover transition-opacity duration-300",
                 // Cross-fade to the second shot on hover — opacity only, so the

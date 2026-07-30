@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateCatalog } from "@/lib/shop/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { ProductStatus, WeightUnit } from "@/lib/types";
 import type { SizeChart } from "@/lib/size-chart";
@@ -103,12 +104,22 @@ function readableError(message: string): string {
   return message;
 }
 
+/**
+ * Two invalidations, because there are two caches.
+ *
+ * `revalidatePath` drops rendered route output. `revalidateCatalog` drops the
+ * cached *data* behind `@/lib/shop/queries` — which, since the storefront reads
+ * are shared across every visitor, is now the one that decides whether an edit
+ * is visible. Without it a saved product would keep serving its old price for
+ * up to `CATALOG_TTL` no matter how many paths were revalidated.
+ */
 function revalidateProduct(id: string, handle: string) {
   revalidatePath("/admin/products");
   revalidatePath(`/admin/products/${id}`);
   revalidatePath("/admin/products/inventory");
   revalidatePath(`/products/${handle}`);
   revalidatePath("/");
+  revalidateCatalog({ ids: [id], handles: [handle] });
 }
 
 /**
@@ -145,6 +156,9 @@ export async function duplicateProduct(
 
   const result = data as { id: string; handle: string };
   revalidatePath("/admin/products");
+  // A duplicate starts as a draft, so no PDP changes — but it can still land in
+  // a smart collection the moment it is published, and the copy is made here.
+  revalidateCatalog({ ids: [result.id], handles: [result.handle] });
   return { ok: true, id: result.id, handle: result.handle };
 }
 
@@ -154,6 +168,7 @@ export async function deleteProduct(id: string) {
   if (error) return { ok: false as const, error: readableError(error.message) };
   revalidatePath("/admin/products");
   revalidatePath("/");
+  revalidateCatalog({ ids: [id] });
   return { ok: true as const };
 }
 
@@ -194,6 +209,7 @@ export async function setProductStatusBulk(ids: string[], status: ProductStatus)
   if (error) return { ok: false as const, error: readableError(error.message) };
   revalidatePath("/admin/products");
   revalidatePath("/");
+  revalidateCatalog({ ids });
   return { ok: true as const, count: count ?? ids.length };
 }
 
@@ -208,6 +224,7 @@ export async function deleteProductBulk(ids: string[]) {
   if (error) return { ok: false as const, error: readableError(error.message) };
   revalidatePath("/admin/products");
   revalidatePath("/");
+  revalidateCatalog({ ids });
   return { ok: true as const, count: count ?? ids.length };
 }
 
@@ -229,6 +246,11 @@ export async function adjustInventory(
   );
   if (error) return { ok: false as const, error: readableError(error.message) };
   revalidatePath("/admin/products/inventory");
+  // Stock is the fastest-moving thing on a PDP and the storefront now serves it
+  // from cache, so this has to be invalidated here. Previously only the admin's
+  // own inventory screen was revalidated and the shopper-facing side went
+  // untouched — which was harmless when every view hit Postgres, and is not now.
+  revalidateCatalog({ ids: [productId] });
   return { ok: true as const };
 }
 

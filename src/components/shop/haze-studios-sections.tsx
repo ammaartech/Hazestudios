@@ -36,7 +36,7 @@ export function Lookbook() {
               alt={frame.alt}
               width={1080}
               height={1800}
-              priority={i < 2}
+              loading={i < 2 ? "eager" : "lazy"}
               sizes="(max-width: 768px) 50vw, 25vw"
               className="aspect-[3/5] w-full object-cover"
             />

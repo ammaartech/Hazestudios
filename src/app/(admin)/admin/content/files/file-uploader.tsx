@@ -6,6 +6,7 @@ import { Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { IMMUTABLE_CACHE_CONTROL, prepareImageUpload } from "@/lib/images/prepare-upload";
 import { recordFile } from "./actions";
 
 export function FileUploader() {
@@ -18,18 +19,25 @@ export function FileUploader() {
     const supabase = createClient();
 
     for (const file of Array.from(files)) {
-      const path = `${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
-      const { error } = await supabase.storage.from("files").upload(path, file);
+      // This bucket takes anything — PDFs, size guides, spreadsheets — and only
+      // images come back conditioned. The rest pass straight through.
+      const { file: upload } = await prepareImageUpload(file);
+      const path = `${crypto.randomUUID()}-${upload.name.replace(/[^\w.\-]/g, "_")}`;
+      const { error } = await supabase.storage
+        .from("files")
+        .upload(path, upload, { cacheControl: IMMUTABLE_CACHE_CONTROL });
       if (error) {
         toast.error(`Upload failed for ${file.name}: ${error.message}`);
         continue;
       }
       const { data } = supabase.storage.from("files").getPublicUrl(path);
+      // Recorded from the conditioned file, so the library's listed type and
+      // size describe the object that actually exists in the bucket.
       const result = await recordFile({
         url: data.publicUrl,
-        filename: file.name,
-        mime_type: file.type,
-        size: file.size,
+        filename: upload.name,
+        mime_type: upload.type,
+        size: upload.size,
       });
       if (result.error) toast.error(result.error);
     }

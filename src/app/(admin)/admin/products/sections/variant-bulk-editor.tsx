@@ -342,7 +342,7 @@ export function VariantBulkEditor({
                             width={24}
                             height={24}
                             className="size-full object-cover"
-                            unoptimized
+                            quality={60}
                           />
                         ) : (
                           <ImageIcon className="size-3 text-muted-foreground" />

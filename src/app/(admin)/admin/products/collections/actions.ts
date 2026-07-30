@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateCollections } from "@/lib/shop/cache";
 import { createClient } from "@/lib/supabase/server";
 import { handleize } from "@/lib/format";
 import type { CollectionRule, CollectionSort, CollectionType } from "@/lib/types";
@@ -149,6 +150,10 @@ export async function saveCollection(payload: CollectionPayload) {
 function revalidateStorefront() {
   revalidatePath("/admin/products/collections");
   revalidatePath("/", "layout");
+  // The rendered pages above are only half of it: the collection rows and their
+  // membership are cached as data too, and the header nav on every storefront
+  // route reads them.
+  revalidateCollections();
 }
 
 export async function deleteCollection(id: string) {

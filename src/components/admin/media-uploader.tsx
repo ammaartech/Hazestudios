@@ -22,6 +22,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { ArrowUpFromLine, GripVertical, RotateCw, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { IMMUTABLE_CACHE_CONTROL, prepareImageUpload } from "@/lib/images/prepare-upload";
 import { cn } from "@/lib/utils";
 
 export type MediaStatus = "uploading" | "ready" | "error";
@@ -114,7 +115,12 @@ function SortableThumb({
             "object-cover transition-opacity duration-200 select-none",
             uploading && "opacity-50"
           )}
-          unoptimized
+          /* While the upload is in flight `url` is a local object URL — there is
+             no CDN to resize it and no network to save, so it renders as-is.
+             Once Storage answers, `url` becomes a public URL and this tile picks
+             up the same transform every other thumbnail gets. */
+          unoptimized={uploading}
+          quality={60}
         />
 
         {/* Storage uploads report no byte progress, so this is an honest
@@ -220,12 +226,17 @@ export function MediaUploader({
   const uploadOne = useCallback(
     async (id: string, file: File) => {
       const supabase = createClient();
-      const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
+      // Downscale and re-encode before the bytes ever leave the browser: the
+      // operator stops waiting on a 4 MB upload, and we stop storing pixels no
+      // rendition will ever ask for.
+      const prepared = await prepareImageUpload(file);
+      const ext = prepared.file.name.split(".").pop()?.toLowerCase() ?? "png";
       const path = `${id}.${ext}`;
 
-      const { error } = await supabase.storage
-        .from(bucket)
-        .upload(path, file, { cacheControl: "3600", upsert: true });
+      const { error } = await supabase.storage.from(bucket).upload(path, prepared.file, {
+        cacheControl: IMMUTABLE_CACHE_CONTROL,
+        upsert: true,
+      });
 
       if (error) {
         update((prev) =>

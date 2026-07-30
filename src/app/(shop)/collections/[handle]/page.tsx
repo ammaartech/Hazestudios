@@ -54,7 +54,10 @@ export default async function CollectionPage({
             alt=""
             aria-hidden
             fill
-            priority
+            /* The one image on this page that is unambiguously the LCP — a
+               full-bleed banner above everything else — so it earns a real
+               <link rel=preload> rather than just an eager fetch. */
+            preload
             sizes="100vw"
             className="object-cover"
           />
@@ -116,7 +119,7 @@ export default async function CollectionPage({
               <ProductCard
                 key={product.id}
                 product={product}
-                priority={i < 4}
+                eager={i < 4}
                 revealIndex={i % 4}
               />
             ))}

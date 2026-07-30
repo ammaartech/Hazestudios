@@ -60,7 +60,7 @@ export default async function SearchPage({
       {products.length > 0 && (
         <div className="mx-auto mt-12 grid max-w-7xl grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 md:gap-x-6 lg:grid-cols-4">
           {products.map((product, i) => (
-            <ProductCard key={product.id} product={product} priority={i < 4} />
+            <ProductCard key={product.id} product={product} eager={i < 4} />
           ))}
         </div>
       )}

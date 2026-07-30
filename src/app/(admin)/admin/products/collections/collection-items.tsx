@@ -67,7 +67,7 @@ function Thumb({ url, alt }: { url: string | null; alt: string }) {
           width={40}
           height={40}
           className="size-10 object-cover"
-          unoptimized
+          quality={60}
         />
       ) : (
         <ImageIcon className="size-4 text-muted-foreground" />

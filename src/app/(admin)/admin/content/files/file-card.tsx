@@ -32,7 +32,7 @@ export function FileCard({ file }: { file: FileRecord }) {
             fill
             sizes="200px"
             className="object-cover"
-            unoptimized
+            quality={60}
           />
         ) : (
           <FileIcon className="size-10 text-muted-foreground" />

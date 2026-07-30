@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
+import { IMMUTABLE_CACHE_CONTROL, prepareImageUpload } from "@/lib/images/prepare-upload";
 import type { ShopSettings } from "@/lib/types";
 import { updateShopSettings } from "../actions";
 
@@ -34,9 +35,14 @@ export function BrandForm({ settings }: { settings: ShopSettings }) {
   async function uploadLogo(file: File) {
     setUploading(true);
     const supabase = createClient();
-    const ext = file.name.split(".").pop() ?? "png";
+    // SVG logos pass through untouched — rasterising one would throw away the
+    // only thing that makes it a good logo.
+    const prepared = await prepareImageUpload(file);
+    const ext = prepared.file.name.split(".").pop() ?? "png";
     const path = `logo-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("brand").upload(path, file);
+    const { error } = await supabase.storage
+      .from("brand")
+      .upload(path, prepared.file, { cacheControl: IMMUTABLE_CACHE_CONTROL });
     setUploading(false);
     if (error) {
       toast.error(`Upload failed: ${error.message}`);
@@ -81,7 +87,7 @@ export function BrandForm({ settings }: { settings: ShopSettings }) {
                   width={64}
                   height={64}
                   className="size-16 object-contain"
-                  unoptimized
+                  quality={60}
                 />
               ) : (
                 <span className="text-xs text-muted-foreground">No logo</span>

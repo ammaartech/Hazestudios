@@ -214,7 +214,7 @@ export function ShopTheLook() {
               alt={frame.alt}
               width={1000}
               height={1430}
-              priority={i < 2}
+              loading={i < 2 ? "eager" : "lazy"}
               sizes="(max-width: 640px) 74vw, (max-width: 768px) 42vw, 25vw"
               className="aspect-[7/10] w-full object-cover"
             />

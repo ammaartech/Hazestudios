@@ -21,8 +21,8 @@ export const HAZE_HERO: HeroContent = {
   heading: "Haze Studios",
   body: "Feels expensive. Looks good. Priced Fair.",
   cta: { label: "Campus Drip", href: "/collections/haze-tees" },
-  image: "/fogstores/men/hero-desktop.png",
-  imageMobile: "/fogstores/men/hero-mobile.png",
+  image: "/fogstores/men/hero-desktop.webp",
+  imageMobile: "/fogstores/men/hero-mobile.webp",
 };
 
 /* -------------------------------------------------------------------------- */
@@ -64,25 +64,25 @@ export const HAZE_LOOKBOOK = {
   eyebrow: "Hoodies trending currently",
   frames: [
     {
-      image: "/fogstores/men/look-1.png",
+      image: "/fogstores/men/look-1.webp",
       alt: "Flat-lay: black Arctic Monkeys hoodie with washed black wide-leg denim, Air Force 1s and a CD player",
       handle: "arctic-monkey",
       cta: "Shop the look",
     },
     {
-      image: "/fogstores/men/look-2.png",
+      image: "/fogstores/men/look-2.webp",
       alt: "Navy Arctic Monkeys hoodie worn with ripped straight denim in a café",
       handle: "arctic-monkey",
       cta: "Shop the look",
     },
     {
-      image: "/fogstores/men/look-3.png",
+      image: "/fogstores/men/look-3.webp",
       alt: "Blue Cold Culture hoodie worn back-to-camera, showing the star back print",
       handle: "cold-culture",
       cta: "Shop the set",
     },
     {
-      image: "/fogstores/men/look-4.png",
+      image: "/fogstores/men/look-4.webp",
       alt: "Flat-lay: blue Cold Culture hoodie with a white tee, light denim, cap and Air Force 1s",
       handle: "cold-culture",
       cta: "Shop the look",
@@ -107,13 +107,13 @@ export const HAZE_ARRIVALS = {
   eyebrow: "New arrivals",
   frames: [
     {
-      image: "/fogstores/men/arrival-left.png",
+      image: "/fogstores/men/arrival-left.webp",
       alt: "Haze Grunge Linen Shirt worn open over a tee",
       handle: "haze-grunge-linen-shirt",
       align: "left",
     },
     {
-      image: "/fogstores/men/arrival-right.png",
+      image: "/fogstores/men/arrival-right.webp",
       alt: "Bodak Tee styled for the new season",
       handle: "bodak-tee-1",
       align: "right",
@@ -164,7 +164,7 @@ export const HAZE_TILES: Tile[] = [
     body: "Beanies, Belt, Rings",
     cta: "Shop Now",
     href: "/collections/mens-accessories",
-    image: "/fogstores/men/tile-accessories.png",
+    image: "/fogstores/men/tile-accessories.webp",
     alt: "Knitted beanie and silver rings",
   },
   {
@@ -173,7 +173,7 @@ export const HAZE_TILES: Tile[] = [
     body: "Customized Slogans, Pictures etc",
     cta: "Shop Now",
     href: "/collections/haze-v-26-copy",
-    image: "/fogstores/men/tile-couple-tees.jpg",
+    image: "/fogstores/men/tile-couple-tees.webp",
     alt: "Two people in matching printed tees",
   },
   {
@@ -182,7 +182,7 @@ export const HAZE_TILES: Tile[] = [
     body: "Deals available FRI–MON only.",
     cta: "Shop Saving",
     href: "/collections/limited-offers",
-    image: "/fogstores/men/tile-clearance.png",
+    image: "/fogstores/men/tile-clearance.webp",
     alt: "Graphic tee, back view",
   },
 ];

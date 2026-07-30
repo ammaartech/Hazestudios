@@ -17,12 +17,13 @@ import { RailCard } from "./rail-card";
 export function ProductRail({
   products,
   label,
-  priority = false,
+  eager = false,
 }: {
   products: RailProduct[];
   /** Names the rail for assistive tech, e.g. the collection title. */
   label: string;
-  priority?: boolean;
+  /** Set on the rail that lands above the fold, so its cards load immediately. */
+  eager?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = useState(true);
@@ -72,7 +73,7 @@ export function ProductRail({
         tabIndex={0}
       >
         {products.map((product, i) => (
-          <RailCard key={product.id} product={product} priority={priority && i < 4} />
+          <RailCard key={product.id} product={product} eager={eager && i < 4} />
         ))}
       </div>
 

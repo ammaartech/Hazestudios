@@ -24,6 +24,7 @@ import {
   InputGroupText,
 } from "@/components/ui/input-group";
 import { createClient } from "@/lib/supabase/client";
+import { IMMUTABLE_CACHE_CONTROL, prepareImageUpload } from "@/lib/images/prepare-upload";
 import { useField, useFields } from "@/lib/form-store";
 import { handleize } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -125,12 +126,16 @@ export function ImageSection() {
     }
     setUploading(true);
     const supabase = createClient();
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+    const prepared = await prepareImageUpload(file);
+    const ext = prepared.file.name.split(".").pop()?.toLowerCase() ?? "jpg";
     const path = `collection-${crypto.randomUUID()}.${ext}`;
 
     const { error } = await supabase.storage
       .from("product-images")
-      .upload(path, file, { cacheControl: "3600", upsert: true });
+      .upload(path, prepared.file, {
+        cacheControl: IMMUTABLE_CACHE_CONTROL,
+        upsert: true,
+      });
 
     setUploading(false);
     if (error) {
@@ -160,7 +165,7 @@ export function ImageSection() {
               fill
               sizes="320px"
               className="object-cover"
-              unoptimized
+              quality={60}
             />
           ) : (
             <span className="flex flex-col items-center gap-1.5 text-muted-foreground">

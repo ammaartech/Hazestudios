@@ -485,7 +485,7 @@ export function VariantTable({
                                 width={28}
                                 height={28}
                                 className="size-full object-cover"
-                                unoptimized
+                                quality={60}
                               />
                             ) : (
                               <ImageIcon className="size-3.5 text-muted-foreground" />
@@ -794,7 +794,7 @@ function VariantImagePicker({
               width={28}
               height={28}
               className="size-full object-cover"
-              unoptimized
+              quality={60}
             />
           ) : (
             <ImagePlus className="size-3.5 text-muted-foreground" />
@@ -830,7 +830,7 @@ function VariantImagePicker({
                 width={56}
                 height={56}
                 className="size-full object-cover"
-                unoptimized
+                quality={60}
               />
             </button>
           ))}

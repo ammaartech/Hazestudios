@@ -111,7 +111,7 @@ export function FeaturedCollection({
           <RailCard
             key={product.id}
             product={product}
-            priority={i < 2}
+            eager={i < 2}
             revealIndex={i}
           />
         ))}

@@ -113,7 +113,7 @@ export function TabCarousel({
           hidden={active !== i}
           className="mt-10"
         >
-          <ProductRail products={tab.products} label={tab.label} priority={i === 0} />
+          <ProductRail products={tab.products} label={tab.label} eager={i === 0} />
         </div>
       ))}
     </section>

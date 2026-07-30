@@ -9,6 +9,22 @@ import { cn } from "@/lib/utils";
  * Mobile: a full-bleed scroll-snap rail, so the photography stays edge to edge.
  * Desktop: a stacked column — editorial catalogs scroll, they don't carousel.
  */
+/**
+ * Both layouts below sit in the DOM at once and only one is ever visible, but
+ * each renders the opening shot eagerly — so the page used to fetch the largest
+ * image on it twice, at two different widths, on every device.
+ *
+ * Sharing one `sizes` string fixes that without touching the markup: at any
+ * given viewport both elements resolve to the *same* CDN URL, so whichever one
+ * is hidden costs a cache hit instead of a second download. The breakpoint here
+ * has to track the `md:hidden` / `hidden md:block` pair below — 767px, because
+ * Tailwind's `md` takes over at 768.
+ */
+const GALLERY_SIZES = "(max-width: 767px) 100vw, 60vw";
+
+/** Fabric texture at this size is what the customer is actually buying. */
+const GALLERY_QUALITY = 90;
+
 export function ProductGallery({
   images,
   title,
@@ -37,8 +53,11 @@ export function ProductGallery({
                 src={image.url}
                 alt={image.alt || `${title} — view ${i + 1}`}
                 fill
-                sizes="100vw"
-                priority={i === 0}
+                sizes={GALLERY_SIZES}
+                /* First frame is what a phone lands on, so it must not wait for
+                   the lazy-load threshold; the rest are a swipe away. */
+                loading={i === 0 ? "eager" : "lazy"}
+                quality={GALLERY_QUALITY}
                 className="bg-[var(--shop-cloud)] object-cover"
               />
             </li>
@@ -58,8 +77,13 @@ export function ProductGallery({
             src={images[active].url}
             alt={images[active].alt || `${title} — view ${active + 1}`}
             fill
-            sizes="(max-width: 1280px) 55vw, 60vw"
-            priority
+            sizes={GALLERY_SIZES}
+            /* The opening shot is the LCP and the reason the page exists, so it
+               earns a real <link rel=preload> — but only while it *is* the
+               opening shot. Once the shopper picks a thumbnail, preloading the
+               image we are already displaying buys nothing. */
+            preload={active === 0}
+            quality={GALLERY_QUALITY}
             className="object-cover"
           />
         </div>

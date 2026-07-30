@@ -21,12 +21,12 @@ const SIZES = "(max-width: 640px) 62vw, (max-width: 1024px) 33vw, 24vw";
  */
 export function RailCard({
   product,
-  priority = false,
+  eager = false,
   revealIndex = 0,
 }: {
   product: RailProduct;
-  /** Set on the first few cards so the rail's LCP image isn't lazy-loaded. */
-  priority?: boolean;
+  /** Set on the first few cards so the rail's leading images aren't lazy-loaded. */
+  eager?: boolean;
   /** Position in the row's entrance cascade. */
   revealIndex?: number;
 }) {
@@ -59,7 +59,7 @@ export function RailCard({
                 alt=""
                 fill
                 sizes={SIZES}
-                priority={priority}
+                loading={eager ? "eager" : "lazy"}
                 className={cn(
                   "object-cover transition-opacity duration-300",
                   hover && "group-hover/media:opacity-0",

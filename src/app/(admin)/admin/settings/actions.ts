@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateSettings } from "@/lib/shop/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { ShopSettings, StaffRole } from "@/lib/types";
 
@@ -27,6 +28,9 @@ export async function updateShopSettings(
     .eq("id", 1);
   if (error) return { error: error.message };
   revalidatePath("/admin/settings", "layout");
+  // The store name is read into the storefront header and footer on every
+  // route, and that read is cached.
+  revalidateSettings();
   return { ok: true };
 }
 

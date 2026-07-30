@@ -173,8 +173,8 @@ export const HERO: HeroContent = {
   heading: "Siren Muse",
   body: "Mini-Skirts, Boots, Studs & All Things Hot.",
   cta: { label: "Fall 2026", href: "/collections/siren-muse" },
-  image: "/fogstores/hero-desktop.png",
-  imageMobile: "/fogstores/hero-mobile.png",
+  image: "/fogstores/hero-desktop.webp",
+  imageMobile: "/fogstores/hero-mobile.webp",
 };
 
 /* -------------------------------------------------------------------------- */
@@ -197,25 +197,25 @@ export const MOST_TRENDING_EYEBROW = "Most trending";
  */
 export const SHOP_THE_LOOK: LookFrame[] = [
   {
-    image: "/fogstores/look-1.jpg",
+    image: "/fogstores/look-1.webp",
     alt: "Shell skirt styled with a cropped knit",
     handle: "shell-skirt",
     cta: "Shop the look",
   },
   {
-    image: "/fogstores/look-2.jpg",
+    image: "/fogstores/look-2.webp",
     alt: "Sea shell top worn on the beach",
     handle: "sea-shell-top",
     cta: "Shop the look",
   },
   {
-    image: "/fogstores/look-3.png",
+    image: "/fogstores/look-3.webp",
     alt: "Gingham dress styled with boots",
     handle: "gingham-dress",
     cta: "Shop the look",
   },
   {
-    image: "/fogstores/look-4.jpg",
+    image: "/fogstores/look-4.webp",
     alt: "Cherry red cowboy boots",
     handle: "cherry-red-cowboy-boots",
     cta: "Shop the look",
