@@ -22,8 +22,6 @@ import type { Customer, Order } from "@/lib/types";
 import { CustomerForm } from "../customer-form";
 
 export const metadata = { title: "Customer" };
-export const dynamic = "force-dynamic";
-
 export default async function CustomerDetailPage({
   params,
 }: {

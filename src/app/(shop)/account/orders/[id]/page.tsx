@@ -9,8 +9,6 @@ import { AccountShell } from "../../account-shell";
 import { StatusPill } from "../../order-parts";
 import type { Fulfillment } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
-
 export async function generateMetadata({
   params,
 }: {

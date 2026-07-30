@@ -18,8 +18,6 @@ import { resolveRange, DEFAULT_RANGE } from "@/lib/analytics/ranges";
 import { CsvExportButton } from "../report-controls";
 import { RecordView, ReportRangeControls } from "./report-view";
 
-export const dynamic = "force-dynamic";
-
 export async function generateMetadata({
   params,
 }: {

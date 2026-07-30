@@ -9,8 +9,6 @@ import { countryName } from "@/lib/shop/countries";
 import type { CheckoutAddress } from "@/lib/shop/checkout-totals";
 import { PurchaseBeacon } from "./purchase-beacon";
 
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = {
   title: "Order confirmed",
   // Reachable by anyone holding the token, which is the point — and exactly why

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { AlertCircle, ArrowRight } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { WorldMap } from "@/components/admin/world-map";
@@ -9,8 +10,6 @@ import { HomeMetrics, type StripMetric } from "./home-metrics";
 import { AskBar, type Suggestion } from "./ask-bar";
 
 export const metadata = { title: "Home" };
-export const dynamic = "force-dynamic";
-
 function greeting() {
   const hour = new Date().getHours();
   if (hour < 12) return "Good morning!";
@@ -27,6 +26,12 @@ function delta(current: number, previous: number): number | null {
 const RANGE_DAYS = 30;
 
 export default async function HomePage() {
+  // "Today" and "good morning" are only meaningful relative to the moment of
+  // the request, so this dashboard must not be prerendered. `connection()` says
+  // that outright — without it, Cache Components rejects the `new Date()` below
+  // as non-deterministic work attempted during the build.
+  await connection();
+
   const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
 
   const to = new Date();

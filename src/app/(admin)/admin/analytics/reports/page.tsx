@@ -6,8 +6,6 @@ import { ReportCatalog } from "./report-catalog";
 import { AskAi } from "./ask-ai";
 
 export const metadata = { title: "Reports" };
-export const dynamic = "force-dynamic";
-
 export default async function ReportsPage() {
   let storeName = "Fogstores";
 

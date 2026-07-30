@@ -6,8 +6,6 @@ import { FileCard } from "./file-card";
 import { FileUploader } from "./file-uploader";
 
 export const metadata = { title: "Files" };
-export const dynamic = "force-dynamic";
-
 export default async function FilesPage({
   searchParams,
 }: {

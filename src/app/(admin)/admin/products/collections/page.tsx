@@ -8,8 +8,6 @@ import type { Collection, CollectionRule, Product } from "@/lib/types";
 import { CollectionsTable, type CollectionListRow } from "./collections-table";
 
 export const metadata = { title: "Collections" };
-export const dynamic = "force-dynamic";
-
 const OPERATOR_LABELS: Record<CollectionRule["operator"], string> = {
   equals: "is",
   contains: "contains",

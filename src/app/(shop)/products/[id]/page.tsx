@@ -6,7 +6,11 @@ import { ProductGallery } from "@/components/shop/product-gallery";
 import { VariantPicker } from "@/components/shop/variant-picker";
 import { ProductViewTracker } from "@/components/shop/product-view-tracker";
 import { SizeGuide } from "@/components/shop/size-guide";
-import { getProduct, getRelatedProducts } from "@/lib/shop/queries";
+import {
+  getCatalogHandles,
+  getProduct,
+  getRelatedProducts,
+} from "@/lib/shop/queries";
 import {
   hasSizeChartData,
   parseSizeChart,
@@ -14,15 +18,30 @@ import {
   populatedRows,
 } from "@/lib/size-chart";
 
+/**
+ * Prerender the whole catalogue.
+ *
+ * A PDP is the most cacheable page in the store — the same hoodie, the same
+ * price, the same photographs for everybody — and it is also the page a drop
+ * points a thousand people at within the same minute. Building all of them
+ * ahead of time turns that spike into a static file read: no React render, no
+ * database round trip, nothing to contend over.
+ *
+ * A product added after the build still works. `dynamicParams` defaults to
+ * true, so an unknown handle renders on demand and is cached from then on; the
+ * only difference is that the first shopper to open it pays for the render.
+ */
+export async function generateStaticParams() {
+  const { products } = await getCatalogHandles();
+  // Cache Components rejects an empty array, and a build should not fail
+  // because Supabase happened to be unreachable for a moment. One unknown
+  // handle prerenders as the 404 it would be anyway.
+  return products.length
+    ? products.map((id) => ({ id }))
+    : [{ id: "__none__" }];
+}
+
 /*
- * No `dynamic = "force-dynamic"` here any more.
- *
- * It was doing nothing this page wanted. A PDP is the most cacheable thing in
- * the store — the same hoodie for every visitor — and the export declared the
- * opposite. What actually keeps this route rendering per request is the cart
- * read in the shop layout, which touches `cookies()`; the config export was
- * only stopping the page from ever being prerendered once that changes.
- *
  * `getProduct` is called twice below, once for metadata and once for the body.
  * That is deliberate and free: it is wrapped in React `cache`, so the second
  * call inside the same render pass returns the first call's promise rather than

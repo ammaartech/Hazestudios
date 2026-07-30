@@ -10,8 +10,6 @@ import type {
 import { InventoryGrid, type InventoryRow } from "./inventory-grid";
 
 export const metadata = { title: "Inventory" };
-export const dynamic = "force-dynamic";
-
 export default async function InventoryPage() {
   const supabase = await createClient();
   const [

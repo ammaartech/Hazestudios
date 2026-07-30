@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cacheLife } from "next/cache";
 import {
   BRAND_INSTAGRAMS,
   FOOTER_LINKS,
@@ -69,7 +70,17 @@ const PAYMENTS = ["Visa", "Mastercard", "Amex", "PayPal", "Diners", "Discover"];
  * which is what ends the page rather than letting the last section trail off
  * into white.
  */
-export function ShopFooter({ storeName }: { storeName: string }) {
+export async function ShopFooter({ storeName }: { storeName: string }) {
+  // Cached rather than rendered per request, for the copyright year. Reading
+  // the clock is non-deterministic, and Cache Components will not let that
+  // happen during a prerender unless the result is either deferred to request
+  // time or — as here — cached, so every visitor sees the same value. A day is
+  // the right window for something that changes once a year: the footer is
+  // pure chrome keyed only on the store's name, so this also takes it out of
+  // the per-request render path entirely.
+  "use cache";
+  cacheLife("days");
+
   const year = new Date().getFullYear();
 
   return (

@@ -5,8 +5,6 @@ import { ConfirmEmailNotice } from "../order-parts";
 import { updateProfile } from "../actions";
 
 export const metadata = { title: "Your details" };
-export const dynamic = "force-dynamic";
-
 export default async function ProfilePage() {
   const session = await requireAccount("/account/profile");
 

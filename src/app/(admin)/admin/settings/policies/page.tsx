@@ -3,8 +3,6 @@ import type { ShopSettings } from "@/lib/types";
 import { PoliciesForm } from "./policies-form";
 
 export const metadata = { title: "Policies" };
-export const dynamic = "force-dynamic";
-
 export default async function PoliciesSettingsPage() {
   const supabase = await createClient();
   const { data } = await supabase

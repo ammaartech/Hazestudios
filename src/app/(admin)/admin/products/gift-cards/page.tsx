@@ -16,8 +16,6 @@ import { GiftCardDialog } from "./gift-card-dialog";
 import { GiftCardToggle } from "./gift-card-toggle";
 
 export const metadata = { title: "Gift cards" };
-export const dynamic = "force-dynamic";
-
 type GiftCardRow = GiftCard & {
   customers: Pick<Customer, "first_name" | "last_name" | "email"> | null;
 };

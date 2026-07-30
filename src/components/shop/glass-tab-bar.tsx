@@ -70,8 +70,19 @@ function useHideOnScrollDown() {
   return hidden;
 }
 
-export function GlassTabBar({ collections }: { collections: Collection[] }) {
-  const pathname = usePathname();
+/**
+ * The tab bar, given a path. See `ShopHeaderView` for why the path is a prop:
+ * on routes whose params cannot be enumerated this renders in the static shell
+ * with an empty path — every tab present and correctly sized, none marked
+ * current — and the router-aware version takes over as it streams in.
+ */
+export function GlassTabBarView({
+  collections,
+  pathname,
+}: {
+  collections: Collection[];
+  pathname: string;
+}) {
   const hidden = useHideOnScrollDown();
   const [sheetOpen, setSheetOpen] = useState(false);
   const { count } = useCart();
@@ -259,4 +270,9 @@ export function GlassTabBar({ collections }: { collections: Collection[] }) {
       </nav>
     </>
   );
+}
+
+/** The tab bar as mounted on a live route, reading the path from the router. */
+export function GlassTabBar({ collections }: { collections: Collection[] }) {
+  return <GlassTabBarView collections={collections} pathname={usePathname()} />;
 }

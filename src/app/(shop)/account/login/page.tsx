@@ -5,8 +5,6 @@ import { SignInForm } from "../auth-forms";
 import { signIn } from "../actions";
 
 export const metadata = { title: "Sign in" };
-export const dynamic = "force-dynamic";
-
 const NOTICES: Record<string, string> = {
   "staff-only":
     "That account is a customer account, so it can’t open the admin. You’re signed in here instead.",

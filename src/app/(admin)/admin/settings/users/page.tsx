@@ -21,8 +21,6 @@ import type { StaffMember } from "@/lib/types";
 import { RoleSelect } from "./role-select";
 
 export const metadata = { title: "Users and permissions" };
-export const dynamic = "force-dynamic";
-
 export default async function UsersSettingsPage() {
   const supabase = await createClient();
   const [{ data: staffData }, { data: userData }] = await Promise.all([

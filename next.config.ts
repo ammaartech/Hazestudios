@@ -5,6 +5,52 @@ const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
   : undefined;
 
 const nextConfig: NextConfig = {
+  // Partial Prerendering, and the `use cache` directive that feeds it.
+  //
+  // The storefront's whole problem was that a page every visitor sees
+  // identically — one hoodie, one price, one gallery — was being rendered from
+  // scratch per request because a single cookie read in the layout dragged the
+  // entire route into dynamic rendering. Cache Components inverts that: the
+  // page is prerendered into a static shell, and only the parts that genuinely
+  // depend on *this* shopper (the cart) stream in behind a Suspense boundary.
+  //
+  // The cost is that nothing is dynamic by accident any more. Reading
+  // `cookies()`, `headers()` or `searchParams` outside a boundary is now a
+  // build error rather than a silent deopt, which is the point.
+  cacheComponents: true,
+
+  cacheLife: {
+    /**
+     * The profile every storefront catalogue read uses.
+     *
+     * `revalidate: 60` is a backstop, not the freshness mechanism — admin
+     * writes call `updateTag` and expire the affected entries immediately (see
+     * `src/lib/shop/cache.ts`). Sixty seconds is what covers a change that
+     * arrives *without* passing through a Server Action: a direct SQL edit, a
+     * tweak in the Supabase dashboard.
+     *
+     * `stale: 300` is the client router's cache, and it is the single biggest
+     * lever for the shoppers we care about most. On a slow phone, a shopper
+     * going PDP → collection → back pays nothing for the return trip: the
+     * router replays it from memory with no network at all. The cost is that a
+     * price changed mid-session can take up to five minutes to reach a tab that
+     * is already open, which for this catalogue is the right side of the trade.
+     *
+     * `expire: 3600` bounds how long an untouched entry may be served after a
+     * quiet spell before someone has to wait for a fresh read.
+     *
+     * These numbers currently coincide with the built-in `minutes` preset. The
+     * named profile is kept anyway: `cacheLife("catalog")` says what the data
+     * *is* at eleven call sites, and tuning the storefront's freshness later is
+     * a one-line change here rather than an audit of who meant which minute.
+     */
+    catalog: {
+      stale: 300,
+      revalidate: 60,
+      expire: 3600,
+    },
+  },
+
   images: {
     // Image bytes never touch our server: `image-loader.ts` rewrites each URL to
     // the transform endpoint of whichever CDN already stores it. See that file

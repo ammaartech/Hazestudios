@@ -15,8 +15,6 @@ import { SegmentBuilder } from "./segment-builder";
 import { SegmentDelete } from "./segment-delete";
 
 export const metadata = { title: "Segments" };
-export const dynamic = "force-dynamic";
-
 export default async function SegmentsPage() {
   const supabase = await createClient();
   const [{ data: segmentsData }, { data: customersData }] = await Promise.all([

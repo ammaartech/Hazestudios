@@ -15,8 +15,6 @@ import { getProductFacets } from "../actions";
 import { draftFromProduct } from "../draft-mapping";
 import { ProductForm } from "../product-form";
 
-export const dynamic = "force-dynamic";
-
 export async function generateMetadata({
   params,
 }: {

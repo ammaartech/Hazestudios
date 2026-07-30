@@ -6,8 +6,6 @@ import { draftFromCollection } from "../collection-draft";
 import { getPickerProducts } from "../collection-data";
 
 export const metadata = { title: "Edit collection" };
-export const dynamic = "force-dynamic";
-
 export default async function EditCollectionPage({
   params,
 }: {

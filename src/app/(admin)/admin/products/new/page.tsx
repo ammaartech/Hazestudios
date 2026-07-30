@@ -6,8 +6,6 @@ import { emptyDraft } from "../draft-mapping";
 import { ProductForm } from "../product-form";
 
 export const metadata = { title: "Add product" };
-export const dynamic = "force-dynamic";
-
 export default async function NewProductPage() {
   const supabase = await createClient();
   const [{ data: collections }, { data: locations }, { data: settings }, facets] =

@@ -6,8 +6,6 @@ import { getLiveSnapshot } from "@/lib/analytics/queries";
  * Reads through the cookie-scoped Supabase client, so RLS applies and an
  * unauthenticated caller gets an empty snapshot rather than visitor data.
  */
-export const dynamic = "force-dynamic";
-
 export async function GET() {
   const snapshot = await getLiveSnapshot();
 

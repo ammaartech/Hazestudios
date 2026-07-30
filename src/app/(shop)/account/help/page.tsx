@@ -4,8 +4,6 @@ import { ContactChannels } from "@/components/shop/contact-channels";
 import { AccountShell } from "../account-shell";
 
 export const metadata = { title: "Help" };
-export const dynamic = "force-dynamic";
-
 export default async function HelpPage({
   searchParams,
 }: {

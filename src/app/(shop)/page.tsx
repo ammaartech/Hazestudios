@@ -23,8 +23,6 @@ import {
   ShortcutRow,
 } from "@/components/shop/home-sections";
 
-export const dynamic = "force-dynamic";
-
 interface ResolvedBlock {
   config: FeaturedConfig;
   heading: string;

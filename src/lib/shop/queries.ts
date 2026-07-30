@@ -1,10 +1,10 @@
 import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import {
   CATALOG_TAG,
   COLLECTIONS_TAG,
   SETTINGS_TAG,
-  cachedCatalogRead,
   productTag,
 } from "./cache";
 import type {
@@ -31,15 +31,17 @@ import type {
  *   * **One product is one round trip.** Product, images, options, variants and
  *     stock arrive together as an embedded select rather than as five parallel
  *     `.in()` queries. See `PRODUCT_SELECT`.
- *   * **One product is one round trip *in total*, not per viewer.** Every
- *     exported read is wrapped twice: `cachedCatalogRead` shares the result
- *     across requests until a write invalidates its tag, and React `cache`
- *     dedupes repeat calls inside a single render pass — which is what stops a
- *     PDP fetching its own product once for `generateMetadata` and again for
- *     the page body.
+ *   * **One product is one round trip *in total*, not per viewer.** Every read
+ *     below is `use cache`d and tagged, so the result is shared across requests
+ *     until a write invalidates its tag — and, because these feed prerendered
+ *     pages, most of them run at build time and never again in a given
+ *     deployment. Each is additionally wrapped in React `cache` so repeat calls
+ *     inside one render pass collapse, which is what stops a PDP fetching its
+ *     own product once for `generateMetadata` and again for the page body.
  *
- * Neither wrapper may touch a request API, so these read through
+ * A `use cache` scope may not touch a request API, so these read through
  * `createPublicClient` (cookie-blind) rather than `@/lib/supabase/server`.
+ * Lifetimes come from the `catalog` profile in `next.config.ts`.
  */
 
 /** A product with everything the grid and PDP need, stock already resolved. */
@@ -180,44 +182,47 @@ const rowsToProducts = (data: unknown): ShopProduct[] =>
  *
  * RLS already hides unpublished ones from `anon`, but the explicit filter stays
  * for the reason it always did — and now for a second one. A scheduled
- * `published_at` is compared against `now()` *at cache-fill time*, so a drop
- * scheduled to the minute goes live within `CATALOG_TTL` of its timestamp
- * rather than exactly on it. That is the price of not asking Postgres on every
- * page view; if a launch ever needs to be second-accurate, invalidate the
- * `collections` tag from the job that publishes it.
+ * `published_at` is compared against `now()` *at cache-fill time*, not at read
+ * time, so a drop scheduled to the minute goes live within the `catalog`
+ * profile's revalidate window of its timestamp rather than exactly on it. That
+ * is the price of not asking Postgres on every page view; if a launch ever
+ * needs to be second-accurate, have the job that publishes it call
+ * `revalidateCollections`.
  */
-export const getCollections = cache(
-  cachedCatalogRead(
-    "shop:getCollections",
-    async (): Promise<Collection[]> => {
-      const { data } = await createPublicClient()
-        .from("collections")
-        .select("*")
-        .not("published_at", "is", null)
-        .lte("published_at", new Date().toISOString())
-        .order("created_at");
-      return (data ?? []) as Collection[];
-    },
-    [COLLECTIONS_TAG]
-  )
-);
+async function readCollections(): Promise<Collection[]> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(COLLECTIONS_TAG);
 
-export const getCollectionByHandle = cache(
-  cachedCatalogRead(
-    "shop:getCollectionByHandle",
-    async (handle: string): Promise<Collection | null> => {
-      const { data } = await createPublicClient()
-        .from("collections")
-        .select("*")
-        .eq("handle", handle)
-        .not("published_at", "is", null)
-        .lte("published_at", new Date().toISOString())
-        .maybeSingle();
-      return (data as Collection) ?? null;
-    },
-    [COLLECTIONS_TAG]
-  )
-);
+  const { data } = await createPublicClient()
+    .from("collections")
+    .select("*")
+    .not("published_at", "is", null)
+    .lte("published_at", new Date().toISOString())
+    .order("created_at");
+  return (data ?? []) as Collection[];
+}
+
+export const getCollections = cache(readCollections);
+
+async function readCollectionByHandle(
+  handle: string
+): Promise<Collection | null> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(COLLECTIONS_TAG);
+
+  const { data } = await createPublicClient()
+    .from("collections")
+    .select("*")
+    .eq("handle", handle)
+    .not("published_at", "is", null)
+    .lte("published_at", new Date().toISOString())
+    .maybeSingle();
+  return (data as Collection) ?? null;
+}
+
+export const getCollectionByHandle = cache(readCollectionByHandle);
 
 /**
  * Applies the merchant's chosen ordering.
@@ -270,72 +275,65 @@ function sortProducts<T extends Product>(
  * first and only embeds the matches: rule evaluation needs every active
  * product, and pulling the whole catalogue's images, variants and stock just to
  * discard most of it is far more expensive than the extra hop.
+ *
+ * Keyed on the whole collection row, which is what we want — change the sort
+ * order or the rules and the old entry is orphaned rather than served.
  */
-export const getProductsInCollection = cache(
-  cachedCatalogRead(
-    "shop:getProductsInCollection",
-    async (collection: Collection): Promise<ShopProduct[]> => {
-      const supabase = createPublicClient();
+async function readProductsInCollection(
+  collection: Collection
+): Promise<ShopProduct[]> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(CATALOG_TAG, COLLECTIONS_TAG);
 
-      if (collection.type === "smart") {
-        const { data } = await supabase
-          .from("products")
-          .select(PRODUCT_COLUMNS)
-          .eq("status", "active");
+  const supabase = createPublicClient();
 
-        const { productMatchesRules } = await import("@/lib/smart-collections");
-        const matching = ((data ?? []) as Product[]).filter((p) =>
-          productMatchesRules(p, collection.rules)
-        );
-        if (!matching.length) return [];
+  if (collection.type === "smart") {
+    const { data } = await supabase
+      .from("products")
+      .select(PRODUCT_COLUMNS)
+      .eq("status", "active");
 
-        const { data: embedded } = await activeProducts().in(
-          "id",
-          matching.map((p) => p.id)
-        );
+    const { productMatchesRules } = await import("@/lib/smart-collections");
+    const matching = ((data ?? []) as Product[]).filter((p) =>
+      productMatchesRules(p, collection.rules)
+    );
+    if (!matching.length) return [];
 
-        return sortProducts(rowsToProducts(embedded), collection.sort_order);
-      }
+    const { data: embedded } = await activeProducts().in(
+      "id",
+      matching.map((p) => p.id)
+    );
 
-      const { data: links } = await supabase
-        .from("product_collections")
-        .select("product_id, position")
-        .eq("collection_id", collection.id)
-        .order("position");
+    return sortProducts(rowsToProducts(embedded), collection.sort_order);
+  }
 
-      const rows = (links ?? []) as { product_id: string; position: number }[];
-      if (!rows.length) return [];
+  const { data: links } = await supabase
+    .from("product_collections")
+    .select("product_id, position")
+    .eq("collection_id", collection.id)
+    .order("position");
 
-      const manualOrder = new Map(rows.map((l) => [l.product_id, l.position]));
+  const rows = (links ?? []) as { product_id: string; position: number }[];
+  if (!rows.length) return [];
 
-      const { data } = await activeProducts().in(
-        "id",
-        rows.map((l) => l.product_id)
-      );
+  const manualOrder = new Map(rows.map((l) => [l.product_id, l.position]));
 
-      return sortProducts(
-        rowsToProducts(data),
-        collection.sort_order,
-        manualOrder
-      );
-    },
-    [CATALOG_TAG, COLLECTIONS_TAG]
-  )
-);
+  const { data } = await activeProducts().in(
+    "id",
+    rows.map((l) => l.product_id)
+  );
+
+  return sortProducts(rowsToProducts(data), collection.sort_order, manualOrder);
+}
+
+export const getProductsInCollection = cache(readProductsInCollection);
 
 /* -------------------------------------------------------------------------- */
 /* Products                                                                    */
 /* -------------------------------------------------------------------------- */
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-async function readProduct(idOrHandle: string): Promise<ShopProduct | null> {
-  const { data } = await activeProducts()
-    .eq(UUID.test(idOrHandle) ? "id" : "handle", idOrHandle)
-    .maybeSingle();
-
-  return data ? toShopProduct(data as unknown as ProductRow) : null;
-}
 
 /**
  * Accepts either a handle (`/products/black-tee`) or a raw id.
@@ -344,20 +342,24 @@ async function readProduct(idOrHandle: string): Promise<ShopProduct | null> {
  * created before handles existed — and the admin's own internal links — keep
  * working instead of turning into 404s.
  *
- * The cache wrapper is built per call so the entry can carry a tag naming *this
- * product*. An edit to one hoodie then drops one entry rather than the whole
- * catalogue. `readProduct` is a stable module-level function, so the cache key
- * — derived from it, the name, and the argument — is stable too. React `cache`
- * sits outside so `generateMetadata` and the page body share one lookup within
- * a request even on a cache miss.
+ * The entry is tagged with the product it holds, so editing one hoodie drops
+ * one entry rather than the whole catalogue. React `cache` sits outside the
+ * cached scope so `generateMetadata` and the page body share a single lookup
+ * within one render pass, even on a cold cache.
  */
-export const getProduct = cache(
-  async (idOrHandle: string): Promise<ShopProduct | null> =>
-    cachedCatalogRead("shop:getProduct", readProduct, [
-      CATALOG_TAG,
-      productTag(idOrHandle),
-    ])(idOrHandle)
-);
+async function readProduct(idOrHandle: string): Promise<ShopProduct | null> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(CATALOG_TAG, productTag(idOrHandle));
+
+  const { data } = await activeProducts()
+    .eq(UUID.test(idOrHandle) ? "id" : "handle", idOrHandle)
+    .maybeSingle();
+
+  return data ? toShopProduct(data as unknown as ProductRow) : null;
+}
+
+export const getProduct = cache(readProduct);
 
 /**
  * Products by id, hydrated. The cart's resolution step — a cart line stores a
@@ -365,17 +367,24 @@ export const getProduct = cache(
  * price and stock. Anything that has since been unpublished simply doesn't come
  * back, which is how a cart drops a line that is no longer for sale.
  *
- * Ids are sorted before they reach the cache so that two carts holding the same
- * two products in different orders share one entry instead of minting two.
+ * Tagged per product as well as broadly, so a price change on one item in a
+ * shopper's bag drops this entry too rather than leaving the cart quoting the
+ * old figure until the profile's revalidate window elapses.
  */
-const readProductsByIds = cachedCatalogRead(
-  "shop:getProductsByIds",
-  async (ids: string[]): Promise<ShopProduct[]> => {
-    const { data } = await activeProducts().in("id", ids);
-    return rowsToProducts(data);
-  }
-);
+async function readProductsByIds(ids: string[]): Promise<ShopProduct[]> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(CATALOG_TAG, ...ids.map(productTag));
 
+  const { data } = await activeProducts().in("id", ids);
+  return rowsToProducts(data);
+}
+
+/**
+ * Ids are deduped and sorted before they reach the cache so that two carts
+ * holding the same two products in a different order share one entry instead
+ * of minting two.
+ */
 export const getProductsByIds = cache(
   async (ids: string[]): Promise<ShopProduct[]> => {
     if (!ids.length) return [];
@@ -383,30 +392,40 @@ export const getProductsByIds = cache(
   }
 );
 
+async function readLatestProducts(limit: number): Promise<ShopProduct[]> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(CATALOG_TAG);
+
+  const { data } = await activeProducts()
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return rowsToProducts(data);
+}
+
 export const getLatestProducts = cache(
-  cachedCatalogRead(
-    "shop:getLatestProducts",
-    async (limit: number = 8): Promise<ShopProduct[]> => {
-      const { data } = await activeProducts()
-        .order("created_at", { ascending: false })
-        .limit(limit);
-      return rowsToProducts(data);
-    }
-  )
+  async (limit = 8): Promise<ShopProduct[]> => readLatestProducts(limit)
 );
+
+async function readRelatedProducts(
+  excludeId: string,
+  limit: number
+): Promise<ShopProduct[]> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(CATALOG_TAG);
+
+  const { data } = await activeProducts()
+    .neq("id", excludeId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return rowsToProducts(data);
+}
 
 /** Other active products, excluding one — used for "more from the drop". */
 export const getRelatedProducts = cache(
-  cachedCatalogRead(
-    "shop:getRelatedProducts",
-    async (excludeId: string, limit: number = 4): Promise<ShopProduct[]> => {
-      const { data } = await activeProducts()
-        .neq("id", excludeId)
-        .order("created_at", { ascending: false })
-        .limit(limit);
-      return rowsToProducts(data);
-    }
-  )
+  async (excludeId: string, limit = 4): Promise<ShopProduct[]> =>
+    readRelatedProducts(excludeId, limit)
 );
 
 /**
@@ -419,21 +438,22 @@ export const getRelatedProducts = cache(
  * Normalised to lower case before caching: `ilike` is case-insensitive, so
  * "Hoodie" and "hoodie" are the same query and should not be two cache entries.
  */
-const readSearch = cachedCatalogRead(
-  "shop:searchProducts",
-  async (query: string, limit: number): Promise<ShopProduct[]> => {
-    const escaped = query.replace(/\\/g, "\\\\").replace(/[%_]/g, (c) => `\\${c}`);
-    const pattern = `%${escaped}%`;
+async function readSearch(query: string, limit: number): Promise<ShopProduct[]> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(CATALOG_TAG);
 
-    const { data } = await activeProducts()
-      .or(
-        `title.ilike.${pattern},product_type.ilike.${pattern},vendor.ilike.${pattern}`
-      )
-      .limit(limit);
+  const escaped = query.replace(/\\/g, "\\\\").replace(/[%_]/g, (c) => `\\${c}`);
+  const pattern = `%${escaped}%`;
 
-    return rowsToProducts(data);
-  }
-);
+  const { data } = await activeProducts()
+    .or(
+      `title.ilike.${pattern},product_type.ilike.${pattern},vendor.ilike.${pattern}`
+    )
+    .limit(limit);
+
+  return rowsToProducts(data);
+}
 
 export const searchProducts = cache(
   async (term: string, limit = 24): Promise<ShopProduct[]> => {
@@ -444,19 +464,68 @@ export const searchProducts = cache(
 );
 
 /* -------------------------------------------------------------------------- */
+/* Route enumeration                                                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Every URL the catalogue can be reached at, for `generateStaticParams`.
+ *
+ * These exist so each product and collection page is prerendered under its own
+ * concrete path rather than sharing one shell for the whole `[handle]` pattern.
+ * That matters for more than the page body: the header and tab bar mark the
+ * current route, and a path they can only learn at request time keeps them out
+ * of the static HTML entirely. Enumerating the routes puts the whole shell —
+ * chrome and product alike — into the prerender.
+ *
+ * Products created after a build still work: `dynamicParams` defaults to true,
+ * so an unknown handle is rendered on demand and cached from then on.
+ *
+ * Handles are the canonical URL, so only handles are enumerated. The id form
+ * still resolves at runtime for old links.
+ */
+async function readCatalogHandles(): Promise<{
+  products: string[];
+  collections: string[];
+}> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(CATALOG_TAG, COLLECTIONS_TAG);
+
+  const supabase = createPublicClient();
+  const [{ data: products }, { data: collections }] = await Promise.all([
+    supabase.from("products").select("handle").eq("status", "active"),
+    supabase
+      .from("collections")
+      .select("handle")
+      .not("published_at", "is", null)
+      .lte("published_at", new Date().toISOString()),
+  ]);
+
+  const handles = (rows: { handle: string }[] | null) =>
+    (rows ?? []).map((r) => r.handle).filter(Boolean);
+
+  return {
+    products: handles(products as { handle: string }[] | null),
+    collections: handles(collections as { handle: string }[] | null),
+  };
+}
+
+export const getCatalogHandles = cache(readCatalogHandles);
+
+/* -------------------------------------------------------------------------- */
 /* Settings                                                                    */
 /* -------------------------------------------------------------------------- */
 
-export const getStoreName = cache(
-  cachedCatalogRead(
-    "shop:getStoreName",
-    async (): Promise<string> => {
-      const { data } = await createPublicClient()
-        .from("shop_settings")
-        .select("store_name")
-        .maybeSingle();
-      return data?.store_name ?? "Fogstores";
-    },
-    [SETTINGS_TAG]
-  )
-);
+async function readStoreName(): Promise<string> {
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(SETTINGS_TAG);
+
+  const { data } = await createPublicClient()
+    .from("shop_settings")
+    .select("store_name")
+    .maybeSingle();
+  return data?.store_name ?? "Fogstores";
+}
+
+export const getStoreName = cache(readStoreName);

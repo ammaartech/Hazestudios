@@ -17,8 +17,6 @@ import { formatMoney } from "@/lib/format";
 import type { Customer } from "@/lib/types";
 
 export const metadata = { title: "Customers" };
-export const dynamic = "force-dynamic";
-
 export default async function CustomersPage({
   searchParams,
 }: {

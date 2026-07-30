@@ -2,9 +2,29 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/shop/product-card";
-import { getCollectionByHandle, getProductsInCollection } from "@/lib/shop/queries";
+import {
+  getCatalogHandles,
+  getCollectionByHandle,
+  getProductsInCollection,
+} from "@/lib/shop/queries";
 
-export const dynamic = "force-dynamic";
+/**
+ * Prerender every published collection.
+ *
+ * There are a few dozen of them and they are the storefront's primary
+ * navigation, so the whole set is worth building ahead of time. A collection
+ * published after the build still resolves — `dynamicParams` is on by default —
+ * it just pays for its own first render.
+ */
+export async function generateStaticParams() {
+  const { collections } = await getCatalogHandles();
+  // Cache Components rejects an empty array, and a build should not fail
+  // because Supabase happened to be unreachable for a moment. One unknown
+  // handle prerenders as the 404 it would be anyway.
+  return collections.length
+    ? collections.map((handle) => ({ handle }))
+    : [{ handle: "__none__" }];
+}
 
 export async function generateMetadata({
   params,

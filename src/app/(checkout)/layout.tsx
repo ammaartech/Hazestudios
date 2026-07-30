@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import Link from "next/link";
+import { cacheLife } from "next/cache";
 import { Lock } from "lucide-react";
 import { getStoreName } from "@/lib/shop/queries";
 
@@ -22,6 +24,14 @@ export default async function CheckoutLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Nothing in this shell varies by shopper — a store name and a copyright
+  // year — so it is cached rather than rebuilt per request. `children` is a
+  // pass-through slot: it is rendered into the output but never read here, so
+  // the checkout page below stays as dynamic as it needs to be without
+  // affecting this entry. The lifetime is a day, for the year in the footer.
+  "use cache";
+  cacheLife("days");
+
   const storeName = await getStoreName();
 
   return (
@@ -52,7 +62,12 @@ export default async function CheckoutLayout({
       </header>
 
       <main id="checkout" className="flex-1">
-        {children}
+        {/* Checkout is the shopper's own bag, priced against their own address —
+            request-time by definition, and the one page on the site where there
+            is genuinely nothing shared to prerender. The header and footer above
+            and below still come from this cached shell, so the page has its
+            frame immediately and fills in the moment the cart resolves. */}
+        <Suspense fallback={null}>{children}</Suspense>
       </main>
 
       <footer className="border-t border-(--shop-hairline-soft) px-4 py-6 md:px-8">

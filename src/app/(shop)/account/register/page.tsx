@@ -5,8 +5,6 @@ import { SignUpForm } from "../auth-forms";
 import { signUp } from "../actions";
 
 export const metadata = { title: "Create account" };
-export const dynamic = "force-dynamic";
-
 export default async function RegisterPage({
   searchParams,
 }: {

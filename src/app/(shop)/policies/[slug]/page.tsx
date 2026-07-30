@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cacheLife, cacheTag } from "next/cache";
 import { PageProse, PageShell } from "@/components/shop/page-prose";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
+import { SETTINGS_TAG } from "@/lib/shop/cache";
 import {
   POLICY_SETTING_KEY,
   getPolicyPage,
@@ -9,7 +11,10 @@ import {
   type PolicySlug,
 } from "@/lib/shop/store-pages";
 
-export const dynamic = "force-dynamic";
+/** The policy slugs are a fixed set in code, so all of them are prerendered. */
+export function generateStaticParams() {
+  return Object.keys(POLICY_SETTING_KEY).map((slug) => ({ slug }));
+}
 
 export async function generateMetadata({
   params,
@@ -51,10 +56,20 @@ function blocksFromText(text: string): PageBlock[] {
  * showing the default text.
  */
 async function resolveBlocks(slug: PolicySlug, fallback: PageBlock[]): Promise<PageBlock[]> {
+  // Public text, identical for every reader, and legally the least volatile
+  // content on the site — so it is cached and prerendered rather than read per
+  // request. Tagged with the settings tag, so editing a policy in the admin
+  // publishes it immediately rather than at the end of the revalidate window.
+  "use cache";
+  cacheLife("catalog");
+  cacheTag(SETTINGS_TAG);
+
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return fallback;
 
   try {
-    const supabase = await createClient();
+    // The cookie-blind client, not the session one: a `use cache` scope may not
+    // touch request APIs, and a policy page has no reason to know who is asking.
+    const supabase = createPublicClient();
     const { data } = await supabase
       .from("shop_settings")
       .select("policies")

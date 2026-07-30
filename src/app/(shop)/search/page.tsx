@@ -1,10 +1,9 @@
-import { Search } from "lucide-react";
+import { Suspense } from "react";
+import Link from "next/link";
 import { ProductCard } from "@/components/shop/product-card";
 import { searchProducts } from "@/lib/shop/queries";
 import { QUICK_LINKS } from "@/lib/shop/home-content";
-import Link from "next/link";
-
-export const dynamic = "force-dynamic";
+import { SearchField } from "./search-field";
 
 export const metadata = { title: "Search" };
 
@@ -14,8 +13,37 @@ export const metadata = { title: "Search" };
  * A plain GET form, so a search is a URL: shareable, bookmarkable, and it works
  * before hydration. The results are a grid rather than a rail because a result
  * set has no curated order to scroll through.
+ *
+ * The page splits along the one line that matters under Partial Prerendering:
+ * the heading, the search box and the help links are the same for everybody and
+ * ship as static HTML, while the results — which depend on `?q=` and therefore
+ * on the request — stream in behind a boundary. A shopper on a slow connection
+ * gets a usable search box in the first paint instead of after a database round
+ * trip.
  */
-export default async function SearchPage({
+export default function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  return (
+    <section className="px-4 pb-24 pt-16 md:px-8 md:pt-24">
+      <h1 className="display text-center text-[clamp(1.75rem,4vw,2.75rem)]">
+        Search
+      </h1>
+
+      <SearchField />
+
+      {/* No fallback: an empty search and an unresolved one look identical, and
+          a spinner under the box would only advertise the wait. */}
+      <Suspense fallback={<HelpLinks />}>
+        <Results searchParams={searchParams} />
+      </Suspense>
+    </section>
+  );
+}
+
+async function Results({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>;
@@ -25,32 +53,9 @@ export default async function SearchPage({
   const products = term ? await searchProducts(term) : [];
 
   return (
-    <section className="px-4 pb-24 pt-16 md:px-8 md:pt-24">
-      <h1 className="display text-center text-[clamp(1.75rem,4vw,2.75rem)]">
-        Search
-      </h1>
-
-      <form action="/search" method="get" className="relative mx-auto mt-8 max-w-lg">
-        <label htmlFor="q" className="sr-only">
-          Search for products on our site
-        </label>
-        <Search
-          className="pointer-events-none absolute left-5 top-1/2 size-4 -translate-y-1/2 text-[var(--shop-stone)]"
-          aria-hidden
-        />
-        <input
-          id="q"
-          name="q"
-          type="search"
-          defaultValue={term}
-          autoFocus
-          placeholder="Search for products on our site"
-          className="h-14 w-full rounded-full border border-[var(--shop-hairline)] bg-transparent pl-12 pr-6 text-sm text-[var(--shop-ink)] placeholder:text-[var(--shop-stone)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--shop-ink)]"
-        />
-      </form>
-
+    <>
       {term && (
-        <p role="status" className="mt-6 text-center text-sm text-[var(--shop-mute)]">
+        <p role="status" className="mt-6 text-center text-sm text-(--shop-mute)">
           {products.length
             ? `${products.length} result${products.length === 1 ? "" : "s"} for “${term}”`
             : `No results for “${term}”.`}
@@ -65,24 +70,30 @@ export default async function SearchPage({
         </div>
       )}
 
-      {/* An empty search is the one moment a shopper is definitely looking for
-          something and has not found it, so the help links belong here. */}
-      {!products.length && (
-        <nav aria-label="Help" className="mt-16 text-center">
-          <ul className="flex flex-wrap justify-center gap-x-6 gap-y-3">
-            {QUICK_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="cursor-pointer text-sm text-[var(--shop-mute)] transition-colors duration-200 hover:text-[var(--shop-ink)]"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
-    </section>
+      {!products.length && <HelpLinks />}
+    </>
+  );
+}
+
+/**
+ * An empty search is the one moment a shopper is definitely looking for
+ * something and has not found it, so the help links belong here.
+ */
+function HelpLinks() {
+  return (
+    <nav aria-label="Help" className="mt-16 text-center">
+      <ul className="flex flex-wrap justify-center gap-x-6 gap-y-3">
+        {QUICK_LINKS.map((link) => (
+          <li key={link.href}>
+            <Link
+              href={link.href}
+              className="cursor-pointer text-sm text-(--shop-mute) transition-colors duration-200 hover:text-(--shop-ink)"
+            >
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }

@@ -20,8 +20,6 @@ import {
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Analytics" };
-export const dynamic = "force-dynamic";
-
 function delta(current: number, previous: number): number | null {
   if (previous === 0) return current === 0 ? 0 : null;
   return ((current - previous) / previous) * 100;

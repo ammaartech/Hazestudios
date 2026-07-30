@@ -15,8 +15,6 @@ import { formatDateTime, formatMoney } from "@/lib/format";
 import type { Customer, Order } from "@/lib/types";
 
 export const metadata = { title: "Draft orders" };
-export const dynamic = "force-dynamic";
-
 type DraftRow = Order & {
   customers: Pick<Customer, "first_name" | "last_name" | "email"> | null;
 };

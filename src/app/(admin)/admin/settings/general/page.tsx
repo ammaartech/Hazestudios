@@ -3,8 +3,6 @@ import type { ShopSettings } from "@/lib/types";
 import { GeneralForm } from "./general-form";
 
 export const metadata = { title: "Store details" };
-export const dynamic = "force-dynamic";
-
 export default async function GeneralSettingsPage() {
   const supabase = await createClient();
   const { data } = await supabase

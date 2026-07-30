@@ -23,8 +23,6 @@ import {
 } from "@/components/shop/haze-studios-sections";
 import { TabCarousel, type CarouselTab } from "@/components/shop/tab-carousel";
 
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = {
   title: "Haze Studios",
   description:

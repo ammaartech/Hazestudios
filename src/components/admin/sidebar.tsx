@@ -79,9 +79,18 @@ function NavEntry({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-export function Sidebar() {
-  const pathname = usePathname();
-
+/**
+ * The sidebar's markup, given a path.
+ *
+ * Split from `Sidebar` so the nav can be rendered without knowing the current
+ * URL. Under Partial Prerendering the pathname is request-time data — on a
+ * dynamic route like `/admin/products/[id]` there is no single path to bake in
+ * — so `Sidebar` cannot appear in a static shell. Passing an empty pathname
+ * renders the identical nav with nothing marked active, which is what the
+ * Suspense fallback in the admin layout uses: same width, same rows, same
+ * height, so the highlight resolves without moving anything.
+ */
+export function SidebarNav({ pathname }: { pathname: string }) {
   return (
     <aside className="fixed inset-y-0 left-0 top-14 z-30 hidden w-60 flex-col border-r border-sidebar-border bg-sidebar md:flex">
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
@@ -122,4 +131,8 @@ export function Sidebar() {
       </div>
     </aside>
   );
+}
+
+export function Sidebar() {
+  return <SidebarNav pathname={usePathname()} />;
 }

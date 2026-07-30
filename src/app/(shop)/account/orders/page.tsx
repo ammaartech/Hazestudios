@@ -3,8 +3,6 @@ import { AccountShell } from "../account-shell";
 import { ConfirmEmailNotice, OrderSections } from "../order-parts";
 
 export const metadata = { title: "Orders" };
-export const dynamic = "force-dynamic";
-
 export default async function OrdersPage() {
   const session = await requireAccount("/account/orders");
 

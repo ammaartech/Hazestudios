@@ -18,8 +18,6 @@ import type { Location } from "@/lib/types";
 import { LocationDialog } from "./location-dialog";
 
 export const metadata = { title: "Locations" };
-export const dynamic = "force-dynamic";
-
 export default async function LocationsSettingsPage() {
   const supabase = await createClient();
   const { data } = await supabase

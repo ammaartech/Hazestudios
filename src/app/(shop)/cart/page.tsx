@@ -7,8 +7,6 @@ export const metadata = { title: "Bag" };
  * or prerender. The layout resolves it server-side into the cart context; this
  * page just gives it a full-size home.
  */
-export const dynamic = "force-dynamic";
-
 export default function CartPage() {
   return <CartView />;
 }

@@ -13,8 +13,6 @@ import { resolveGeo } from "@/lib/analytics/geo";
  */
 
 // Beacons are per-visitor by definition — never prerender or cache this.
-export const dynamic = "force-dynamic";
-
 const EVENT_TYPES = [
   "page_view",
   "product_view",

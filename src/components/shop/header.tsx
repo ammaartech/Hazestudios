@@ -27,14 +27,27 @@ import {
  * the way of, and content refracting under a fixed material reads as one
  * continuous surface as you scroll.
  */
-export function ShopHeader({
+export function ShopHeaderView({
   storeName,
   collections,
+  pathname,
 }: {
   storeName: string;
   collections: Collection[];
+  /**
+   * The current path, passed in rather than read from the router.
+   *
+   * On a route whose params are enumerated — every product and collection page
+   * — the path is known while the shell is being built, so the real header is
+   * prerendered into it. On the handful of routes that cannot be enumerated
+   * (`/account/orders/[id]`, `/orders/[token]`) there is no such path, so the
+   * layout renders this with an empty string as its Suspense fallback and the
+   * router-aware version replaces it a moment later. An empty path simply
+   * matches no nav item, so the fallback is the same bar with nothing marked
+   * current — identical dimensions, nothing to shift.
+   */
+  pathname: string;
 }) {
-  const pathname = usePathname();
   const { count, openDrawer } = useCart();
   const groups = resolveNav(collections);
 
@@ -174,6 +187,14 @@ export function ShopHeader({
       </div>
     </header>
   );
+}
+
+/** The header as mounted on a live route, reading the path from the router. */
+export function ShopHeader(props: {
+  storeName: string;
+  collections: Collection[];
+}) {
+  return <ShopHeaderView {...props} pathname={usePathname()} />;
 }
 
 /* -------------------------------------------------------------------------- */

@@ -10,8 +10,6 @@ import { ProductListActions } from "./product-list-actions";
 import { ProductsTable, type ProductListRow } from "./products-table";
 
 export const metadata = { title: "Products" };
-export const dynamic = "force-dynamic";
-
 type ProductRow = Product & {
   product_images: Pick<ProductImage, "url" | "position">[];
   inventory_levels: { quantity: number }[];

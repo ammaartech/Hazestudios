@@ -8,6 +8,7 @@ import {
   useEffect,
   useMemo,
   useOptimistic,
+  useRef,
   useState,
 } from "react";
 import { toast } from "sonner";
@@ -34,6 +35,22 @@ import { track } from "@/lib/analytics/track";
  * quantity. Passing the new cart back through React state updates the header,
  * the tab bar and the cart page from one round trip.
  */
+
+/**
+ * What the provider starts with before the server's cart arrives.
+ *
+ * Deliberately a local literal rather than the `EMPTY_CART` in `lib/shop/cart`:
+ * that module imports `next/headers` and the service-role client, and pulling a
+ * value (rather than a type) from it would drag all of that into the browser
+ * bundle.
+ */
+const EMPTY: Cart = {
+  lines: [],
+  count: 0,
+  subtotal: 0,
+  currency: "INR",
+  removed: [],
+};
 
 interface CartContextValue {
   cart: Cart;
@@ -104,34 +121,55 @@ function applyPatch(cart: Cart, patch: Patch): Cart {
   };
 }
 
-export function CartProvider({
-  seed,
-  children,
-}: {
-  /** Server-resolved cart from the shop layout, on every full page load. */
-  seed: Cart;
-  children: React.ReactNode;
-}) {
-  const [cart, setCart] = useState<Cart>(seed);
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const [cart, setCart] = useState<Cart>(EMPTY);
   const [optimisticCart, patch] = useOptimistic(cart, applyPatch);
   const [isPending, setIsPending] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  /**
+   * True while one of the actions below is in flight.
+   *
+   * A resync that lands mid-mutation describes the bag as it was *before* the
+   * shopper's change and would silently discard it. Mutations return the full
+   * resolved cart themselves, so skipping the resync loses nothing.
+   *
+   * A ref rather than the `isPending` state because the resync listener is
+   * registered once and must read the current value, not the one captured when
+   * the effect ran.
+   */
+  const pending = useRef(false);
+
+  /** Keeps the ref the resync reads and the state the UI reads in step. */
+  const markPending = useCallback((value: boolean) => {
+    pending.current = value;
+    setIsPending(value);
+  }, []);
 
   const openDrawer = useCallback(() => setDrawerOpen(true), []);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   /**
-   * Re-read the cart when the tab comes back to the foreground.
+   * Read the bag from the server: once on mount, and again whenever the tab
+   * comes back to the foreground.
    *
-   * Two things go stale while a tab sits in the background: the shopper's other
-   * tab may have changed the bag, and stock may have moved underneath it. Both
-   * end in the same bad moment — a checkout that rejects a line the page still
-   * shows as available. Re-reading on focus is one query at the point the
-   * shopper starts looking again.
+   * On mount, because the pages around this provider are fully static. The bag
+   * is the one thing on the storefront keyed to a cookie, and resolving it on
+   * the server — even inside a Suspense boundary — is enough to stop every
+   * catalogue page being prerendered as plain HTML. It is not worth that: the
+   * badge is a number in the corner, while the static shell is the difference
+   * between a phone painting the page from the edge cache and waiting on a
+   * render. So the bag is fetched from the client instead, after hydration.
+   *
+   * On refocus, because two things go stale while a tab sits in the background:
+   * the shopper's other tab may have changed the bag, and stock may have moved
+   * underneath it. Both end in the same bad moment — a checkout that rejects a
+   * line the page still shows as available.
    */
   useEffect(() => {
     const resync = () => {
       if (document.visibilityState !== "visible") return;
+      if (pending.current) return;
       startTransition(async () => {
         try {
           setCart(await refreshCart());
@@ -142,18 +180,19 @@ export function CartProvider({
       });
     };
 
+    resync();
     document.addEventListener("visibilitychange", resync);
     return () => document.removeEventListener("visibilitychange", resync);
   }, []);
 
   const add = useCallback<CartContextValue["add"]>(
     ({ productId, variantId, quantity = 1, title, optionLabel, price }) => {
-      setIsPending(true);
+      markPending(true);
 
       startTransition(async () => {
         const result = await addToCart({ productId, variantId, quantity });
         setCart(result.cart);
-        setIsPending(false);
+        markPending(false);
 
         if (!result.ok) {
           toast.error(result.error);
@@ -174,12 +213,12 @@ export function CartProvider({
         setDrawerOpen(true);
       });
     },
-    []
+    [markPending]
   );
 
   const setQuantity = useCallback<CartContextValue["setQuantity"]>(
     (lineId, quantity) => {
-      setIsPending(true);
+      markPending(true);
 
       startTransition(async () => {
         // Inside the transition so React keeps the guess on screen until the
@@ -188,12 +227,12 @@ export function CartProvider({
 
         const result = await setLineQuantity(lineId, quantity);
         setCart(result.cart);
-        setIsPending(false);
+        markPending(false);
 
         if (!result.ok) toast.error(result.error);
       });
     },
-    [patch]
+    [markPending, patch]
   );
 
   const remove = useCallback<CartContextValue["remove"]>(
@@ -202,16 +241,16 @@ export function CartProvider({
   );
 
   const clear = useCallback(() => {
-    setIsPending(true);
+    markPending(true);
 
     startTransition(async () => {
       patch({ type: "clear" });
       const result = await clearCartAction();
       setCart(result.cart);
-      setIsPending(false);
+      markPending(false);
       if (!result.ok) toast.error(result.error);
     });
-  }, [patch]);
+  }, [markPending, patch]);
 
   const value = useMemo<CartContextValue>(
     () => ({

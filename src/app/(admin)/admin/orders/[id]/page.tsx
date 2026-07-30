@@ -30,8 +30,6 @@ import { getFulfillment } from "@/lib/qikink/fulfillment";
 import { QikinkCard } from "./qikink-card";
 
 export const metadata = { title: "Order" };
-export const dynamic = "force-dynamic";
-
 export default async function OrderDetailPage({
   params,
 }: {

@@ -17,8 +17,6 @@ import { DiscountDialog } from "./discount-dialog";
 import { DiscountRowActions } from "./discount-row-actions";
 
 export const metadata = { title: "Discounts" };
-export const dynamic = "force-dynamic";
-
 function describeDiscount(d: Discount) {
   switch (d.type) {
     case "percentage":
