@@ -60,6 +60,14 @@ interface CartContextValue {
   drawerOpen: boolean;
   openDrawer: () => void;
   closeDrawer: () => void;
+  /**
+   * Adds to the bag without waiting for the server.
+   *
+   * The optional fields are not decoration: they are what the optimistic line
+   * is drawn from, so the row that appears the instant the button is pressed is
+   * the row the server will confirm. Omit them and the add still works — the
+   * bag just does not move until the write returns.
+   */
   add: (input: {
     productId: string;
     variantId?: string | null;
@@ -68,6 +76,11 @@ interface CartContextValue {
     title?: string;
     optionLabel?: string;
     price?: number;
+    /** Below: what the optimistic line needs to render like the real one. */
+    handle?: string;
+    image?: string | null;
+    compareAt?: number | null;
+    maxQuantity?: number | null;
   }) => void;
   setQuantity: (lineId: string, quantity: number) => void;
   remove: (lineId: string) => void;
@@ -87,19 +100,68 @@ export function useCart(): CartContextValue {
 /* -------------------------------------------------------------------------- */
 
 /**
- * The optimistic patches. Only quantity changes are guessed at: they are the
- * ones a shopper taps repeatedly, and their outcome is knowable without the
- * server. An *add* is not guessed — the line's price, image and stock ceiling
- * all come from the database, and inventing a placeholder row that then swaps
- * for a real one is a visible flicker for no benefit.
+ * The optimistic patches — every mutation the bag has, including adds.
+ *
+ * Adds used to be excluded, on the reasoning that a line's price, image and
+ * stock ceiling all come from the database and a placeholder that swapped for a
+ * real row would flicker. What that actually bought was a bag that did nothing
+ * at all until the round trip landed: the button sat disabled reading "Adding…"
+ * and the drawer opened late, which reads as a broken button rather than as
+ * care. The flicker was also avoidable — the caller is a product page that
+ * already has the title, image, price and stock ceiling on screen, so the
+ * placeholder below is built from the same values the server will return and
+ * there is nothing visible to swap.
  */
 type Patch =
+  | { type: "add"; line: CartLine }
   | { type: "quantity"; lineId: string; quantity: number }
   | { type: "clear" };
+
+/** Recomputes the derived totals after any change to the lines. */
+function withTotals(cart: Cart, lines: CartLine[]): Cart {
+  return {
+    ...cart,
+    lines,
+    count: lines.reduce((n, l) => n + (l.available ? l.quantity : 0), 0),
+    subtotal: lines.reduce((n, l) => n + l.lineTotal, 0),
+  };
+}
 
 function applyPatch(cart: Cart, patch: Patch): Cart {
   if (patch.type === "clear") {
     return { ...cart, lines: [], count: 0, subtotal: 0 };
+  }
+
+  if (patch.type === "add") {
+    const incoming = patch.line;
+    const match = (line: CartLine) =>
+      line.productId === incoming.productId &&
+      line.variantId === incoming.variantId;
+
+    // Adding something already in the bag is a quantity change, not a second
+    // row — which is what the server does too, so the guess survives the swap.
+    if (cart.lines.some(match)) {
+      return withTotals(
+        cart,
+        cart.lines.map((line) => {
+          if (!match(line)) return line;
+          const quantity = capped(
+            line.quantity + incoming.quantity,
+            line.maxQuantity
+          );
+          return {
+            ...line,
+            quantity,
+            lineTotal: line.available ? line.price * quantity : 0,
+          };
+        })
+      );
+    }
+
+    // Appended, not prepended: the server returns lines in `created_at` order,
+    // so a new one lands at the bottom. Guessing the other end would make the
+    // row jump the moment the real cart arrived.
+    return withTotals(cart, [...cart.lines, incoming]);
   }
 
   const lines = cart.lines
@@ -113,12 +175,12 @@ function applyPatch(cart: Cart, patch: Patch): Cart {
     })
     .filter((line) => line.quantity > 0);
 
-  return {
-    ...cart,
-    lines,
-    count: lines.reduce((n, l) => n + (l.available ? l.quantity : 0), 0),
-    subtotal: lines.reduce((n, l) => n + l.lineTotal, 0),
-  };
+  return withTotals(cart, lines);
+}
+
+/** Never guess past the stock ceiling; the server would only cap it back. */
+function capped(quantity: number, max: number | null) {
+  return max == null ? quantity : Math.min(quantity, max);
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
@@ -186,15 +248,70 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const add = useCallback<CartContextValue["add"]>(
-    ({ productId, variantId, quantity = 1, title, optionLabel, price }) => {
+    ({
+      productId,
+      variantId = null,
+      quantity = 1,
+      title,
+      optionLabel,
+      price,
+      handle,
+      image,
+      compareAt = null,
+      maxQuantity = null,
+    }) => {
+      /*
+       * Everything the shopper perceives happens now, on the click, before a
+       * single byte goes to the server: the drawer opens, the line is in it and
+       * the badge has moved. The write below is bookkeeping that happens to be
+       * watched.
+       *
+       * No success toast. The drawer is already open with the item, its option
+       * and its price on screen — a toast saying the same thing in words is the
+       * confirmation repeated, and it lands over the Checkout button while
+       * doing it. Only failure gets announced, because only failure is
+       * something the drawer cannot show by itself.
+       */
+      setDrawerOpen(true);
       markPending(true);
 
       startTransition(async () => {
+        // Only guessable when the caller supplied enough to draw a real-looking
+        // line. Without it the bag simply waits, as it always did, rather than
+        // showing a row with holes in it.
+        if (title && price != null) {
+          patch({
+            type: "add",
+            line: {
+              // Namespaced so it can never be mistaken for a server id. It only
+              // exists between this click and the action returning; the real
+              // cart replaces it wholesale.
+              id: `optimistic:${productId}:${variantId ?? ""}`,
+              productId,
+              variantId,
+              quantity: capped(quantity, maxQuantity),
+              title,
+              handle: handle ?? productId,
+              variantTitle: optionLabel ?? "",
+              price,
+              compareAtPrice: compareAt,
+              image: image ?? null,
+              lineTotal: price * capped(quantity, maxQuantity),
+              available: true,
+              maxQuantity,
+              reduced: false,
+            },
+          });
+        }
+
         const result = await addToCart({ productId, variantId, quantity });
         setCart(result.cart);
         markPending(false);
 
         if (!result.ok) {
+          // The guess is discarded with the transition, so the bag corrects
+          // itself — the line the shopper just watched appear vanishes again,
+          // which needs saying out loud or it reads as the drawer glitching.
           toast.error(result.error);
           return;
         }
@@ -206,14 +323,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           productTitle: title,
           value: price != null ? price * quantity : undefined,
         });
-
-        toast.success("Added to bag", {
-          description: [title, optionLabel].filter(Boolean).join(" · "),
-        });
-        setDrawerOpen(true);
       });
     },
-    [markPending]
+    [markPending, patch]
   );
 
   const setQuantity = useCallback<CartContextValue["setQuantity"]>(

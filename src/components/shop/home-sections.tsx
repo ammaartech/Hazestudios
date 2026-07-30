@@ -2,8 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   BRAND_MARQUEE,
+  EDITORIAL_BANNER,
   HERO,
-  MOSAIC,
   SHOP_THE_LOOK,
   SHORTCUTS,
   type HeroContent,
@@ -158,10 +158,13 @@ export function Eyebrow({
 export function SectionIntro({
   eyebrow,
   heading,
+  headingId,
   className,
 }: {
   eyebrow: string;
   heading?: string;
+  /** Set where a section labels itself by this heading via `aria-labelledby`. */
+  headingId?: string;
   className?: string;
 }) {
   return (
@@ -177,6 +180,7 @@ export function SectionIntro({
       <Eyebrow {...revealProps("fade")}>{eyebrow}</Eyebrow>
       {heading && (
         <h2
+          id={headingId}
           className="display mt-2.5 text-[clamp(1.5rem,3.5vw,2.25rem)]"
           {...revealProps("rise", 1)}
         >
@@ -297,42 +301,37 @@ export function BrandMarquee() {
 /* Editorial banner                                                            */
 /* -------------------------------------------------------------------------- */
 
-/** The full-bleed campaign image that closes the Haze Studios break. */
+/**
+ * The full-bleed campaign image that closes the Haze Studios break.
+ *
+ * The eyebrow and heading sit above the artwork rather than over it: the
+ * campaign lockup is already burnt into the photograph, and a second line of
+ * type laid on top would be reading against it. Nothing is overlaid on the
+ * image at all, so it needs no scrim and stays edge to edge.
+ */
 export function EditorialBanner() {
   return (
-    <section className="mt-20 grid gap-2 px-2 md:mt-28 md:grid-cols-3">
-      <h2 className="sr-only">Shop by category</h2>
-      {MOSAIC.map((tile, i) => (
-        /* The tiles already clip their own overflow, so the curtain wipe has
-           something to draw against. Staggered, but only just — three columns
-           arriving in a slow sequence would read as three separate sections. */
-        <Link
-          key={tile.handle}
-          href={`/collections/${tile.handle}`}
-          className="group relative isolate flex min-h-[26rem] items-center justify-center overflow-hidden bg-[var(--shop-cloud)] p-8 text-center focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white"
-          {...revealProps("media", i)}
-        >
-          <Image
-            src={tile.image}
-            alt={tile.alt}
-            fill
-            sizes="(max-width: 768px) 100vw, 33vw"
-            className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
-          />
-          <div className="absolute inset-0 bg-black/35" aria-hidden />
+    <section aria-labelledby="editorial-banner">
+      <SectionIntro
+        eyebrow={EDITORIAL_BANNER.eyebrow}
+        heading={EDITORIAL_BANNER.heading}
+        className="pb-8 uppercase"
+        headingId="editorial-banner"
+      />
 
-          <div className="relative">
-            <p className="meta text-white/80">{tile.eyebrow}</p>
-            <h3 className="display mt-3 text-[clamp(2rem,4vw,3rem)] text-white">
-              {tile.heading}
-            </h3>
-            <p className="mt-3 text-sm text-white/85">{tile.body}</p>
-            <span className="meta mt-5 inline-block border-b border-white/70 pb-1 text-white transition-colors duration-300 group-hover:border-white">
-              {tile.cta}
-            </span>
-          </div>
-        </Link>
-      ))}
+      <Link href={EDITORIAL_BANNER.href} className="block cursor-pointer">
+        {/* The curtain wipe rather than a rise: the banner is full-bleed, and a
+            band that slid up would drag a seam across the page edges. */}
+        <Image
+          src={EDITORIAL_BANNER.image}
+          alt={EDITORIAL_BANNER.alt}
+          width={2000}
+          height={800}
+          sizes="100vw"
+          className="aspect-[2/1] w-full object-cover md:aspect-[2.5/1]"
+          {...revealProps("media")}
+        />
+      </Link>
     </section>
   );
 }

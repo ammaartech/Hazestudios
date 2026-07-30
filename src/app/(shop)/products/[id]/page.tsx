@@ -95,7 +95,14 @@ export default async function ProductPage({
   return (
     <>
       <ProductViewTracker productId={product.id} productTitle={product.title} />
-      <article className="md:grid md:grid-cols-[1.15fr_1fr] md:items-start md:gap-12 lg:gap-20">
+      {/*
+        Capped, and centred once the cap bites. Left uncapped the two columns
+        just kept growing: on a wide monitor the photography column resolved to
+        around a thousand pixels, which at 4:5 is a picture taller than the
+        screen — the shopper landed on a crop of fabric with the size buttons
+        and the price somewhere below the fold.
+      */}
+      <article className="mx-auto max-w-[88rem] md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-start md:gap-12 lg:gap-20">
         {/* Photography runs to the edge on mobile, and is sticky-free on desktop
             so long descriptions scroll against a stable image column. */}
         <div className="md:pl-8">
@@ -119,8 +126,10 @@ export default async function ProductPage({
             <VariantPicker product={product} />
           </div>
 
+          {/* Left, with the size buttons it belongs to. Centred it read as a
+              separate block rather than as help for the choice above it. */}
           {sizeChart && (
-            <div className="mt-4 flex justify-center">
+            <div className="mt-4 flex justify-start">
               <SizeGuide
                 chart={sizeChart.chart}
                 measurements={sizeChart.measurements}

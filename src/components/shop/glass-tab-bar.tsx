@@ -37,17 +37,41 @@ const TABS: Tab[] = [
 ];
 
 /**
+ * How long the page must sit still before the bar comes back on its own.
+ *
+ * Tuned against the way a thumb actually scrolls. A long page is read in
+ * flicks, and momentum keeps scroll events firing through each glide, so this
+ * only elapses once the page has genuinely come to rest — not in the pause
+ * between two flicks, which would make the bar strobe. Much longer and a
+ * shopper who has stopped to read is left waiting for their navigation.
+ */
+const REVEAL_WHEN_IDLE_MS = 1000;
+
+/**
  * Hides the bar on downward scroll and returns it on the way up, so a long
  * product page is never fighting the chrome for vertical space.
+ *
+ * It also returns whenever scrolling stops. Hiding on the way down is only
+ * defensible while the shopper is moving — the bar is buying them reading room
+ * in exchange for navigation they are not currently reaching for. Once the page
+ * is still that trade is over: they have arrived somewhere, and a shopper who
+ * stops mid-page was otherwise stranded with no way back to the bag short of
+ * scrolling up to summon it.
  */
 function useHideOnScrollDown() {
   const [hidden, setHidden] = useState(false);
   const lastY = useRef(0);
+  const idle = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     lastY.current = window.scrollY;
 
     const onScroll = () => {
+      // Restarted on every event, so it only ever fires from the last one —
+      // which is, by definition, the moment scrolling stopped.
+      if (idle.current) clearTimeout(idle.current);
+      idle.current = setTimeout(() => setHidden(false), REVEAL_WHEN_IDLE_MS);
+
       const y = window.scrollY;
       const delta = y - lastY.current;
 
@@ -64,7 +88,10 @@ function useHideOnScrollDown() {
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (idle.current) clearTimeout(idle.current);
+    };
   }, []);
 
   return hidden;

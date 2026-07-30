@@ -16,7 +16,7 @@ import { useCart } from "./cart-provider";
  * combination's own stock then drives the CTA.
  */
 export function VariantPicker({ product }: { product: ShopProduct }) {
-  const { add, isPending } = useCart();
+  const { add } = useCart();
   const options = product.options;
   const [selection, setSelection] = useState<Record<string, string>>(() => {
     // Preselect a single-value axis (e.g. "One Size") — there's no choice to make.
@@ -66,6 +66,29 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
   const price = selected?.price ?? product.price;
   const compareAt = selected?.compare_at_price ?? product.compare_at_price;
 
+  /**
+   * The three values the bag needs to draw this line before the server has
+   * confirmed it. Mirrors what `resolveLines` in lib/shop/cart.ts computes on
+   * the server, so the optimistic row and the real one are the same row — if
+   * these drift, the drawer will visibly redraw when the write lands.
+   */
+  const lineImage =
+    (selected?.image_id
+      ? product.images.find((i) => i.id === selected.image_id)?.url
+      : undefined) ??
+    product.images[0]?.url ??
+    null;
+
+  const stockCeiling = (() => {
+    const productUnlimited = !product.track_inventory || product.continue_selling;
+    if (!selected) return productUnlimited ? null : product.totalStock;
+    return productUnlimited ||
+      !selected.track_inventory ||
+      selected.continue_selling
+      ? null
+      : selected.stock;
+  })();
+
   const allChosen = options.length > 0 && options.every((o) => selection[o.name]);
   const canAdd = options.length
     ? Boolean(selected?.available)
@@ -96,15 +119,20 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
     return () => observer.disconnect();
   }, []);
 
+  /*
+   * No "Adding…" state, and the button is never disabled by a write in flight.
+   * The bag updates on the click now — see `add` in cart-provider.tsx — so a
+   * pending label would be describing something the shopper has already been
+   * shown the result of, and disabling would block the second tap of a shopper
+   * who genuinely wants two.
+   */
   const ctaLabel = !product.inStock
     ? "Sold out"
     : !allChosen && options.length
       ? `Select ${options.find((o) => !selection[o.name])?.name.toLowerCase()}`
-      : isPending
-        ? "Adding…"
-        : canAdd
-          ? "Add to bag"
-          : "Sold out";
+      : canAdd
+        ? "Add to bag"
+        : "Sold out";
 
   /**
    * The server re-checks the product, the variant and their pairing, so this
@@ -112,7 +140,7 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
    * about trusting the client.
    */
   function addToBag() {
-    if (!canAdd || isPending) return;
+    if (!canAdd) return;
 
     add({
       productId: product.id,
@@ -120,6 +148,10 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
       title: product.title,
       optionLabel: selected?.title,
       price,
+      handle: product.handle || product.id,
+      image: lineImage,
+      compareAt: compareAt != null && compareAt > price ? compareAt : null,
+      maxQuantity: stockCeiling,
     });
   }
 
@@ -211,7 +243,7 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
         ref={inlineCta}
         type="button"
         onClick={addToBag}
-        disabled={!canAdd || isPending}
+        disabled={!canAdd}
         className={cn(
           "glass glass-pill glass-press mt-4 min-h-14 w-full cursor-pointer px-8 text-base font-medium",
           "focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)",
@@ -253,7 +285,7 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
           <button
             type="button"
             onClick={addToBag}
-            disabled={!canAdd || isPending}
+            disabled={!canAdd}
             tabIndex={ctaVisible ? -1 : 0}
             className={cn(
               "glass glass-pill glass-press min-h-12 shrink-0 cursor-pointer px-6 text-sm font-medium",

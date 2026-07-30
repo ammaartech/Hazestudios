@@ -281,12 +281,45 @@
    container and break the sticky header; `clip` does not, and it is the one
    overflow value that may pair with a visible vertical axis.
 --------------------------------------------------------------------------- */
+/* The root guard, because `.shop` cannot be the only line of defence.
+
+   `.shop` clips its own descendants, but two things sit outside that clip. A
+   `position: fixed` box is laid out against the viewport rather than against
+   `.shop`, and anything mounted as a sibling of the shell — the toast layer is
+   in the root layout, outside `.shop` entirely — was never inside it to begin
+   with. Either one widens the document, and then the whole page pans sideways:
+   content sliced off one edge, a band of bare `body` down the other.
+
+   `clip` for the same reason it is used below. `hidden` here would make the
+   root a scroll container and kill the sticky header, which is precisely the
+   trap this is meant to avoid. `overflow-y` stays `visible` — the one value
+   `clip` may pair with — so neither axis becomes a scroll container. */
+html,
+body {
+  overflow-x: clip;
+}
+
 .shop {
   width: 100%;
   overflow-x: clip;
 }
 .shop > * {
   min-width: 0;
+}
+
+/* Sonner's own mobile rule sets `left`, `right` *and* `width: 100%` on the
+   toast container. All three at once is over-constrained, so the browser drops
+   `right` and the layer ends up a full viewport wide starting at the left
+   inset — hanging off the right edge by that inset, on every phone-width page,
+   whether or not a toast is on screen. The two offsets already describe the
+   width; `auto` is what lets them.
+
+   Qualified with `html` purely to outrank sonner, whose stylesheet is injected
+   into the head at runtime and would otherwise win on order. */
+@media (max-width: 600px) {
+  html [data-sonner-toaster] {
+    width: auto;
+  }
 }
 
 @layer base {

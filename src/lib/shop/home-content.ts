@@ -227,58 +227,19 @@ export const SHOP_THE_LOOK: LookFrame[] = [
 /* -------------------------------------------------------------------------- */
 
 /**
- * Campaign artwork referenced straight off the Shopify CDN rather than copied
- * into `public/`. The catalogue behind this storefront was imported from a
- * Shopify export, so every product already renders from that origin (see the
- * `cdn.shopify.com` entry in `next.config.ts`). `&width=` is Shopify's own
- * transform, so each frame pulls a crop sized for its slot.
+ * The full-bleed campaign image that closes the Haze Studios break.
+ *
+ * One authored photograph, not a grid of product cut-outs: the campaign type is
+ * burnt into the artwork, so the slot is art-directed as a whole rather than
+ * assembled from three tiles whose headings would have to compete with it.
  */
-const CDN = "https://cdn.shopify.com/s/files/1/0633/6105/6992/files";
-
-export interface MosaicTile {
-  eyebrow: string;
-  heading: string;
-  body: string;
-  cta: string;
-  /** Collection handle, resolved to `/collections/<handle>`. */
-  handle: string;
-  image: string;
-  alt: string;
-}
-
-/**
- * The Haze Studios block that closes the page — the menswear label carried
- * alongside Fogstores, split into the three doors the campaign uses.
- */
-export const MOSAIC: MosaicTile[] = [
-  {
-    eyebrow: "Haze Studios",
-    heading: "Campus Fits",
-    body: "The full menswear label",
-    cta: "Shop Now",
-    handle: "haze-studios",
-    image: `${CDN}/White_Back_a78c26a8-6cb4-4e49-85dc-6f859917592b.png?v=1773642913&width=1200`,
-    alt: "Boomy oversized tee, back view",
-  },
-  {
-    eyebrow: "Warm up",
-    heading: "Hoodies",
-    body: "Heavyweight fleece, boxy cut",
-    cta: "Shop Now",
-    handle: "haze-hoodies",
-    image: `${CDN}/IMG_0143.jpg?v=1668192684&width=1200`,
-    alt: "Text Me When You Get Home hoodie",
-  },
-  {
-    eyebrow: "Everyday",
-    heading: "Boxy Tees",
-    body: "Oversized graphics and blanks",
-    cta: "Shop Now",
-    handle: "haze-tees",
-    image: `${CDN}/Back_White_W_685889af-8401-400c-a84f-f78138a06964.png?v=1729192763&width=1200`,
-    alt: "Blond graphic tee, back view",
-  },
-];
+export const EDITORIAL_BANNER = {
+  eyebrow: "Fogstores × Haze Studios",
+  heading: "Why should girls have all the fun?",
+  image: "/fogstores/banner-not-cute.webp",
+  alt: "Haze Studios outerwear — studded hoodie and graphic hood",
+  href: "/collections/haze-studios",
+};
 
 /* -------------------------------------------------------------------------- */
 /* Home page — the merchandised collection blocks                              */
