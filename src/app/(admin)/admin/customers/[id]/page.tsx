@@ -98,7 +98,7 @@ export default async function CustomerDetailPage({
                   <TableRow key={o.id}>
                     <TableCell>
                       <Link
-                        href={`/orders/${o.id}`}
+                        href={`/admin/orders/${o.id}`}
                         className="font-medium text-primary hover:underline"
                       >
                         #{o.order_number}

@@ -11,31 +11,74 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/admin/page-header";
+import { Pagination } from "@/components/admin/pagination";
 import { SearchInput } from "@/components/admin/search-input";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/format";
 import type { Customer } from "@/lib/types";
 
 export const metadata = { title: "Customers" };
+
+const PAGE_SIZE = 50;
+
+/**
+ * `default_address.country` holds a two-letter code, so joining it raw produced
+ * "Siliguri, IN". Intl turns it into a name with no lookup table to maintain.
+ */
+const regionNames = new Intl.DisplayNames(["en"], {
+  type: "region",
+  fallback: "none",
+});
+
+function formatLocation(address: Record<string, string>) {
+  const country = address.country
+    ? // A malformed code would throw; the raw value is still better than nothing.
+      (() => {
+        try {
+          return regionNames.of(address.country) ?? address.country;
+        } catch {
+          return address.country;
+        }
+      })()
+    : null;
+  return [address.city, address.province, country].filter(Boolean).join(", ");
+}
+
+/** PostgREST treats these as filter syntax, so they cannot reach a filter raw. */
+function sanitize(term: string) {
+  return term.replace(/[%,()*\\]/g, " ").trim();
+}
+
 export default async function CustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, page: pageParam } = await searchParams;
   const supabase = await createClient();
 
+  const page = Math.max(0, parseInt(pageParam ?? "0", 10) || 0);
+  const term = sanitize(q ?? "");
+
+  // `count: "exact"` is what makes the pager honest: without a total there is no
+  // way to know a 3,952-row table is not the 1,000 rows PostgREST will return.
   let query = supabase
     .from("customers")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (q) {
+    .select("*", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
+
+  if (term) {
+    // Phone is searchable because a support call starts with a number far more
+    // often than with a correctly spelled name.
     query = query.or(
-      `first_name.ilike.%${q}%,last_name.ilike.%${q}%,email.ilike.%${q}%`
+      `first_name.ilike.%${term}%,last_name.ilike.%${term}%,email.ilike.%${term}%,phone.ilike.%${term}%`
     );
   }
-  const { data } = await query;
+
+  const { data, count } = await query;
   const customers = (data ?? []) as Customer[];
+  const total = count ?? 0;
 
   return (
     <div>
@@ -47,64 +90,117 @@ export default async function CustomersPage({
 
       <Card>
         <CardContent className="pt-0">
-          <div className="mb-3 flex justify-end">
-            <SearchInput placeholder="Search customers" />
-          </div>
-          {customers.length === 0 ? (
-            <p className="py-12 text-center text-sm text-muted-foreground">
-              No customers yet.
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground tabular-nums">
+              {total.toLocaleString()} {total === 1 ? "customer" : "customers"}
+              {term && " matching"}
             </p>
+            <SearchInput placeholder="Search name, email or phone" />
+          </div>
+
+          {customers.length === 0 ? (
+            <div className="py-16 text-center">
+              {/* A fruitless search and an empty store need different next
+                  steps, so they do not share a message. */}
+              {term ? (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    No customers match “{q}”.
+                  </p>
+                  <Button variant="outline" size="sm" className="mt-3" asChild>
+                    <Link href="/admin/customers">Clear search</Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    No customers yet. They appear here after their first order.
+                  </p>
+                  <Button variant="outline" size="sm" className="mt-3" asChild>
+                    <Link href="/admin/customers/new">Add customer</Link>
+                  </Button>
+                </>
+              )}
+            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Account</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Orders</TableHead>
-                  <TableHead>Amount spent</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customers.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell>
-                      <Link
-                        href={`/customers/${c.id}`}
-                        className="font-medium hover:underline"
-                      >
-                        {`${c.first_name} ${c.last_name}`.trim() || c.email || "—"}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {c.email ?? "—"}
-                    </TableCell>
-                    <TableCell>
-                      {/* Distinguishes a self-service account from a guest or
-                          imported record — it changes what support can tell
-                          them to do (reset a password vs. create an account). */}
-                      {c.user_id ? (
-                        <Badge variant="secondary" className="font-normal">
-                          Registered
-                        </Badge>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">Guest</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {[c.default_address?.city, c.default_address?.country]
-                        .filter(Boolean)
-                        .join(", ") || "—"}
-                    </TableCell>
-                    <TableCell className="tabular-nums">{c.orders_count}</TableCell>
-                    <TableCell className="tabular-nums">
-                      {formatMoney(c.total_spent)}
-                    </TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer name</TableHead>
+                    <TableHead>Email subscription</TableHead>
+                    <TableHead>Account</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead className="text-right">Orders</TableHead>
+                    <TableHead className="text-right">Amount spent</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {customers.map((c) => {
+                    const name = `${c.first_name} ${c.last_name}`.trim();
+                    const location = formatLocation(c.default_address);
+                    return (
+                      <TableRow key={c.id}>
+                        <TableCell>
+                          <Link
+                            href={`/admin/customers/${c.id}`}
+                            className="font-medium text-foreground transition-colors duration-150 hover:text-primary hover:underline"
+                          >
+                            {/* Imported records are frequently name-less; the
+                                email is then the only handle there is. */}
+                            {name || c.email || c.phone || "Unnamed customer"}
+                          </Link>
+                          {name && c.email && (
+                            <span className="block text-xs text-muted-foreground">
+                              {c.email}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {c.accepts_marketing ? (
+                            <Badge
+                              variant="secondary"
+                              className="border-transparent bg-emerald-100 font-normal text-emerald-900"
+                            >
+                              Subscribed
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="font-normal">
+                              Not subscribed
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {/* Distinguishes a self-service account from a guest or
+                              imported record — it changes what support can tell
+                              them to do (reset a password vs. create an account). */}
+                          {c.user_id ? (
+                            <Badge variant="secondary" className="font-normal">
+                              Registered
+                            </Badge>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">
+                              Guest
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {location || "—"}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {c.orders_count}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {formatMoney(c.total_spent)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+
+              <Pagination page={page} pageSize={PAGE_SIZE} total={total} />
+            </>
           )}
         </CardContent>
       </Card>

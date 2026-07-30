@@ -109,7 +109,7 @@ export default async function OrdersPage({
                     <TableRow key={o.id}>
                       <TableCell>
                         <Link
-                          href={`/orders/${o.id}`}
+                          href={`/admin/orders/${o.id}`}
                           className="font-semibold text-foreground hover:underline"
                         >
                           #{o.order_number}

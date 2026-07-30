@@ -58,7 +58,7 @@ export default async function DraftsPage() {
                   <TableRow key={o.id}>
                     <TableCell>
                       <Link
-                        href={`/orders/${o.id}`}
+                        href={`/admin/orders/${o.id}`}
                         className="font-semibold hover:underline"
                       >
                         #D{o.order_number}

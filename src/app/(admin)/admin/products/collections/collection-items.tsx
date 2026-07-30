@@ -207,7 +207,9 @@ function ProductPicker({
           Add products
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      {/* `sm:` variant required: DialogContent's own `sm:max-w-sm` outranks a
+          bare `max-w-lg` above 640px, which clamped this to 384px. */}
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Add products</DialogTitle>
         </DialogHeader>

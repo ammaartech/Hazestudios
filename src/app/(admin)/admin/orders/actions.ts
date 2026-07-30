@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import type { Discount } from "@/lib/types";
 
 export interface OrderItemPayload {
-  product_id: string;
+  /** Null for a custom line with no catalogue entry (a fee, a bespoke item). */
+  product_id: string | null;
   variant_id: string | null;
   title: string;
   variant_title: string;
@@ -20,6 +21,7 @@ export interface OrderPayload {
   mark_as_paid: boolean;
   note: string;
   discount_code: string;
+  shipping_total: number;
   items: OrderItemPayload[];
 }
 
@@ -106,7 +108,10 @@ export async function createOrder(payload: OrderPayload) {
       .eq("id", discount.id);
   }
 
-  const total = Math.max(0, subtotal - discountTotal);
+  // Shipping is charged on top, so it is added after the discount is taken off
+  // the goods — clamping first would let a large discount eat the freight.
+  const shippingTotal = Math.max(0, Number(payload.shipping_total) || 0);
+  const total = Math.max(0, subtotal - discountTotal) + shippingTotal;
 
   const { data: order, error } = await supabase
     .from("orders")
@@ -117,6 +122,7 @@ export async function createOrder(payload: OrderPayload) {
       subtotal,
       discount_total: discountTotal,
       discount_code: discountCode,
+      shipping_total: shippingTotal,
       total,
       note: payload.note,
     })
@@ -160,7 +166,7 @@ export async function convertDraftToOrder(orderId: string) {
 
   await adjustStock(supabase, items ?? [], -1);
   revalidatePath("/admin/orders");
-  revalidatePath(`/orders/${orderId}`);
+  revalidatePath(`/admin/orders/${orderId}`);
   return { ok: true };
 }
 
@@ -171,7 +177,7 @@ export async function markOrderPaid(orderId: string) {
     .update({ payment_status: "paid" })
     .eq("id", orderId);
   if (error) return { error: error.message };
-  revalidatePath(`/orders/${orderId}`);
+  revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
   return { ok: true };
 }
@@ -199,7 +205,7 @@ export async function fulfillOrder(
     .eq("id", orderId);
   if (statusError) return { error: statusError.message };
 
-  revalidatePath(`/orders/${orderId}`);
+  revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
   return { ok: true };
 }
@@ -253,7 +259,7 @@ export async function refundOrder(
     await adjustStock(supabase, items ?? [], 1);
   }
 
-  revalidatePath(`/orders/${orderId}`);
+  revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
   return { ok: true };
 }
