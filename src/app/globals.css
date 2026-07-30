@@ -922,6 +922,46 @@ body {
   }
 }
 
+/* The spotlight bar. A pop, not a slide: it is summoned by a keystroke rather
+   than pulled from an edge, so it has no direction to arrive from and simply
+   resolves in place. It scales up from just under full size — enough to read as
+   arriving, small enough that the type inside never looks like it is being
+   zoomed. No overshoot, per the rest of the glass: it settles, it never bounces. */
+@keyframes spotlight-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* The spotlight bar acknowledging a search.
+   Both edges travel inward to meet in the middle, so the bar closes on itself
+   rather than simply disappearing — the shopper gets a reply to the keystroke
+   before the results page has rendered a thing.
+
+   `clip-path` rather than `scaleX`: a scale would squash the placeholder and
+   the magnifier as it went, and squashed type reads as a rendering fault rather
+   than as a gesture. Clipping leaves everything inside at its true width and
+   simply stops showing it. The `round` matches the pill so the closing edges
+   stay lens-shaped to the last frame.
+
+   Accelerating, unlike everything else here: entrances settle, but an exit that
+   eases *out* looks like it lost momentum halfway. */
+@keyframes spotlight-submit {
+  from {
+    clip-path: inset(0 0 0 0 round 999px);
+    opacity: 1;
+  }
+  to {
+    clip-path: inset(0 50% 0 50% round 999px);
+    opacity: 0;
+  }
+}
+
 /* The badge only animates when the count actually changes, so it reads as a
    response to the shopper's tap rather than idle decoration. */
 @keyframes cart-badge-pop {
@@ -964,6 +1004,27 @@ body {
     }
     to {
       opacity: 1;
+    }
+  }
+
+  @keyframes spotlight-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Still a real animation, and deliberately still the same duration: the
+     navigation waits on this one finishing, so it has to end — it just fades
+     instead of closing. */
+  @keyframes spotlight-submit {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
     }
   }
 }

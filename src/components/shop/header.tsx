@@ -8,6 +8,7 @@ import type { Collection } from "@/lib/types";
 import { resolveNav, type ResolvedGroup } from "@/lib/shop/nav";
 import { cn } from "@/lib/utils";
 import { useCart } from "./cart-provider";
+import { SearchSpotlight } from "./search-spotlight";
 import {
   ScrambleText,
   scrambleDuration,
@@ -56,6 +57,37 @@ export function ShopHeaderView({
   const [open, setOpen] = useState<number | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchTrigger = useRef<HTMLButtonElement>(null);
+
+  /**
+   * The global shortcut — the "no matter where you are" half of the pattern.
+   *
+   * Bound to ⌘K rather than the launcher's own ⌘Space, which macOS claims
+   * before a web page ever sees the event; binding it would ship a shortcut
+   * that silently never fires. ⌘K is what the web settled on for this exact
+   * bar, and Ctrl+K covers Windows and Linux.
+   *
+   * The listener is on `window` and never unbinds while the header is mounted,
+   * which is every storefront route — so the bar is one keystroke away from any
+   * page without each page having to know it exists.
+   */
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "k" || !(event.metaKey || event.ctrlKey)) return;
+      event.preventDefault();
+      setSearchOpen((wasOpen) => !wasOpen);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  /** Focus goes back to the magnifier, so ⌘K → Esc leaves it nowhere odd. */
+  const closeSearch = () => {
+    setSearchOpen(false);
+    searchTrigger.current?.focus();
+  };
+
   // Any navigation dismisses the panel; otherwise clicking a link leaves it
   // hanging over the page it just loaded. Adjusted during render rather than in
   // an effect, so the panel is already gone in the same commit as the new route
@@ -64,6 +96,9 @@ export function ShopHeaderView({
   if (routeAtOpen !== pathname) {
     setRouteAtOpen(pathname);
     setOpen(null);
+    // Enter navigates to /search, so the bar has to be gone in the same commit
+    // as the route it asked for rather than hanging over the results.
+    setSearchOpen(false);
   }
 
   useEffect(() => {
@@ -129,9 +164,20 @@ export function ShopHeaderView({
           {/* Actions                                                           */}
           {/* ---------------------------------------------------------------- */}
           <div className="ml-auto flex items-center gap-0.5">
-            <IconLink href="/search" label="Search">
+            {/* A button, not a link to /search. Reaching for search should not
+                cost the shopper the page they are on — the bar comes to them,
+                and only a term they actually type goes to the search page. */}
+            <button
+              ref={searchTrigger}
+              type="button"
+              aria-label="Search"
+              aria-haspopup="dialog"
+              aria-expanded={searchOpen}
+              onClick={() => setSearchOpen(true)}
+              className="glass-press flex size-10 cursor-pointer items-center justify-center rounded-full text-[var(--shop-ink)] transition-colors duration-300 hover:bg-[var(--shop-ink)]/6"
+            >
               <Search className="size-[1.15rem]" aria-hidden />
-            </IconLink>
+            </button>
             <IconLink href="/account" label="Your account" desktopOnly>
               <User className="size-[1.15rem]" aria-hidden />
             </IconLink>
@@ -185,6 +231,10 @@ export function ShopHeaderView({
           ) : null
         )}
       </div>
+
+      {/* Mounted only while open, so each press builds a fresh bar instead of
+          reopening onto whatever was typed into it last. */}
+      {searchOpen && <SearchSpotlight onClose={closeSearch} />}
     </header>
   );
 }

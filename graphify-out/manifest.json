@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.impeccable\\hook.cache.json": {
-    "mtime": 1785435812.2673986,
-    "ast_hash": "1d6dec304e0600490a9c879880733f2b",
+    "mtime": 1785438609.525632,
+    "ast_hash": "7c75fefd614ad996f3bbb1bb06955da9",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\db-config.mjs": {
@@ -830,8 +830,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\header.tsx": {
-    "mtime": 1785435756.8243816,
-    "ast_hash": "23121cb385fe6fe7f0038726df6dc7a6",
+    "mtime": 1785436583.6818278,
+    "ast_hash": "562261cd2ec984e1c1d8827d5a73d132",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\price.tsx": {
@@ -2852,6 +2852,11 @@
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\public\\fogstores\\men\\tile-couple-tees.webp": {
     "mtime": 1785393899.2152326,
     "ast_hash": "af4d21b03c933a93a8ced60e88263ae1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\search-spotlight.tsx": {
+    "mtime": 1785438609.3342152,
+    "ast_hash": "b94d262453851e8058c3a0ac651d45d9",
     "semantic_hash": ""
   }
 }
