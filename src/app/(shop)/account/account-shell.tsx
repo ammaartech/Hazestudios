@@ -1,20 +1,17 @@
-import Link from "next/link";
-import { Package, User, LifeBuoy, LayoutDashboard, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { signOut } from "./actions";
-
-const LINKS = [
-  { href: "/account", label: "Overview", icon: LayoutDashboard },
-  { href: "/account/orders", label: "Orders", icon: Package },
-  { href: "/account/profile", label: "Details", icon: User },
-  { href: "/account/help", label: "Help", icon: LifeBuoy },
-];
+import { AccountNav } from "./account-nav";
 
 /**
  * Chrome for the signed-in account area.
  *
- * The nav is a horizontal scroller on phones and a sidebar from `md` up, rather
- * than a list that collapses into a menu — four destinations do not earn a
- * disclosure, and keeping them visible means one tap instead of two.
+ * The nav is an equal-width, four-up segmented control on phones — every
+ * destination visible at once, nothing to scroll to discover — and a sidebar
+ * from `md` up. A horizontal scroller used to stand in for the phone layout,
+ * but four icon-and-label pills never fit a phone width without clipping the
+ * last one, which reads as broken rather than "scroll for more." Sign out is
+ * not a destination, so it sits below the grid rather than competing with it
+ * for a fifth column.
  */
 export function AccountShell({
   title,
@@ -22,57 +19,38 @@ export function AccountShell({
   current,
   children,
 }: {
-  title: string;
+  title: React.ReactNode;
   description?: string;
   current: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="px-4 pt-10 md:px-8 md:pt-14">
-      <header className="mb-8">
-        <h1 className="display text-[clamp(2rem,6vw,3.5rem)]">{title}</h1>
+    <div className="px-4 pt-8 md:px-8 md:pt-14">
+      <header className="mb-6 md:mb-8">
+        <h1 className="display text-[clamp(1.75rem,6vw,3.5rem)]">{title}</h1>
         {description && (
-          <p className="mt-3 max-w-prose text-[15px] leading-relaxed text-(--shop-mute)">
+          <p className="mt-2 max-w-prose text-sm leading-relaxed text-(--shop-mute) md:mt-3 md:text-[15px]">
             {description}
           </p>
         )}
       </header>
 
-      <div className="grid gap-8 md:grid-cols-[200px_1fr] md:gap-12">
+      <div className="grid gap-6 md:grid-cols-[200px_1fr] md:gap-12">
         <nav aria-label="Account" className="md:sticky md:top-24 md:self-start">
-          <ul className="-mx-1 flex gap-1 overflow-x-auto pb-2 md:mx-0 md:flex-col md:overflow-visible md:pb-0">
-            {LINKS.map((link) => {
-              const active = current === link.href;
-              const Icon = link.icon;
-              return (
-                <li key={link.href} className="shrink-0">
-                  <Link
-                    href={link.href}
-                    aria-current={active ? "page" : undefined}
-                    className={`glass-press flex min-h-11 items-center gap-2.5 rounded-full px-4 text-sm font-medium transition-colors duration-300 md:w-full ${
-                      active
-                        ? "glass glass-on-light text-(--shop-ink)"
-                        : "text-(--shop-mute) hover:text-(--shop-ink)"
-                    }`}
-                  >
-                    <Icon className="size-4" aria-hidden />
-                    {link.label}
-                  </Link>
-                </li>
-              );
-            })}
-            <li className="shrink-0 md:mt-4 md:w-full md:border-t md:border-(--shop-hairline-soft) md:pt-4">
-              <form action={signOut}>
-                <button
-                  type="submit"
-                  className="glass-press flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-full px-4 text-sm font-medium text-(--shop-mute) transition-colors duration-300 hover:text-(--shop-ink)"
-                >
-                  <LogOut className="size-4" aria-hidden />
-                  Sign out
-                </button>
-              </form>
-            </li>
-          </ul>
+          <AccountNav current={current} />
+
+          <form
+            action={signOut}
+            className="mt-3 border-t border-(--shop-hairline-soft) pt-3 md:mt-4 md:pt-4"
+          >
+            <button
+              type="submit"
+              className="glass-press flex min-h-11 w-full cursor-pointer items-center justify-center gap-2.5 rounded-full px-4 text-sm font-medium text-(--shop-mute) transition-colors duration-300 hover:text-(--shop-ink) md:justify-start"
+            >
+              <LogOut className="size-4" aria-hidden />
+              Sign out
+            </button>
+          </form>
         </nav>
 
         <div className="min-w-0 pb-8">{children}</div>
