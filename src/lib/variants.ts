@@ -220,3 +220,67 @@ export function sortOptionValues(name: string, values: string[]): string[] {
 
   return values;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Display labels                                                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Spelled-out sizes → the codes garment labels actually use.
+ *
+ * Purely a rendering concern: the stored value stays whatever the operator or
+ * the import typed, because it is the variant title the admin, the order record
+ * and Qikink's SKUs all key on. Renaming the data to suit a chip would rewrite
+ * history for a typography decision.
+ *
+ * Keys are normalised (lowercased, separators dropped), so "X-Large",
+ * "extra large" and "XL" all arrive here as the same lookup.
+ */
+const SIZE_LABELS: Record<string, string> = {
+  extrasmall: "XS", xsmall: "XS", xs: "XS",
+  extraextrasmall: "2XS", xxsmall: "2XS", xxs: "2XS", "2xs": "2XS",
+  small: "S", s: "S",
+  medium: "M", med: "M", m: "M",
+  large: "L", l: "L",
+  extralarge: "XL", xlarge: "XL", xl: "XL",
+  extraextralarge: "2XL", xxlarge: "2XL", xxl: "2XL", "2xl": "2XL", "2xlarge": "2XL",
+  xxxlarge: "3XL", xxxl: "3XL", "3xl": "3XL", "3xlarge": "3XL",
+  xxxxl: "4XL", "4xl": "4XL", "4xlarge": "4XL",
+};
+
+function normalizeSize(value: string): string {
+  return value.trim().toLowerCase().replace(/[\s._/-]+/g, "");
+}
+
+/**
+ * The short form of a size value, for controls where the label is the whole
+ * object — a size chip is read as a code, not as a sentence, and "Small /
+ * Medium / Large" forces three different pill widths for one row of choices.
+ *
+ * Only applied to size axes, and only to values the table recognises: a colour
+ * called "Large" or a bespoke value like "One Size" is returned untouched.
+ */
+export function shortSizeLabel(optionName: string, value: string): string {
+  if (!/size/i.test(optionName)) return value;
+  return SIZE_LABELS[normalizeSize(value)] ?? value;
+}
+
+/**
+ * The same abbreviation applied to a variant title, for the places that show a
+ * chosen combination rather than an axis — the bag, the checkout summary.
+ *
+ * A title has no axis names attached ("Yellow / Small"), so each segment is
+ * matched against the size table on its own and anything unrecognised is left
+ * exactly as stored. That keeps the bag saying the same word the product page's
+ * chip said, which is the whole point: the shopper picked "S", so the bag
+ * should not tell them they bought a "Small".
+ */
+export function shortVariantTitle(title: string): string {
+  return title
+    .split("/")
+    .map((part) => {
+      const trimmed = part.trim();
+      return SIZE_LABELS[normalizeSize(trimmed)] ?? trimmed;
+    })
+    .join(" / ");
+}

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
 import type { CartLine } from "@/lib/shop/cart";
+import { shortVariantTitle } from "@/lib/variants";
 import { cn } from "@/lib/utils";
 import { Price } from "./price";
 import { QuantityStepper } from "./quantity-stepper";
@@ -32,7 +33,12 @@ export function CartLineRow({
   onRemove: () => void;
 }) {
   const compact = size === "drawer";
-  const label = [line.title, line.variantTitle].filter(Boolean).join(" · ");
+  // Abbreviated to match the chip the shopper actually pressed on the product
+  // page: they chose "S", so the bag should not report a "Small".
+  const variantTitle = line.variantTitle
+    ? shortVariantTitle(line.variantTitle)
+    : line.variantTitle;
+  const label = [line.title, variantTitle].filter(Boolean).join(" · ");
 
   return (
     <li
@@ -82,9 +88,9 @@ export function CartLineRow({
                 {line.title}
               </Link>
             </h3>
-            {line.variantTitle && (
+            {variantTitle && (
               <p className="mt-0.5 truncate text-sm text-(--shop-mute)">
-                {line.variantTitle}
+                {variantTitle}
               </p>
             )}
           </div>

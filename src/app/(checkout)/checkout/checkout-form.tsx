@@ -349,7 +349,7 @@ export function CheckoutForm({
           <button
             type="submit"
             disabled={submitting}
-            className="glass glass-pill glass-press glass-ink flex min-h-14 w-full cursor-pointer items-center justify-center gap-2 px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink) disabled:cursor-not-allowed disabled:opacity-60"
+            className="glass glass-pill glass-press glass-primary flex min-h-14 w-full cursor-pointer items-center justify-center gap-2 px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink) disabled:cursor-not-allowed disabled:opacity-60"
           >
             {submitting ? (
               "Placing your order…"

@@ -161,7 +161,7 @@ export function EmptyOrders() {
       </p>
       <Link
         href="/"
-        className="glass glass-ink glass-pill glass-press mt-6 inline-flex min-h-12 cursor-pointer items-center px-7 text-sm font-medium"
+        className="glass glass-primary glass-pill glass-press mt-6 inline-flex min-h-12 cursor-pointer items-center px-7 text-sm font-medium"
       >
         Start shopping
       </Link>

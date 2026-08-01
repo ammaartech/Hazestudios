@@ -20,7 +20,7 @@ export default function CheckEmailPage() {
 
       <Link
         href="/account/login"
-        className="glass glass-ink glass-pill glass-press mt-6 flex min-h-13 cursor-pointer items-center justify-center px-8 text-[15px] font-medium"
+        className="glass glass-primary glass-pill glass-press mt-6 flex min-h-13 cursor-pointer items-center justify-center px-8 text-[15px] font-medium"
       >
         Back to sign in
       </Link>

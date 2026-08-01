@@ -178,13 +178,13 @@ export default async function OrderConfirmationPage({
       <div className="mt-12 flex flex-col gap-3 sm:flex-row">
         <Link
           href="/"
-          className="glass glass-pill glass-press glass-ink flex min-h-14 flex-1 cursor-pointer items-center justify-center px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
+          className="glass glass-pill glass-press glass-primary flex min-h-14 flex-1 cursor-pointer items-center justify-center px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
         >
           Keep shopping
         </Link>
         <Link
           href="/account/orders"
-          className="glass glass-on-light glass-pill glass-press flex min-h-14 flex-1 cursor-pointer items-center justify-center px-8 text-base font-medium text-(--shop-ink) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
+          className="glass glass-on-light glass-quiet glass-pill glass-press flex min-h-14 flex-1 cursor-pointer items-center justify-center px-8 text-base font-medium text-(--shop-ink) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
         >
           View your orders
         </Link>

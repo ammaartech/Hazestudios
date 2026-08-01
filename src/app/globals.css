@@ -453,44 +453,83 @@ body {
   }
 
   /* Primary control on the white content plane.
-     Dark glass, not paint. The tension here is real: `.glass-dark`'s 0.62 tint
-     over white resolves to mid-grey (#6b6b6b), which reads as a *disabled*
-     button rather than the primary action. The answer is not to give up the
-     translucency — it is to set the alpha by contrast. At 0.84 the same ink
-     lands near #363636 over white, holding ~11:1 against white text (AA wants
-     4.5:1) while still passing enough of the backdrop through to refract when
-     imagery, a gallery or the sticky bar's content scrolls beneath it.
+     The predecessor here was near-black glass (ink at 0.84 alpha). It cleared
+     contrast easily, but it was the one painted-looking surface in a shell built
+     entirely out of glass: on a page of translucent pills, panels and islands,
+     a dark slab reads as something dropped *onto* the material rather than made
+     of it — and the same pill sat on the product page, inside the bag sheet and
+     over the checkout summary, so the mismatch showed up everywhere at once.
+
+     So primacy is carried by *elevation* rather than by colour. This is the
+     brightest glass in the system (0.86 rising toward opaque at the top of the
+     lens) and the only one that throws a real drop shadow, which is what lifts
+     it off a white page where blur has almost nothing to refract. Its label is
+     full ink at ~17:1, so the primary action is also the highest-contrast text
+     on screen — the thing colour was doing before, done by type instead.
 
      The gradient is the lens itself: light catches the top curve, falls away
      through the middle, and the bottom edge picks up the shadow the body of the
      glass casts into itself. Painted as a background-image rather than a
      pseudo-element so it composites behind the label with no stacking work. */
-  .shop .glass-ink {
-    background-color: rgba(17, 17, 17, 0.84);
+  .shop .glass-primary {
+    background-color: rgba(255, 255, 255, 0.86);
     background-image: linear-gradient(
       to bottom,
-      rgba(255, 255, 255, 0.16),
-      rgba(255, 255, 255, 0.05) 38%,
-      rgba(255, 255, 255, 0) 58%,
-      rgba(0, 0, 0, 0.08)
+      rgba(255, 255, 255, 0.85),
+      rgba(255, 255, 255, 0.34) 44%,
+      rgba(255, 255, 255, 0) 62%,
+      rgba(17, 17, 17, 0.06)
     );
-    color: var(--shop-canvas);
+    color: var(--shop-ink);
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    /* A lit edge on near-black needs far less brightness than on clear glass,
-       or the rim reads as a white outline rather than a highlight. */
-    --glass-rim-top: rgba(255, 255, 255, 0.38);
-    --glass-rim-bottom: rgba(255, 255, 255, 0.07);
+    /* Hairline edge, then the lift. Without the second shadow a white pill on a
+       white plane has no silhouette at all. */
+    box-shadow:
+      inset 0 0 0 1px rgba(17, 17, 17, 0.12),
+      0 10px 28px -10px rgba(17, 17, 17, 0.32),
+      0 2px 6px -3px rgba(17, 17, 17, 0.18);
+    --glass-rim-top: rgba(255, 255, 255, 0.95);
+    --glass-rim-bottom: rgba(17, 17, 17, 0.05);
   }
 
-  /* Declared after `.glass-ink` rather than alongside the other fallbacks near
-     the top: both selectors have identical specificity, so source order is the
-     only thing deciding the winner. Without a backdrop filter there is nothing
-     to refract, and the CTA returns to solid ink instead of sitting washed-out
-     and grey over the content plane. */
+  /* Rises further under the cursor — the affordance the dark fill used to give
+     for free. `:not(:disabled)` so a submitting button does not lift. */
+  .shop .glass-primary:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.94);
+    box-shadow:
+      inset 0 0 0 1px rgba(17, 17, 17, 0.16),
+      0 14px 34px -10px rgba(17, 17, 17, 0.36),
+      0 2px 6px -3px rgba(17, 17, 17, 0.2);
+  }
+
+  /* The chosen value in a group of pills — a size, a unit, a filter.
+     A ring rather than a fill. Filling the selected chip with ink made it the
+     heaviest object on the product page, louder than the buy button it sits
+     above; the ring states the same thing at the weight a *setting* deserves.
+     It is a real 1.5px ink border, not a lighter tint, so the selection never
+     depends on distinguishing two shades of white — and the picker pairs it
+     with a weight change, so it survives greyscale and low vision both. */
+  .shop .glass-selected {
+    background-color: rgba(255, 255, 255, 0.92);
+    color: var(--shop-ink);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    box-shadow:
+      inset 0 0 0 1.5px var(--shop-ink),
+      0 6px 16px -8px rgba(17, 17, 17, 0.3);
+  }
+
+  /* Declared after the two rules above rather than alongside the other fallbacks
+     near the top: identical specificity, so source order is the only thing
+     deciding the winner. With no backdrop filter there is nothing to refract, so
+     both go opaque rather than sitting washed-out over the content plane. */
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .shop .glass-ink {
-      background-color: var(--shop-ink);
+    .shop .glass-primary {
+      background-color: rgba(255, 255, 255, 0.97);
+    }
+    .shop .glass-selected {
+      background-color: var(--shop-canvas);
     }
   }
 
@@ -504,6 +543,14 @@ body {
     box-shadow:
       inset 0 0 0 1px var(--glass-edge),
       var(--glass-shadow);
+  }
+
+  /* A secondary control standing next to a primary one. Same material, no lift:
+     now that primacy is signalled by elevation rather than by a dark fill, two
+     pills that both float are two pills that both look primary. Declared after
+     `.glass-on-light` so it wins the box-shadow it is overriding. */
+  .shop .glass-quiet {
+    box-shadow: inset 0 0 0 1px var(--glass-edge);
   }
 
   /* Semantic stacking order for the floating layer.

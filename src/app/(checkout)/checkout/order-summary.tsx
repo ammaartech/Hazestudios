@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef } from "react";
 import { Check, ChevronDown, Tag } from "lucide-react";
 import { formatMoney } from "@/lib/format";
+import { shortVariantTitle } from "@/lib/variants";
 import { cn } from "@/lib/utils";
 import type { Cart } from "@/lib/shop/cart";
 import type { CheckoutTotals } from "@/lib/shop/checkout-totals";
@@ -93,7 +94,7 @@ export function OrderSummary({
                   <p className="truncate text-sm">{line.title}</p>
                   {line.variantTitle && (
                     <p className="mt-0.5 truncate text-xs text-(--shop-mute)">
-                      {line.variantTitle}
+                      {shortVariantTitle(line.variantTitle)}
                     </p>
                   )}
                 </div>

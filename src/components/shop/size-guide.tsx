@@ -15,6 +15,7 @@ import {
   inchesToCm,
   type SizeChart,
 } from "@/lib/size-chart";
+import { shortSizeLabel } from "@/lib/variants";
 import { cn } from "@/lib/utils";
 
 type Unit = "in" | "cm";
@@ -79,7 +80,7 @@ export function SizeGuide({
         >
           <span
             aria-hidden
-            className="glass-indicator absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-full bg-(--shop-ink)"
+            className="glass glass-selected glass-indicator absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-full"
             style={{ transform: `translateX(${unit === "in" ? "0%" : "100%"})` }}
           />
           {(["in", "cm"] as const).map((u) => (
@@ -91,7 +92,7 @@ export function SizeGuide({
               className={cn(
                 "relative z-10 min-h-9 flex-1 cursor-pointer whitespace-nowrap rounded-full px-4 text-xs font-medium uppercase tracking-wider transition-colors duration-300",
                 unit === u
-                  ? "text-(--shop-canvas)"
+                  ? "font-semibold text-(--shop-ink)"
                   : "text-(--shop-mute) hover:text-(--shop-ink)"
               )}
             >
@@ -128,7 +129,10 @@ export function SizeGuide({
                     scope="row"
                     className="py-3 pr-4 text-left font-medium"
                   >
-                    {row.size}
+                    {/* Abbreviated to match the chips on the product page —
+                        the chart is only useful if the row you are looking up
+                        is labelled the way the button you pressed was. */}
+                    {shortSizeLabel("size", row.size)}
                   </th>
                   {measurements.map((key) => {
                     const value = (row.values[key] ?? "").trim();

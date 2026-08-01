@@ -159,7 +159,7 @@ export function CartDrawer() {
             <button
               type="button"
               onClick={closeDrawer}
-              className="glass glass-pill glass-press glass-ink min-h-12 cursor-pointer px-6 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
+              className="glass glass-pill glass-press glass-primary min-h-12 cursor-pointer px-6 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
             >
               Keep shopping
             </button>
@@ -191,26 +191,26 @@ export function CartDrawer() {
               </p>
 
               {/*
-                Both controls are the same material as the tab bar island —
-                `glass-on-light` rather than `glass-ink`. The dark pill was the
-                one painted surface in a shell built entirely out of glass, and
-                inside a panel that is itself glass it read as a slab dropped
-                onto the material rather than as part of it. `glass-on-light` is
-                the idiom here for a control sitting on an already-light surface:
-                it carries the rim and tint without stacking a second
-                backdrop-filter over the panel's own, which would cost a blur
-                pass to refract something already blurred.
+                Both controls are light glass — no dark pill inside a panel that
+                is itself glass, where a slab would read as dropped onto the
+                material rather than as part of it.
 
-                Hierarchy is carried by scale and weight instead of by colour —
-                the bag is a quieter, shorter pill; checkout is full height and
-                medium. Checkout sits second so the primary action is the one
-                nearest the thumb on a phone, where this drawer is a sheet.
+                Hierarchy is carried by elevation, scale and weight instead of by
+                colour: the bag is a quieter, shorter `glass-on-light` pill;
+                checkout is full height, medium, and the only one of the two that
+                lifts off the panel. Both labels stay full ink — the bag link was
+                previously set in `--shop-mute` to push it down the order, but
+                muted type on a control reads as *disabled*, and it was doing a
+                job that scale was already doing.
+
+                Checkout sits second so the primary action is the one nearest the
+                thumb on a phone, where this drawer is a sheet.
               */}
               {canCheckout && (
                 <Link
                   href="/cart"
                   onClick={closeDrawer}
-                  className="glass glass-pill glass-press glass-on-light mt-4 flex min-h-12 cursor-pointer items-center justify-center px-8 text-sm text-(--shop-mute) transition-colors hover:text-(--shop-ink) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
+                  className="glass glass-pill glass-press glass-on-light glass-quiet mt-4 flex min-h-12 cursor-pointer items-center justify-center px-8 text-sm text-(--shop-ink) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)"
                 >
                   View bag
                 </Link>
@@ -222,7 +222,7 @@ export function CartDrawer() {
                 href={canCheckout ? "/checkout" : "/cart"}
                 onClick={closeDrawer}
                 className={cn(
-                  "glass glass-pill glass-press glass-on-light flex min-h-14 cursor-pointer items-center justify-center px-8 text-base font-medium text-(--shop-ink) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)",
+                  "glass glass-pill glass-press glass-primary flex min-h-14 cursor-pointer items-center justify-center px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)",
                   // Tight against the bag pill when both are up; otherwise it
                   // carries the full gap under the shipping note on its own.
                   canCheckout ? "mt-2" : "mt-4"

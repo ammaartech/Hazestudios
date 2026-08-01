@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ShopProduct, ShopVariant } from "@/lib/shop/queries";
-import { sortOptionValues } from "@/lib/variants";
+import {
+  shortSizeLabel,
+  shortVariantTitle,
+  sortOptionValues,
+} from "@/lib/variants";
 import { cn } from "@/lib/utils";
 import { Price } from "./price";
 import { useCart } from "./cart-provider";
@@ -170,7 +174,9 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
             return (
               <div key={option.id}>
                 <h2 className="meta text-[var(--shop-mute)]">{option.name}</h2>
-                <p className="mt-2 text-sm">{option.values[0]}</p>
+                <p className="mt-2 text-sm">
+                  {shortSizeLabel(option.name, option.values[0])}
+                </p>
               </div>
             );
           }
@@ -181,7 +187,7 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
                 {option.name}
                 {selection[option.name] && (
                   <span className="ml-2 text-[var(--shop-ink)]">
-                    {selection[option.name]}
+                    {shortSizeLabel(option.name, selection[option.name])}
                   </span>
                 )}
               </legend>
@@ -201,18 +207,20 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
                         setSelection((prev) => ({ ...prev, [option.name]: value }))
                       }
                       className={cn(
-                        "glass-press min-h-12 min-w-14 cursor-pointer rounded-full px-5 text-sm font-medium",
+                        "glass-press min-h-12 min-w-14 cursor-pointer rounded-full px-5 text-sm",
                         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--shop-ink)",
+                        // Ring + weight for the chosen value, so the selection
+                        // survives greyscale as well as a glance.
                         active
-                          ? "glass glass-ink"
-                          : "glass glass-on-light text-(--shop-ink)",
+                          ? "glass glass-selected font-semibold"
+                          : "glass glass-on-light glass-quiet font-medium text-(--shop-charcoal) transition-colors hover:text-(--shop-ink)",
                         // Struck-through rather than merely faded, so the
                         // unavailable state doesn't rely on contrast alone.
                         !available &&
                           "cursor-not-allowed text-(--shop-stone) line-through opacity-60"
                       )}
                     >
-                      {value}
+                      {shortSizeLabel(option.name, value)}
                     </button>
                   );
                 })}
@@ -228,7 +236,7 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
           <span className="text-[var(--shop-mute)]">Sold out</span>
         ) : allChosen && selected && !selected.available ? (
           <span className="text-[var(--shop-mute)]">
-            {selected.title} is sold out
+            {shortVariantTitle(selected.title)} is sold out
           </span>
         ) : lowStock ? (
           <span className="text-[var(--shop-sale)]">
@@ -248,8 +256,10 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
           "glass glass-pill glass-press mt-4 min-h-14 w-full cursor-pointer px-8 text-base font-medium",
           "focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)",
           canAdd
-            ? "glass-ink"
-            : "cursor-not-allowed bg-(--shop-cloud) text-(--shop-stone)"
+            ? "glass-primary"
+            : // Flat and unlifted: with the live CTA now carried by elevation
+              // rather than by fill, the shadow is what has to go.
+              "cursor-not-allowed bg-(--shop-cloud) text-(--shop-stone) shadow-none"
         )}
       >
         {ctaLabel}
@@ -291,8 +301,8 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
               "glass glass-pill glass-press min-h-12 shrink-0 cursor-pointer px-6 text-sm font-medium",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--shop-ink)",
               canAdd
-                ? "glass-ink"
-                : "cursor-not-allowed bg-(--shop-cloud) text-(--shop-stone)"
+                ? "glass-primary"
+                : "cursor-not-allowed bg-(--shop-cloud) text-(--shop-stone) shadow-none"
             )}
           >
             {ctaLabel}

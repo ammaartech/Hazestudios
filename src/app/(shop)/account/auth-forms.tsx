@@ -52,7 +52,7 @@ function Submit({ children }: { children: React.ReactNode }) {
     <button
       type="submit"
       disabled={pending}
-      className="glass glass-ink glass-pill glass-press min-h-13 w-full cursor-pointer px-8 text-[15px] font-medium disabled:cursor-not-allowed disabled:opacity-60"
+      className="glass glass-primary glass-pill glass-press min-h-13 w-full cursor-pointer px-8 text-[15px] font-medium disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending ? "One moment…" : children}
     </button>
@@ -111,7 +111,7 @@ export function GoogleButton({ next = "/account" }: { next?: string }) {
         type="button"
         onClick={signInWithGoogle}
         disabled={busy}
-        className="glass glass-on-light glass-pill glass-press flex min-h-13 w-full cursor-pointer items-center justify-center gap-3 px-8 text-[15px] font-medium text-(--shop-ink) disabled:cursor-not-allowed disabled:opacity-60"
+        className="glass glass-on-light glass-quiet glass-pill glass-press flex min-h-13 w-full cursor-pointer items-center justify-center gap-3 px-8 text-[15px] font-medium text-(--shop-ink) disabled:cursor-not-allowed disabled:opacity-60"
       >
         <svg className="size-5" viewBox="0 0 24 24" aria-hidden>
           <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.7v3h3.9c2.3-2.1 3.5-5.2 3.5-8.9z" />
