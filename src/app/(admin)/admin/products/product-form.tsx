@@ -39,6 +39,7 @@ import {
   useProductStore,
   type ProductDraft,
 } from "./product-draft";
+import { useQikinkPaste } from "./use-qikink-paste";
 import { BasicsSection } from "./sections/basics";
 import { InventorySection } from "./sections/inventory";
 import { MediaSection } from "./sections/media";
@@ -96,6 +97,8 @@ function ProductFormInner({
   const isNew = !productId;
   const titleMissing = !header.title.trim();
   const uploading = isUploading(header.images);
+
+  useQikinkPaste(store, isNew);
 
   const blockedReason = titleMissing
     ? "Add a title before saving."

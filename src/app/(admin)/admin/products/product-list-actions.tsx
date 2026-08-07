@@ -14,11 +14,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ImportDialog } from "./import-dialog";
+import { PasteQikinkDialog } from "./paste-qikink-dialog";
 
 /** Header controls that sit left of "Add product": Export, Import, More actions. */
 export function ProductListActions({ currency = "INR" }: { currency?: string }) {
   const router = useRouter();
   const [importing, setImporting] = useState(false);
+  const [pasting, setPasting] = useState(false);
 
   return (
     <>
@@ -32,6 +34,9 @@ export function ProductListActions({ currency = "INR" }: { currency?: string }) 
       <Button variant="outline" size="sm" onClick={() => setImporting(true)}>
         Import
       </Button>
+      <Button variant="outline" size="sm" onClick={() => setPasting(true)}>
+        Paste from Qikink
+      </Button>
 
       <ImportDialog
         open={importing}
@@ -41,6 +46,7 @@ export function ProductListActions({ currency = "INR" }: { currency?: string }) 
         // refreshed now so it is already correct when the operator closes it.
         onImported={() => router.refresh()}
       />
+      <PasteQikinkDialog open={pasting} onOpenChange={setPasting} />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="gap-1.5">
