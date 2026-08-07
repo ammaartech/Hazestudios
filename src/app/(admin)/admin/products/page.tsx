@@ -3,6 +3,7 @@ import { Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/admin/page-header";
+import { Pagination } from "@/components/admin/pagination";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/format";
 import type { Product, ProductImage } from "@/lib/types";
@@ -10,7 +11,21 @@ import { ProductListActions } from "./product-list-actions";
 import { ProductsTable, type ProductListRow } from "./products-table";
 
 export const metadata = { title: "Products" };
-type ProductRow = Product & {
+
+const PAGE_SIZE = 50;
+
+/** One page of list rows — the table's columns plus what the flattening needs. */
+type ProductRow = Pick<
+  Product,
+  | "id"
+  | "title"
+  | "status"
+  | "category"
+  | "product_type"
+  | "vendor"
+  | "price"
+  | "track_inventory"
+> & {
   product_images: Pick<ProductImage, "url" | "position">[];
   inventory_levels: { quantity: number }[];
 };
@@ -18,15 +33,25 @@ type ProductRow = Product & {
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string }>;
 }) {
-  const { status, q } = await searchParams;
+  const { status, q, page: pageParam } = await searchParams;
   const supabase = await createClient();
 
+  const page = Math.max(0, parseInt(pageParam ?? "0", 10) || 0);
+
+  // The table used to page client-side over every row in the catalog, which
+  // still shipped the whole catalog on each visit (and PostgREST caps the
+  // response at 1,000 rows anyway). One `range` page + an exact count is both
+  // lighter and correct at any size.
   let query = supabase
     .from("products")
-    .select("*, product_images(url, position), inventory_levels(quantity)")
-    .order("created_at", { ascending: false });
+    .select(
+      "id, title, status, category, product_type, vendor, price, track_inventory, product_images(url, position), inventory_levels(quantity)",
+      { count: "exact" }
+    )
+    .order("created_at", { ascending: false })
+    .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
   if (status && ["active", "draft", "archived"].includes(status)) {
     query = query.eq("status", status);
@@ -35,11 +60,12 @@ export default async function ProductsPage({
     query = query.ilike("title", `%${q}%`);
   }
 
-  const [{ data }, { data: shop }] = await Promise.all([
+  const [{ data, count }, { data: shop }] = await Promise.all([
     query,
     supabase.from("shop_settings").select("currency").single(),
   ]);
   const products = (data ?? []) as ProductRow[];
+  const total = count ?? 0;
 
   // Flatten each row so the client table stays a pure renderer.
   const rows: ProductListRow[] = products.map((p) => ({
@@ -76,6 +102,7 @@ export default async function ProductsPage({
       <Card>
         <CardContent>
           <ProductsTable products={rows} status={status} />
+          <Pagination page={page} pageSize={PAGE_SIZE} total={total} />
         </CardContent>
       </Card>
     </div>

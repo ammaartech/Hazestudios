@@ -1,7 +1,18 @@
 import type { Customer, SegmentFilter } from "./types";
 
+/**
+ * The only fields a filter actually reads — same idea as `MatchableProduct` in
+ * smart-collections.ts. A full `Customer` still satisfies this, so callers with
+ * whole rows are unaffected, and the segments list can count matches without
+ * fetching every column of every customer.
+ */
+export type MatchableCustomer = Pick<
+  Customer,
+  "total_spent" | "orders_count" | "default_address" | "accepts_marketing" | "tags"
+>;
+
 export function customerMatchesFilters(
-  customer: Customer,
+  customer: MatchableCustomer,
   filters: SegmentFilter[]
 ) {
   if (!filters.length) return false;

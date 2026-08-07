@@ -1,16 +1,10 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsUpDown,
-  Columns3,
-  ImageIcon,
-} from "lucide-react";
+import { ChevronsUpDown, Columns3, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -56,7 +50,6 @@ export interface ProductListRow {
 const LOW_STOCK = 10;
 /** Sales channels every product publishes to here (Online Store + POS). */
 const CHANNELS = 2;
-const PAGE_SIZE = 50;
 
 type ColumnKey =
   | "status"
@@ -94,18 +87,9 @@ export function ProductsTable({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [page, setPage] = useState(0);
   // Price is available but hidden by default, matching the reference layout.
   const [visible, setVisible] = useState<Set<ColumnKey>>(
     new Set(["status", "inventory", "category", "channels", "type", "vendor"])
-  );
-
-  const pageCount = Math.max(1, Math.ceil(products.length / PAGE_SIZE));
-  const safePage = Math.min(page, pageCount - 1);
-  const start = safePage * PAGE_SIZE;
-  const paged = useMemo(
-    () => products.slice(start, start + PAGE_SIZE),
-    [products, start]
   );
 
   const allSelected = products.length > 0 && selected.size === products.length;
@@ -267,138 +251,111 @@ export function ProductsTable({
           </Link>
         </p>
       ) : (
-        <>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10 pl-1">
-                  <Checkbox
-                    checked={headerState}
-                    onCheckedChange={toggleAll}
-                    aria-label="Select all products"
-                  />
-                </TableHead>
-                <TableHead>Product</TableHead>
-                {visible.has("status") && <TableHead>Status</TableHead>}
-                {visible.has("inventory") && <TableHead>Inventory</TableHead>}
-                {visible.has("category") && <TableHead>Category</TableHead>}
-                {visible.has("channels") && <TableHead>Channels</TableHead>}
-                {visible.has("type") && <TableHead>Product type</TableHead>}
-                {visible.has("vendor") && <TableHead>Vendor</TableHead>}
-                {visible.has("price") && <TableHead className="text-right">Price</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paged.map((p) => {
-                const isSelected = selected.has(p.id);
-                return (
-                  <TableRow key={p.id} data-state={isSelected ? "selected" : undefined}>
-                    <TableCell className="pl-1">
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={() => toggleRow(p.id)}
-                        aria-label={`Select ${p.title}`}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
-                          {p.cover ? (
-                            <Image
-                              src={p.cover}
-                              alt={p.title}
-                              width={40}
-                              height={40}
-                              className="size-10 object-cover"
-                              quality={60}
-                            />
-                          ) : (
-                            <ImageIcon className="size-4 text-muted-foreground" />
-                          )}
-                        </span>
-                        {/* Opens the editor — the storefront link used to drop
-                            the operator out of the admin mid-task. */}
-                        <Link
-                          href={`/admin/products/${p.id}`}
-                          className="font-medium text-foreground transition-colors duration-150 hover:text-primary hover:underline"
-                        >
-                          {p.title}
-                        </Link>
-                      </div>
-                    </TableCell>
-                    {visible.has("status") && (
-                      <TableCell>
-                        <ProductStatusBadge status={p.status} />
-                      </TableCell>
-                    )}
-                    {visible.has("inventory") && (
-                      <TableCell className="tabular-nums">
-                        {p.track_inventory ? (
-                          <span className={cn(p.stock < LOW_STOCK && "text-destructive")}>
-                            {p.stock} in stock
-                          </span>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10 pl-1">
+                <Checkbox
+                  checked={headerState}
+                  onCheckedChange={toggleAll}
+                  aria-label="Select all products"
+                />
+              </TableHead>
+              <TableHead>Product</TableHead>
+              {visible.has("status") && <TableHead>Status</TableHead>}
+              {visible.has("inventory") && <TableHead>Inventory</TableHead>}
+              {visible.has("category") && <TableHead>Category</TableHead>}
+              {visible.has("channels") && <TableHead>Channels</TableHead>}
+              {visible.has("type") && <TableHead>Product type</TableHead>}
+              {visible.has("vendor") && <TableHead>Vendor</TableHead>}
+              {visible.has("price") && <TableHead className="text-right">Price</TableHead>}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {products.map((p) => {
+              const isSelected = selected.has(p.id);
+              return (
+                <TableRow key={p.id} data-state={isSelected ? "selected" : undefined}>
+                  <TableCell className="pl-1">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleRow(p.id)}
+                      aria-label={`Select ${p.title}`}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
+                        {p.cover ? (
+                          <Image
+                            src={p.cover}
+                            alt={p.title}
+                            width={40}
+                            height={40}
+                            className="size-10 object-cover"
+                            quality={60}
+                          />
                         ) : (
-                          <span className="text-muted-foreground">Inventory not tracked</span>
+                          <ImageIcon className="size-4 text-muted-foreground" />
                         )}
-                      </TableCell>
-                    )}
-                    {/* Blank rather than an em-dash for missing values. Most rows
-                        have no category or type, and a column of dashes draws the
-                        eye to the absence; the reference leaves them empty. */}
-                    {visible.has("category") && (
-                      <TableCell>{p.category}</TableCell>
-                    )}
-                    {visible.has("channels") && (
-                      <TableCell className="tabular-nums text-muted-foreground">
-                        {CHANNELS}
-                      </TableCell>
-                    )}
-                    {visible.has("type") && (
-                      <TableCell className="text-muted-foreground">
-                        {p.product_type}
-                      </TableCell>
-                    )}
-                    {visible.has("vendor") && (
-                      <TableCell className="text-muted-foreground">
-                        {p.vendor}
-                      </TableCell>
-                    )}
-                    {visible.has("price") && (
-                      <TableCell className="text-right tabular-nums">
-                        {formatMoney(p.price)}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-
-          {/* Footer pagination — the reference paginates in pages of 50. */}
-          <div className="flex items-center justify-center gap-2 border-t pt-3">
-            <Button
-              variant="outline"
-              size="icon-sm"
-              disabled={safePage === 0}
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              aria-label="Previous page"
-            >
-              <ChevronLeft className="size-4" />
-            </Button>
-            <span className="text-xs text-muted-foreground tabular-nums">
-              {start + 1}–{Math.min(products.length, start + PAGE_SIZE)}
-            </span>
-            <Button
-              variant="outline"
-              size="icon-sm"
-              disabled={safePage >= pageCount - 1}
-              onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
-              aria-label="Next page"
-            >
-              <ChevronRight className="size-4" />
-            </Button>
-          </div>
-        </>
+                      </span>
+                      {/* Opens the editor — the storefront link used to drop
+                          the operator out of the admin mid-task. */}
+                      <Link
+                        href={`/admin/products/${p.id}`}
+                        className="font-medium text-foreground transition-colors duration-150 hover:text-primary hover:underline"
+                      >
+                        {p.title}
+                      </Link>
+                    </div>
+                  </TableCell>
+                  {visible.has("status") && (
+                    <TableCell>
+                      <ProductStatusBadge status={p.status} />
+                    </TableCell>
+                  )}
+                  {visible.has("inventory") && (
+                    <TableCell className="tabular-nums">
+                      {p.track_inventory ? (
+                        <span className={cn(p.stock < LOW_STOCK && "text-destructive")}>
+                          {p.stock} in stock
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Inventory not tracked</span>
+                      )}
+                    </TableCell>
+                  )}
+                  {/* Blank rather than an em-dash for missing values. Most rows
+                      have no category or type, and a column of dashes draws the
+                      eye to the absence; the reference leaves them empty. */}
+                  {visible.has("category") && (
+                    <TableCell>{p.category}</TableCell>
+                  )}
+                  {visible.has("channels") && (
+                    <TableCell className="tabular-nums text-muted-foreground">
+                      {CHANNELS}
+                    </TableCell>
+                  )}
+                  {visible.has("type") && (
+                    <TableCell className="text-muted-foreground">
+                      {p.product_type}
+                    </TableCell>
+                  )}
+                  {visible.has("vendor") && (
+                    <TableCell className="text-muted-foreground">
+                      {p.vendor}
+                    </TableCell>
+                  )}
+                  {visible.has("price") && (
+                    <TableCell className="text-right tabular-nums">
+                      {formatMoney(p.price)}
+                    </TableCell>
+                  )}
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       )}
     </div>
   );

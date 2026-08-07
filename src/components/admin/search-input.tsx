@@ -21,6 +21,9 @@ export function SearchInput({
     const params = new URLSearchParams(searchParams.toString());
     if (value) params.set("q", value);
     else params.delete("q");
+    // A new search is a new result set — carrying `page=3` over would open it
+    // mid-list (or past its end).
+    params.delete("page");
     router.push(`${pathname}?${params.toString()}`);
   }
 

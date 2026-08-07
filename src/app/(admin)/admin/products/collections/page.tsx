@@ -3,8 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/admin/page-header";
 import { createClient } from "@/lib/supabase/server";
-import { productMatchesRules } from "@/lib/smart-collections";
-import type { Collection, CollectionRule, Product } from "@/lib/types";
+import {
+  productMatchesRules,
+  type MatchableProduct,
+} from "@/lib/smart-collections";
+import type { Collection, CollectionRule } from "@/lib/types";
 import { CollectionsTable, type CollectionListRow } from "./collections-table";
 
 export const metadata = { title: "Collections" };
@@ -49,13 +52,13 @@ export default async function CollectionsPage({
     await Promise.all([
       query,
       supabase.from("product_collections").select("collection_id"),
-      // Smart collections are counted by evaluating their rules, which needs the
-      // whole product row — the same evaluation the storefront runs.
-      supabase.from("products").select("*"),
+      // Smart collections are counted by evaluating their rules — which read
+      // exactly these five fields, so nothing more crosses the wire.
+      supabase.from("products").select("title, vendor, product_type, tags, price"),
     ]);
 
   const collections = (collectionsData ?? []) as Collection[];
-  const products = (productsData ?? []) as Product[];
+  const products = (productsData ?? []) as MatchableProduct[];
 
   const manualCounts = new Map<string, number>();
   for (const row of countsData ?? []) {

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/admin/page-header";
 import { FilterTabs } from "@/components/admin/filter-tabs";
+import { Pagination } from "@/components/admin/pagination";
 import { SearchInput } from "@/components/admin/search-input";
 import { PaymentBadge, FulfillmentBadge } from "@/components/admin/status-badges";
 import { createClient } from "@/lib/supabase/server";
@@ -18,7 +19,20 @@ import { formatDateTime, formatMoney } from "@/lib/format";
 import type { Customer, Order } from "@/lib/types";
 
 export const metadata = { title: "Orders" };
-type OrderRow = Order & {
+
+const PAGE_SIZE = 50;
+
+/** Only what the list renders — the full row (addresses, notes, …) stays home. */
+type OrderRow = Pick<
+  Order,
+  | "id"
+  | "order_number"
+  | "created_at"
+  | "total"
+  | "currency"
+  | "payment_status"
+  | "fulfillment_status"
+> & {
   customers: Pick<Customer, "first_name" | "last_name" | "email"> | null;
   order_items: { quantity: number }[];
 };
@@ -26,16 +40,24 @@ type OrderRow = Order & {
 export default async function OrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; q?: string }>;
+  searchParams: Promise<{ tab?: string; q?: string; page?: string }>;
 }) {
-  const { tab, q } = await searchParams;
+  const { tab, q, page: pageParam } = await searchParams;
   const supabase = await createClient();
 
+  const page = Math.max(0, parseInt(pageParam ?? "0", 10) || 0);
+
+  // Bounded like customers: `range` keeps the payload at one page and `count`
+  // keeps the pager honest past PostgREST's 1,000-row response ceiling.
   let query = supabase
     .from("orders")
-    .select("*, customers(first_name, last_name, email), order_items(quantity)")
+    .select(
+      "id, order_number, created_at, total, currency, payment_status, fulfillment_status, customers(first_name, last_name, email), order_items(quantity)",
+      { count: "exact" }
+    )
     .eq("is_draft", false)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
   if (tab === "unfulfilled") query = query.eq("fulfillment_status", "unfulfilled");
   if (tab === "unpaid") query = query.eq("payment_status", "pending");
@@ -43,8 +65,11 @@ export default async function OrdersPage({
   if (tab === "closed") query = query.not("closed_at", "is", null);
   if (q && /^\d+$/.test(q)) query = query.eq("order_number", parseInt(q));
 
-  const { data } = await query;
-  const orders = (data ?? []) as OrderRow[];
+  const { data, count } = await query;
+  // Via unknown: without generated DB types the client guesses the to-one
+  // `customers` join is an array; at runtime PostgREST returns object-or-null.
+  const orders = (data ?? []) as unknown as OrderRow[];
+  const total = count ?? 0;
 
   return (
     <div>
@@ -135,6 +160,8 @@ export default async function OrdersPage({
               </TableBody>
             </Table>
           )}
+
+          <Pagination page={page} pageSize={PAGE_SIZE} total={total} />
         </CardContent>
       </Card>
     </div>

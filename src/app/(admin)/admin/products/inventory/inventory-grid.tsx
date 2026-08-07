@@ -30,7 +30,8 @@ export function InventoryGrid({
   locations,
 }: {
   rows: InventoryRow[];
-  locations: Location[];
+  /** Only what the grid renders — column headers and per-location cells. */
+  locations: Pick<Location, "id" | "name">[];
 }) {
   const [data, setData] = useState(rows);
   const [, startTransition] = useTransition();

@@ -9,8 +9,11 @@ import {
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/admin/page-header";
 import { createClient } from "@/lib/supabase/server";
-import { customerMatchesFilters } from "@/lib/segments";
-import type { Customer, Segment } from "@/lib/types";
+import {
+  customerMatchesFilters,
+  type MatchableCustomer,
+} from "@/lib/segments";
+import type { Segment } from "@/lib/types";
 import { SegmentBuilder } from "./segment-builder";
 import { SegmentDelete } from "./segment-delete";
 
@@ -19,11 +22,14 @@ export default async function SegmentsPage() {
   const supabase = await createClient();
   const [{ data: segmentsData }, { data: customersData }] = await Promise.all([
     supabase.from("segments").select("*").order("created_at"),
-    supabase.from("customers").select("*"),
+    // Counting matches only needs the fields the filters read, not full rows.
+    supabase
+      .from("customers")
+      .select("total_spent, orders_count, default_address, accepts_marketing, tags"),
   ]);
 
   const segments = (segmentsData ?? []) as Segment[];
-  const customers = (customersData ?? []) as Customer[];
+  const customers = (customersData ?? []) as MatchableCustomer[];
 
   return (
     <div>

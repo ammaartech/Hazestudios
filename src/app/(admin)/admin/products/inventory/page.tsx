@@ -10,6 +10,16 @@ import type {
 import { InventoryGrid, type InventoryRow } from "./inventory-grid";
 
 export const metadata = { title: "Inventory" };
+
+// The grid joins these in memory, so each query names just the fields the rows
+// are built from — full product rows (descriptions, SEO, …) never leave the DB.
+type ProductRow = Pick<Product, "id" | "title" | "sku" | "has_variants">;
+type VariantRow = Pick<ProductVariant, "id" | "product_id" | "title" | "sku">;
+type LevelRow = Pick<
+  InventoryLevel,
+  "product_id" | "variant_id" | "location_id" | "quantity"
+>;
+
 export default async function InventoryPage() {
   const supabase = await createClient();
   const [
@@ -20,19 +30,24 @@ export default async function InventoryPage() {
   ] = await Promise.all([
     supabase
       .from("products")
-      .select("*")
+      .select("id, title, sku, has_variants")
       .eq("track_inventory", true)
       .neq("status", "archived")
       .order("title"),
-    supabase.from("product_variants").select("*").order("position"),
-    supabase.from("inventory_levels").select("*"),
-    supabase.from("locations").select("*").order("created_at"),
+    supabase
+      .from("product_variants")
+      .select("id, product_id, title, sku")
+      .order("position"),
+    supabase
+      .from("inventory_levels")
+      .select("product_id, variant_id, location_id, quantity"),
+    supabase.from("locations").select("id, name").order("created_at"),
   ]);
 
-  const products = (productsData ?? []) as Product[];
-  const variants = (variantsData ?? []) as ProductVariant[];
-  const levels = (levelsData ?? []) as InventoryLevel[];
-  const locations = (locationsData ?? []) as Location[];
+  const products = (productsData ?? []) as ProductRow[];
+  const variants = (variantsData ?? []) as VariantRow[];
+  const levels = (levelsData ?? []) as LevelRow[];
+  const locations = (locationsData ?? []) as Pick<Location, "id" | "name">[];
 
   const rows: InventoryRow[] = [];
   for (const p of products) {
