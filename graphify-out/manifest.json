@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.impeccable\\hook.cache.json": {
-    "mtime": 1786114762.7953708,
-    "ast_hash": "8d872cf1a4b73d6470edbda6e964aefd",
+    "mtime": 1786115986.0879796,
+    "ast_hash": "6687de84030c1b24cb260b176f924994",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\db-config.mjs": {
@@ -2260,13 +2260,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\haze-studios-sections.tsx": {
-    "mtime": 1785394069.3693013,
-    "ast_hash": "311b84d1bd77aa364dfc5751fda697db",
+    "mtime": 1786115975.4899654,
+    "ast_hash": "46da0feabdee2ee6ee6fd418027ad595",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\home-sections.tsx": {
-    "mtime": 1785417610.0044923,
-    "ast_hash": "231bb46af4b414bcb7817a49ea544f33",
+    "mtime": 1786115966.7735298,
+    "ast_hash": "509c2bb2b1c899ac49a945bcf5fbd96c",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\newsletter-form.tsx": {
@@ -2285,8 +2285,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\rail-card.tsx": {
-    "mtime": 1785394002.437705,
-    "ast_hash": "49e1f4f34e2889077e097c22275f25d7",
+    "mtime": 1786115985.8533287,
+    "ast_hash": "3ec62e5f27da59b4ea98fb5dea689003",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\scramble-text.tsx": {
@@ -2295,8 +2295,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\shoppable-reel.tsx": {
-    "mtime": 1785304744.5228028,
-    "ast_hash": "3fb50b441d1f62b533ed4a8d217e047e",
+    "mtime": 1786115984.801421,
+    "ast_hash": "d3abb2a2272c585506a35df6be919d41",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\tab-carousel.tsx": {

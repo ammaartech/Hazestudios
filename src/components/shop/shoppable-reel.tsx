@@ -79,6 +79,10 @@ export function ShoppableReel({ items }: { items: ReelItem[] }) {
                     fill
                     sizes="(max-width: 640px) 52vw, (max-width: 768px) 30vw, 16vw"
                     className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
+                    // A reel file in /public is pre-compressed and passes
+                    // through the loader as-is; the product-image fallback is a
+                    // CDN URL the loader does resize.
+                    unoptimized={item.media.startsWith("/")}
                   />
                 )}
 
@@ -91,6 +95,7 @@ export function ShoppableReel({ items }: { items: ReelItem[] }) {
                       width={96}
                       height={96}
                       className="size-full object-cover"
+                      unoptimized={item.thumb.startsWith("/")}
                     />
                   </span>
                 )}

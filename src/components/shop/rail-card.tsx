@@ -49,7 +49,7 @@ export function RailCard({
           href={href}
           tabIndex={-1}
           aria-hidden
-          className="group/media block size-full"
+          className="group/media relative block size-full"
         >
           {primary ? (
             <>

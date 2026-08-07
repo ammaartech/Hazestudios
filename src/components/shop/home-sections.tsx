@@ -220,6 +220,9 @@ export function ShopTheLook() {
               height={1430}
               loading={i < 2 ? "eager" : "lazy"}
               sizes="(max-width: 640px) 74vw, (max-width: 768px) 42vw, 25vw"
+              // Brand art in /public ships pre-compressed at delivery size —
+              // the loader passes it through, so there is no srcset to build.
+              unoptimized
               className="aspect-[7/10] w-full object-cover"
             />
             <Link
@@ -328,6 +331,7 @@ export function EditorialBanner() {
           width={2000}
           height={800}
           sizes="100vw"
+          unoptimized
           className="aspect-[2/1] w-full object-cover md:aspect-[2.5/1]"
           {...revealProps("media")}
         />

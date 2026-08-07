@@ -38,6 +38,9 @@ export function Lookbook() {
               height={1800}
               loading={i < 2 ? "eager" : "lazy"}
               sizes="(max-width: 768px) 50vw, 25vw"
+              // Brand art in /public ships pre-compressed at delivery size —
+              // the loader passes it through, so there is no srcset to build.
+              unoptimized
               className="aspect-[3/5] w-full object-cover"
             />
             <Link
@@ -96,6 +99,7 @@ export function Arrivals({ tags }: { tags: ArrivalTag[] }) {
               width={1600}
               height={2000}
               sizes="(max-width: 768px) 100vw, 50vw"
+              unoptimized
               className="h-[400px] w-full object-cover md:h-[800px]"
             />
 
@@ -157,6 +161,7 @@ export function Tiles() {
               alt={tile.alt}
               fill
               sizes="(max-width: 768px) 86vw, 33vw"
+              unoptimized
               className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
             />
             <div className="absolute inset-0 bg-black/35" aria-hidden />
