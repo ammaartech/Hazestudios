@@ -95,6 +95,7 @@ export async function placeOrder(
     ["last_name", "Enter a last name."],
     ["address1", "Enter a street address."],
     ["city", "Enter a city."],
+    ["postal_code", "Enter a postal code."],
     ["country", "Choose a country."],
   ];
   for (const [field, message] of required) {

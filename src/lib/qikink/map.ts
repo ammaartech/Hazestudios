@@ -51,7 +51,7 @@ function buildAddress(order: Order): { address: QikinkAddress; problems: string[
     ["first_name", a.first_name, "first name"],
     ["address1", a.address1, "street address"],
     ["city", a.city, "city"],
-    ["zip", a.zip, "postcode"],
+    ["zip", a.postal_code, "postcode"],
     ["province", a.province, "state/province"],
     ["country_code", a.country, "country"],
   ];
@@ -76,7 +76,7 @@ function buildAddress(order: Order): { address: QikinkAddress; problems: string[
       phone: order.phone ?? "",
       email: order.email ?? "",
       city: a.city ?? "",
-      zip: a.zip ?? "",
+      zip: a.postal_code ?? "",
       // Qikink matches on a correctly spelled state *name*, not a code. Passed
       // through as entered; a mismatch is rejected by them, not caught here.
       province: a.province ?? "",

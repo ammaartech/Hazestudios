@@ -217,7 +217,9 @@ export function CheckoutForm({
               label="Postal code"
               name="postal_code"
               autoComplete="postal-code"
+              required
               defaultValue={prefill.address.postal_code}
+              invalid={state.field === "postal_code"}
             />
           </div>
 
