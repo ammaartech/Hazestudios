@@ -141,6 +141,98 @@ export function Section({
 }
 
 /**
+ * A group of mutually exclusive options, rendered as cards.
+ *
+ * A real `fieldset`/`legend` wrapping real radios, so the group announces as one
+ * question and arrow keys move within it. Nothing here re-implements that: the
+ * native control already skips disabled options and wraps at the ends, and
+ * every hand-rolled version of this behaviour gets one of those wrong.
+ *
+ * Unavailable options render disabled with the reason visible rather than being
+ * dropped from the list. Hiding a method a store intends to offer tells the
+ * shopper it will never exist; greying it out tells them to come back.
+ */
+export function RadioField({
+  label,
+  name,
+  options,
+  defaultValue,
+}: {
+  label: string;
+  name: string;
+  options: readonly {
+    value: string;
+    label: string;
+    description?: string;
+    available?: boolean;
+    unavailableReason?: string | null;
+  }[];
+  defaultValue?: string;
+}) {
+  return (
+    // `id` and a negative tabIndex so the form's error effect can find and focus
+    // this the same way it focuses a text input — it looks the field up by
+    // getElementById(name), and a group whose controls each carry the same name
+    // has nowhere else to put it. Not in the tab order; the radios still are.
+    <fieldset id={name} tabIndex={-1} className="block outline-none">
+      <legend className="meta text-(--shop-mute)">{label}</legend>
+
+      <div className="mt-2 flex flex-col gap-3">
+        {options.map((option) => {
+          const disabled = option.available === false;
+
+          return (
+            <label
+              key={option.value}
+              className={cn(
+                "glass glass-on-light flex items-start gap-3 rounded-2xl px-5 py-4 transition-shadow duration-300",
+                // The ring follows the input's state rather than React's, so the
+                // card is styled by the same event that moves the radio — no
+                // client state, and no frame where the two disagree.
+                "has-checked:outline-2 has-checked:outline-offset-2 has-checked:outline-(--shop-ink)",
+                "has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-(--shop-ink)",
+                disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer"
+              )}
+            >
+              <input
+                type="radio"
+                name={name}
+                value={option.value}
+                defaultChecked={option.value === defaultValue}
+                disabled={disabled}
+                className={cn(
+                  "mt-0.5 size-5 shrink-0 accent-(--shop-ink)",
+                  // The card owns the focus ring; a second one on the control
+                  // inside it reads as two focused things.
+                  "outline-none",
+                  disabled ? "cursor-not-allowed" : "cursor-pointer"
+                )}
+              />
+
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-(--shop-ink)">
+                  {option.label}
+                  {disabled && option.unavailableReason && (
+                    <span className="meta rounded-full bg-(--shop-ink)/8 px-2 py-0.5 text-[10px] text-(--shop-mute)">
+                      {option.unavailableReason}
+                    </span>
+                  )}
+                </span>
+                {option.description && (
+                  <span className="mt-0.5 block text-xs text-(--shop-mute)">
+                    {option.description}
+                  </span>
+                )}
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
+/**
  * A checkbox with its label. Bigger hit area than the native control gives, and
  * the whole row is the target — a 13px tick box is not a touch target.
  */

@@ -11,9 +11,10 @@ import { quoteTotals } from "@/lib/shop/checkout-totals";
 import type { CheckoutPrefill, CheckoutSettings } from "@/lib/shop/checkout-totals";
 import type { Cart } from "@/lib/shop/cart";
 import type { Country } from "@/lib/shop/countries";
+import type { PaymentMethodOption } from "@/lib/shop/payment-methods";
 import { placeOrder, quoteDiscount } from "./actions";
 import type { CheckoutState, DiscountQuote } from "./actions";
-import { CheckboxField, Field, Section, SelectField } from "./fields";
+import { CheckboxField, Field, RadioField, Section, SelectField } from "./fields";
 import { OrderSummary } from "./order-summary";
 
 /**
@@ -35,11 +36,15 @@ export function CheckoutForm({
   settings,
   prefill,
   countries,
+  paymentMethods,
+  defaultPaymentMethod,
 }: {
   cart: Cart;
   settings: CheckoutSettings;
   prefill: CheckoutPrefill;
   countries: Country[];
+  paymentMethods: PaymentMethodOption[];
+  defaultPaymentMethod: string;
 }) {
   const [state, formAction, submitting] = useActionState<CheckoutState, FormData>(
     placeOrder,
@@ -245,24 +250,23 @@ export function CheckoutForm({
           />
         </Section>
 
-        <Section
-          title="Payment"
-          description="All transactions are secure and encrypted."
-        >
-          {/* No gateway is connected yet. Saying so is the only defensible
-              option: a checkout that implies a card was charged and then
-              silently creates a pending order is the worst possible version of
-              this screen. The order is real, and the store follows up. */}
-          <div className="glass glass-on-light rounded-2xl px-5 py-4">
-            <p className="flex items-center gap-2 text-sm font-medium">
-              <Lock className="size-4" strokeWidth={2} aria-hidden />
-              Pay on confirmation
-            </p>
-            <p className="mt-1.5 text-sm text-(--shop-mute)">
-              We&apos;ll email you a payment link once your order is confirmed and
-              reserved. Nothing is charged now.
-            </p>
-          </div>
+        <Section title="Payment">
+          {/* Still no gateway, and the screen says so rather than implying a
+              charge that never happens. What changed is that the shopper now
+              states how they intend to pay, because the answer routes the
+              order: only COD is auto-sent to the printer, and map.ts reports
+              the order as COD or Prepaid on the strength of it. */}
+          <RadioField
+            label="How would you like to pay?"
+            name="payment_method"
+            options={paymentMethods}
+            defaultValue={defaultPaymentMethod}
+          />
+
+          <p className="flex items-center gap-2 text-xs text-(--shop-mute)">
+            <Lock className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+            Your details are sent over an encrypted connection.
+          </p>
 
           <CheckboxField
             name="billing_same"

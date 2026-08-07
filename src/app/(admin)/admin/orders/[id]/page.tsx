@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/admin/page-header";
 import { PaymentBadge, FulfillmentBadge } from "@/components/admin/status-badges";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime, formatMoney } from "@/lib/format";
+import { paymentMethodLabel } from "@/lib/shop/payment-methods";
 import type {
   Customer,
   Fulfillment,
@@ -115,6 +116,14 @@ export default async function OrderDetailPage({
           <>
             <PaymentBadge status={order.payment_status} />
             <FulfillmentBadge status={order.fulfillment_status} />
+            {/* How the shopper chose to pay, which is not the same question as
+                whether they have. Absent on everything placed before the
+                checkout offered a choice. */}
+            {paymentMethodLabel(order.payment_method) && (
+              <Badge variant="outline">
+                {paymentMethodLabel(order.payment_method)}
+              </Badge>
+            )}
           </>
         )}
         <span className="text-sm text-muted-foreground">

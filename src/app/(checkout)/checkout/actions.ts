@@ -5,6 +5,7 @@ import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { clearCartCookie, readCartToken } from "@/lib/shop/cart";
+import { isPayableMethod } from "@/lib/shop/payment-methods";
 import { formatMoney } from "@/lib/format";
 import type { Discount } from "@/lib/types";
 
@@ -123,6 +124,17 @@ export async function placeOrder(
     return { error: "Enter a complete billing address.", field: "billing_address1" };
   }
 
+  // A disabled radio stops a browser, not a request. `isPayableMethod` checks
+  // the method is one the store can actually collect through today, which is a
+  // stricter question than the one place_order() asks: the function accepts any
+  // well-formed method, because an order awaiting payment is a legitimate row.
+  // What must not happen is this action minting one before there is a gateway
+  // to settle it.
+  const paymentMethod = text(form, "payment_method", 16);
+  if (!isPayableMethod(paymentMethod)) {
+    return { error: "Choose a payment method.", field: "payment_method" };
+  }
+
   const cartToken = await readCartToken();
   if (!cartToken) {
     return { error: "Your bag is empty.", field: null };
@@ -144,6 +156,7 @@ export async function placeOrder(
       last_name: address.last_name,
       shipping_address: address,
       billing_address: billing,
+      payment_method: paymentMethod,
       discount_code: text(form, "discount_code", 64),
       marketing_opt_in: form.get("marketing_opt_in") === "on",
       note: text(form, "note", 500),
@@ -190,7 +203,15 @@ export async function placeOrder(
   // failed push is already recorded on qikink_fulfillments for the operator to
   // retry from the order page. `after` runs it once the redirect is on its way,
   // so nobody waits on two HTTP calls to another provider.
-  if (result.order_id) {
+  //
+  // COD only, and this is the part that has to stay true as payment methods are
+  // added. map.ts reports an order to Qikink as Prepaid or COD purely on
+  // `payment_status === 'paid'`, and a prepaid order is pending at this point —
+  // so auto-sending one would put goods into production, billed to the customer
+  // on delivery, for money the store is separately about to ask for. A prepaid
+  // order waits for its payment; until there is a gateway to settle it, the
+  // operator sends it by hand from the order page.
+  if (result.order_id && paymentMethod === "cod") {
     const orderId = result.order_id;
     after(async () => {
       try {

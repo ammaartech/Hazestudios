@@ -3,6 +3,10 @@ import { redirect } from "next/navigation";
 import { getCart } from "@/lib/shop/cart";
 import { getCheckoutPrefill, getCheckoutSettings } from "@/lib/shop/checkout";
 import { getCountries } from "@/lib/shop/countries";
+import {
+  DEFAULT_PAYMENT_METHOD,
+  PAYMENT_METHODS,
+} from "@/lib/shop/payment-methods";
 import { CheckoutForm } from "./checkout-form";
 
 export const metadata: Metadata = {
@@ -45,6 +49,12 @@ export default async function CheckoutPage() {
       settings={settings}
       prefill={prefill}
       countries={getCountries()}
+      // Passed rather than imported by the form, like `countries` beside it.
+      // Which methods a store offers is a property of the store, and the day it
+      // comes from the database instead of a constant, this line is the only
+      // thing that changes.
+      paymentMethods={[...PAYMENT_METHODS]}
+      defaultPaymentMethod={DEFAULT_PAYMENT_METHOD}
     />
   );
 }

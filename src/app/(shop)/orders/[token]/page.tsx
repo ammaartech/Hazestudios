@@ -66,9 +66,9 @@ export default async function OrderConfirmationPage({
             .
           </h1>
           <p className="mt-3 max-w-prose text-(--shop-mute)">
-            Your order is confirmed and reserved. We&apos;ve sent the details to{" "}
-            <span className="text-(--shop-ink)">{order.email}</span>, along with a
-            payment link — nothing has been charged yet.
+            Your order is confirmed and reserved, under{" "}
+            <span className="text-(--shop-ink)">{order.email}</span>.{" "}
+            {paymentNote(order.payment_method, order.payment_status)}
           </p>
         </div>
       </header>
@@ -195,6 +195,32 @@ export default async function OrderConfirmationPage({
       </p>
     </div>
   );
+}
+
+/**
+ * What happens next about the money.
+ *
+ * This page is the status page as well as the confirmation, so it is read again
+ * weeks later — the sentence has to stay true, not just be true at the moment
+ * of purchase. It previously promised an emailed payment link, which no code in
+ * this repo has ever sent.
+ *
+ * `payment_status` is checked before the method because an order paid by any
+ * route is finished, and the operator can mark one paid by hand.
+ */
+function paymentNote(method: string, status: string): string {
+  if (status === "paid") return "It's paid in full — nothing more to do.";
+  if (status === "refunded") return "This order has been refunded.";
+
+  if (method === "cod") {
+    return "Pay the courier when it arrives — nothing has been charged now.";
+  }
+  if (method === "upi") {
+    return "We'll be in touch with payment details shortly. Nothing has been charged yet.";
+  }
+  // 'manual', and anything imported. Deliberately vague: the store knows how
+  // these were arranged and this page does not.
+  return "Nothing has been charged yet.";
 }
 
 function Row({ label, value }: { label: string; value: string }) {
