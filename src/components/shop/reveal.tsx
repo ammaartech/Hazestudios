@@ -43,6 +43,10 @@ const MAX_STAGGER_INDEX = 7;
 export function revealProps(variant: RevealVariant = "rise", index = 0) {
   return {
     "data-reveal": variant,
+    // The observer stamps `data-reveal-in` on above-the-fold elements before
+    // React finishes hydrating streamed segments; the attribute is ours, not a
+    // mismatch worth warning about.
+    suppressHydrationWarning: true,
     style: {
       "--reveal-index": Math.min(Math.max(Math.trunc(index), 0), MAX_STAGGER_INDEX),
     } as CSSProperties,
