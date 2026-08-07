@@ -26,12 +26,15 @@ export function SearchInput({
 
   return (
     <div className={cn("relative w-full max-w-xs", className)}>
-      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
       <Input
         defaultValue={searchParams.get("q") ?? ""}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="h-9 pl-9"
+        // h-7 to match the `size="sm"` buttons this sits between in every admin
+        // filter bar; it was h-9, which left the input 8px taller than its
+        // neighbours and read as a misalignment rather than a hierarchy.
+        className="h-7 pl-8 glass-control"
         onKeyDown={(e) => {
           if (e.key === "Enter") submit((e.target as HTMLInputElement).value.trim());
         }}

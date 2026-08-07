@@ -71,7 +71,11 @@ export function SaveBar({
           : "pointer-events-none -translate-y-3 opacity-0"
       )}
     >
-      <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-sidebar py-2 pr-2 pl-4 text-white shadow-[0_10px_30px_-12px_rgba(0,0,0,0.45)] ring-1 ring-black/5">
+      {/* Deliberately dark, even though the chrome around it is now light: this
+          is a transient interrupt floating over the page, and the contrast is
+          what makes unsaved work impossible to walk away from. Pinned to an
+          explicit ink rather than `bg-sidebar`, which is a light surface now. */}
+      <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#1f1f21] py-2 pr-2 pl-4 text-white shadow-[0_10px_30px_-12px_rgba(0,0,0,0.45)] ring-1 ring-black/5">
         {/* Amber dot: a calm, unmissable "pending" cue that carries the meaning
             even before the text is read. */}
         <span
@@ -104,7 +108,9 @@ export function SaveBar({
           title={disabled ? disabledReason : undefined}
           // Primary lives on a near-black surface, so it goes white-on-dark to
           // stay unmistakably the primary action instead of vanishing into it.
-          className="bg-white text-sidebar shadow-sm hover:bg-white/90"
+          // The label is pinned to ink: `text-sidebar` is a light token now and
+          // would have left white-on-white here.
+          className="bg-white text-[#1f1f21] shadow-sm hover:bg-white/90"
         >
           {saving && <Loader2 className="size-3.5 animate-spin" />}
           {saving ? "Saving…" : saveLabel}

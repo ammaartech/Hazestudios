@@ -9,9 +9,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        // `glass-*` classes are no-ops outside `.admin` (see globals.css), so the
+        // storefront and any non-admin surface keep the flat variants unchanged.
+        // They add material only — never geometry — so button sizing is identical
+        // in both scopes.
+        default:
+          "bg-primary text-primary-foreground hover:bg-primary/80 glass-primary-action",
         outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 in-[.admin]:border-transparent in-[.admin]:hover:bg-transparent glass-control",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:

@@ -148,7 +148,7 @@ export function ProductsTable({
     <div>
       {/* Control row — becomes a selection toolbar once rows are picked. */}
       {selected.size > 0 ? (
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/40 px-3 py-2">
+        <div className="glass-floating mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg px-3 py-2">
           <div className="flex items-center gap-2 text-sm font-medium">
             <Checkbox
               checked={headerState}
@@ -342,8 +342,11 @@ export function ProductsTable({
                         )}
                       </TableCell>
                     )}
+                    {/* Blank rather than an em-dash for missing values. Most rows
+                        have no category or type, and a column of dashes draws the
+                        eye to the absence; the reference leaves them empty. */}
                     {visible.has("category") && (
-                      <TableCell>{p.category || "—"}</TableCell>
+                      <TableCell>{p.category}</TableCell>
                     )}
                     {visible.has("channels") && (
                       <TableCell className="tabular-nums text-muted-foreground">
@@ -352,12 +355,12 @@ export function ProductsTable({
                     )}
                     {visible.has("type") && (
                       <TableCell className="text-muted-foreground">
-                        {p.product_type || "—"}
+                        {p.product_type}
                       </TableCell>
                     )}
                     {visible.has("vendor") && (
                       <TableCell className="text-muted-foreground">
-                        {p.vendor || "—"}
+                        {p.vendor}
                       </TableCell>
                     )}
                     {visible.has("price") && (

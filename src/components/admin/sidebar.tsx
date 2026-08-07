@@ -29,10 +29,10 @@ function NavEntry({ item, pathname }: { item: NavItem; pathname: string }) {
         className={cn(
           "group/nav flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] transition-colors duration-150",
           parentExact
-            ? "bg-white/[0.07] font-medium text-white"
+            ? "bg-sidebar-selected font-medium text-sidebar-accent-foreground"
             : sectionOn
-              ? "text-white hover:bg-white/[0.05]"
-              : "text-sidebar-foreground hover:bg-white/[0.05] hover:text-white"
+              ? "text-sidebar-accent-foreground hover:bg-sidebar-hover"
+              : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
         )}
       >
         <Icon
@@ -40,7 +40,7 @@ function NavEntry({ item, pathname }: { item: NavItem; pathname: string }) {
             "size-4 shrink-0 transition-colors duration-150",
             sectionOn
               ? "text-sidebar-primary"
-              : "text-sidebar-foreground group-hover/nav:text-white"
+              : "text-sidebar-foreground group-hover/nav:text-sidebar-accent-foreground"
           )}
           strokeWidth={2}
         />
@@ -59,8 +59,8 @@ function NavEntry({ item, pathname }: { item: NavItem; pathname: string }) {
                 className={cn(
                   "flex items-center gap-2 rounded-lg py-1.5 pl-9 pr-2.5 text-[13px] transition-colors duration-150",
                   childOn
-                    ? "font-medium text-white"
-                    : "text-sidebar-foreground hover:bg-white/[0.04] hover:text-white"
+                    ? "font-medium text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
                 )}
               >
                 <span
@@ -113,8 +113,8 @@ export function SidebarNav({ pathname }: { pathname: string }) {
           className={cn(
             "group/nav flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] transition-colors duration-150",
             pathname.startsWith("/admin/settings")
-              ? "bg-white/[0.07] font-medium text-white"
-              : "text-sidebar-foreground hover:bg-white/[0.05] hover:text-white"
+              ? "bg-sidebar-selected font-medium text-sidebar-accent-foreground"
+              : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
           )}
         >
           <Settings
@@ -122,7 +122,7 @@ export function SidebarNav({ pathname }: { pathname: string }) {
               "size-4 shrink-0 transition-colors duration-150",
               pathname.startsWith("/admin/settings")
                 ? "text-sidebar-primary"
-                : "text-sidebar-foreground group-hover/nav:text-white"
+                : "text-sidebar-foreground group-hover/nav:text-sidebar-accent-foreground"
             )}
             strokeWidth={2}
           />

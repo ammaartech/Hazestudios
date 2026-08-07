@@ -8,6 +8,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
+  --font-admin: var(--font-admin);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-display);
   --font-display: var(--font-display);
@@ -19,6 +20,8 @@
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-selected: var(--sidebar-selected);
   --color-sidebar: var(--sidebar);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
@@ -85,15 +88,33 @@
   --chart-4: #d72c0d;
   --chart-5: #95bf47;
   --radius: 0.5rem;
-  /* Dark nav chrome. Hover #303030, selected #404040 handled per-item. */
-  --sidebar: #1f1f21;
-  --sidebar-foreground: #b5b5b5;
-  --sidebar-primary: #ffffff;
-  --sidebar-primary-foreground: #1f1f21;
-  --sidebar-accent: #303030;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #303030;
+  /* Light nav chrome, matching the storefront's white surfaces.
+     The chrome sits one step back from the white content cards — #fbfbfc against
+     #ffffff — so the L of topbar + sidebar still reads as a distinct plane
+     without a dark fill doing the separating. Selection is carried by an ink
+     wash and weight rather than by a light-on-dark flip. */
+  --sidebar: #fbfbfc;
+  --sidebar-foreground: #4a4d50;
+  --sidebar-primary: #1a1a1a;
+  --sidebar-primary-foreground: #ffffff;
+  /* The selected-row wash and its label. */
+  --sidebar-accent: #ececee;
+  --sidebar-accent-foreground: #1a1a1a;
+  --sidebar-border: #e3e3e3;
   --sidebar-ring: #2c6ecb;
+  /* Hover/selected washes, so components stop hardcoding white alphas. */
+  --sidebar-hover: rgba(17, 17, 17, 0.045);
+  --sidebar-selected: rgba(17, 17, 17, 0.075);
+
+  /* The admin's UI face.
+     The root layout sets --font-sans to Work Sans, an editorial face chosen for
+     the storefront: large x-height, wide letterforms, loose default fit. At the
+     13-14px an operations table lives at, that width is what made every row read
+     a size larger than the Shopify page this admin is modelled on — the numbers
+     were already right, the typeface was spending them. The native UI stack is
+     drawn for exactly this size and ships with the OS, so it costs no request. */
+  --font-admin: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text",
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .dark {
@@ -606,6 +627,139 @@ body {
   @media (prefers-reduced-motion: reduce) {
     .shop .glass-press:active {
       transform: none;
+    }
+  }
+
+  /* =========================================================================
+     Admin glass — the control stratum of an operations tool
+     =========================================================================
+     The storefront block above states that the admin keeps opaque chrome. This
+     is a deliberate, scoped exception to that rule, and it is built to a
+     different brief, so it declares its own values rather than reaching into
+     `.shop` (those tokens live on that class and would resolve to nothing here).
+
+     The honest constraint, restated: admin surfaces are white or near-white, and
+     over white a blur returns white. So the controls that sit ON the page do not
+     pay for `blur()` — they carry the material the way `.glass-on-light` does,
+     with saturate, a tint and a specular rim, which is the part that survives on
+     a light plane. Only `.glass-floating` blurs, because a menu or a selection
+     toolbar sits ABOVE content and therefore has something to refract.
+
+     Density comes first: every rule below is geometry-neutral. No padding, no
+     height, no font-size — the Shopify-accurate sizing in button.tsx is what
+     these paint onto, never something they override.
+  ------------------------------------------------------------------------- */
+
+  /* Admin material tokens. Tighter than the storefront's: a tool is looked at
+     for eight hours, so the tint is quieter and the shadow shorter. */
+  .admin {
+    --admin-glass-saturate: 150%;
+    --admin-glass-edge: rgba(17, 17, 17, 0.1);
+    --admin-glass-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Secondary control on the white content plane — Export, Import, filters.
+     No blur: on #fff it would return #fff and cost a repaint per row. The
+     silhouette is the inset hairline; the tint is what separates it from the
+     card beneath. */
+  .admin .glass-control {
+    background-color: rgba(255, 255, 255, 0.72);
+    -webkit-backdrop-filter: saturate(var(--admin-glass-saturate));
+    backdrop-filter: saturate(var(--admin-glass-saturate));
+    background-image: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.9),
+      rgba(255, 255, 255, 0) 58%,
+      rgba(17, 17, 17, 0.03)
+    );
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+      inset 0 0 0 1px var(--admin-glass-edge),
+      0 1px 2px -1px rgba(17, 17, 17, 0.12);
+    transition:
+      background-color 160ms var(--admin-glass-ease),
+      box-shadow 160ms var(--admin-glass-ease);
+  }
+
+  .admin .glass-control:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.92);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+      inset 0 0 0 1px rgba(17, 17, 17, 0.14),
+      0 2px 6px -2px rgba(17, 17, 17, 0.16);
+  }
+
+  /* The primary action. The admin keeps its near-black fill — unlike the
+     storefront, which is a page of translucent pills where a dark slab looked
+     dropped on, this is a page of opaque white rows where the dark CTA is the
+     only saturated object and reads as the obvious next step. Glass here is the
+     lens rim and the lift, not a change of colour. */
+  .admin .glass-primary-action {
+    background-image: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.16),
+      rgba(255, 255, 255, 0.04) 46%,
+      rgba(255, 255, 255, 0) 62%,
+      rgba(0, 0, 0, 0.12)
+    );
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+      0 1px 2px -1px rgba(17, 17, 17, 0.24),
+      0 4px 12px -6px rgba(17, 17, 17, 0.3);
+    transition:
+      background-color 160ms var(--admin-glass-ease),
+      box-shadow 160ms var(--admin-glass-ease);
+  }
+
+  .admin .glass-primary-action:hover:not(:disabled) {
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.26),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+      0 2px 4px -2px rgba(17, 17, 17, 0.28),
+      0 8px 20px -8px rgba(17, 17, 17, 0.36);
+  }
+
+  /* Floating surfaces — dropdown menus, the bulk-selection toolbar. These sit
+     ABOVE content rather than on it, so the blur is doing real work and is
+     worth its cost. */
+  .admin .glass-floating {
+    background-color: rgba(255, 255, 255, 0.86);
+    -webkit-backdrop-filter: blur(16px) saturate(var(--admin-glass-saturate));
+    backdrop-filter: blur(16px) saturate(var(--admin-glass-saturate));
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+      inset 0 0 0 1px var(--admin-glass-edge),
+      0 8px 28px -10px rgba(17, 17, 17, 0.24),
+      0 2px 6px -3px rgba(17, 17, 17, 0.12);
+  }
+
+  /* Radix portals menus to <body>, so they land outside the `.admin` wrapper and
+     none of the scoped rules above can reach them. Keyed on the slot attribute
+     instead. Safe to leave unscoped: dropdowns are used only by the admin — the
+     storefront's floating surfaces are its own `.shop .glass` panels. */
+  [data-slot="dropdown-menu-content"],
+  [data-slot="dropdown-menu-sub-content"] {
+    background-color: rgba(255, 255, 255, 0.86);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    backdrop-filter: blur(16px) saturate(150%);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+      0 8px 28px -10px rgba(17, 17, 17, 0.24),
+      0 2px 6px -3px rgba(17, 17, 17, 0.12);
+  }
+
+  /* No backdrop-filter support: go opaque rather than sit washed out. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .admin .glass-control {
+      background-color: #ffffff;
+    }
+    .admin .glass-floating {
+      background-color: #ffffff;
+    }
+    [data-slot="dropdown-menu-content"],
+    [data-slot="dropdown-menu-sub-content"] {
+      background-color: #ffffff;
     }
   }
 

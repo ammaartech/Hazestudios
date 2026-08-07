@@ -50,7 +50,12 @@ export default function AdminLayout({
     // than per call site means a tooltip anywhere in the admin just works, and
     // hovering between two tooltips shares one delay instead of re-waiting.
     <TooltipProvider delayDuration={300}>
-      <div className="min-h-screen bg-background">
+      {/*
+        `admin` scopes the glass control layer (globals.css) and `font-admin`
+        swaps Work Sans — the storefront's editorial face — for the native UI
+        stack. Both are set here, once, so no admin page has to opt in.
+      */}
+      <div className="admin min-h-screen bg-background font-admin">
         {/* The fallback is the same bar with placeholder text, so the shell has
             the topbar's full height from the first paint and the page below it
             does not jump when the session resolves. */}

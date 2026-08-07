@@ -24,7 +24,10 @@ export function PageHeader({
         </Link>
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-[1.375rem] font-semibold leading-tight tracking-[-0.012em] text-balance text-foreground">
+        {/* 20px — Shopify's page-title size. Was 22px, which the wider Work Sans
+            pushed further still; with the UI face the smaller step holds the
+            same hierarchy against 13px body copy. */}
+        <h1 className="text-[1.25rem] font-semibold leading-tight tracking-[-0.012em] text-balance text-foreground">
           {title}
         </h1>
         {children && <div className="flex items-center gap-2">{children}</div>}
