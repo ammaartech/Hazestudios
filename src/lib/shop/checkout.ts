@@ -5,6 +5,7 @@ import {
   type CheckoutAddress,
   type CheckoutPrefill,
   type CheckoutSettings,
+  type SavedAddress,
 } from "./checkout-totals";
 import type { Order, OrderItem } from "@/lib/types";
 
@@ -16,7 +17,7 @@ import type { Order, OrderItem } from "@/lib/types";
  * live in `./checkout-totals` for exactly that reason.
  */
 
-export type { CheckoutAddress, CheckoutPrefill, CheckoutSettings };
+export type { CheckoutAddress, CheckoutPrefill, CheckoutSettings, SavedAddress };
 
 /**
  * Reads the interim shipping/tax configuration.
@@ -72,6 +73,7 @@ export async function getCheckoutPrefill(): Promise<CheckoutPrefill> {
     lastName: "",
     address: {},
     signedIn: false,
+    addresses: [],
   };
 
   try {
@@ -88,21 +90,61 @@ export async function getCheckoutPrefill(): Promise<CheckoutPrefill> {
       return { ...empty, email: user.email ?? "", signedIn: true };
     }
 
-    const { data } = await supabase
-      .from("customers")
-      .select("first_name, last_name, email, phone, default_address")
-      .eq("id", customerId)
-      .maybeSingle();
+    // Both on the shopper's own session, so the address book is fetched under
+    // `customer_addresses_self_all` (0021) rather than the service role — the
+    // policy is the authorisation, not a `customer_id` we passed ourselves.
+    const [{ data }, { data: saved }] = await Promise.all([
+      supabase
+        .from("customers")
+        .select("first_name, last_name, email, phone, default_address")
+        .eq("id", customerId)
+        .maybeSingle(),
+      supabase
+        .from("customer_addresses")
+        .select(
+          "id, label, first_name, last_name, phone, address1, address2, city, province, postal_code, country, is_default"
+        )
+        .eq("customer_id", customerId)
+        // Default first, then most recently used — which is the order a shopper
+        // is most likely to want them in.
+        .order("is_default", { ascending: false })
+        .order("updated_at", { ascending: false })
+        .limit(12),
+    ]);
 
-    if (!data) return { ...empty, email: user.email ?? "", signedIn: true };
+    const addresses: SavedAddress[] = (
+      (saved ?? []) as Record<string, unknown>[]
+    ).map((row) => ({
+      id: String(row.id),
+      label: (row.label as string) || "Saved",
+      first_name: (row.first_name as string) ?? "",
+      last_name: (row.last_name as string) ?? "",
+      phone: (row.phone as string) ?? "",
+      address1: (row.address1 as string) ?? "",
+      address2: (row.address2 as string) ?? "",
+      city: (row.city as string) ?? "",
+      province: (row.province as string) ?? "",
+      postal_code: (row.postal_code as string) ?? "",
+      country: (row.country as string) ?? "",
+      isDefault: Boolean(row.is_default),
+    }));
+
+    if (!data) {
+      return { ...empty, email: user.email ?? "", signedIn: true, addresses };
+    }
 
     return {
       email: (data.email as string) ?? user.email ?? "",
       phone: (data.phone as string) ?? "",
       firstName: (data.first_name as string) ?? "",
       lastName: (data.last_name as string) ?? "",
-      address: (data.default_address ?? {}) as Partial<CheckoutAddress>,
+      // The book wins when it has anything, since `default_address` is the
+      // single-address world this replaced and may be staler.
+      address: (addresses[0] ??
+        data.default_address ??
+        {}) as Partial<CheckoutAddress>,
       signedIn: true,
+      addresses,
     };
   } catch {
     return empty;

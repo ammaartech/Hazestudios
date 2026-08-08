@@ -49,6 +49,21 @@ export interface CheckoutAddress {
   country: string;
 }
 
+/**
+ * One entry in a signed-in shopper's address book.
+ *
+ * Carries its own `phone` and recipient name rather than borrowing the
+ * customer's: parcels go to a flatmate, a parent, an office reception, and the
+ * number the courier should ring is a property of the destination.
+ */
+export interface SavedAddress extends CheckoutAddress {
+  id: string;
+  /** Free text — "Home", "Work", "Mum's place". */
+  label: string;
+  phone: string;
+  isDefault: boolean;
+}
+
 /** What we can fill in for a shopper we already know. */
 export interface CheckoutPrefill {
   email: string;
@@ -58,6 +73,11 @@ export interface CheckoutPrefill {
   address: Partial<CheckoutAddress>;
   /** Drives "signed in as…" vs. the guest sign-in prompt. */
   signedIn: boolean;
+  /**
+   * Saved addresses, default first. Always empty for a guest — the book is
+   * only readable by the account that owns it.
+   */
+  addresses: SavedAddress[];
 }
 
 export const DEFAULT_CHECKOUT_SETTINGS: CheckoutSettings = {

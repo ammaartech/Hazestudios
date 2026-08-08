@@ -117,6 +117,45 @@
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+/**
+ * Country flags.
+ *
+ * Windows ships no flag glyphs — Segoe UI Emoji draws 🇮🇳 as the letters "IN" —
+ * so the checkout phone selector rendered as a column of two-letter codes on
+ * the platform most of this store's desktop traffic uses. A native `<select>`
+ * cannot hold an `<img>`, so the usual fix (SVG flags) would mean rebuilding
+ * the dropdown as a custom listbox and giving up the native mobile picker.
+ * A font solves it instead: the flags stay *text*, so they work inside
+ * `<option>` exactly as before.
+ *
+ * `unicode-range` is what makes this cheap. The 78kB file is only fetched when
+ * a codepoint in that range is actually painted, so every page without a flag
+ * on it — which is all of them but checkout — pays nothing.
+ *
+ * Twemoji, via country-flag-emoji-polyfill. Font artwork CC-BY 4.0
+ * (https://creativecommons.org/licenses/by/4.0/), from the Twemoji project;
+ * the polyfill's own code is MIT. Self-hosted rather than loaded from their
+ * CDN: a checkout page should not depend on a third party being up, and the
+ * shopper's IP is not theirs to collect.
+ */
+@font-face {
+  font-family: "Twemoji Country Flags";
+  unicode-range: U+1F1E6-1F1FF, U+1F3F4, U+E0062-E0063, U+E0065, U+E0067,
+    U+E006C, U+E006E, U+E0073-E0074, U+E0077, U+E007F;
+  src: url("/fonts/TwemojiCountryFlags.woff2") format("woff2");
+  font-display: swap;
+}
+
+/**
+ * Opt in to the flag font. Listed first so it wins for flag codepoints on every
+ * platform — including macOS and iOS, which have their own flags. That costs
+ * those shoppers one 78kB request, and buys one flag design everywhere instead
+ * of three that disagree.
+ */
+.flag-text {
+  font-family: "Twemoji Country Flags", var(--font-sans), system-ui, sans-serif;
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -192,7 +231,16 @@
    components inside the storefront without touching the admin, which keeps its
    green-primary rounded theme from :root above.
 --------------------------------------------------------------------------- */
-.shop {
+/* `.shop-scope` carries the palette without the layout rules further down.
+   Radix portals its popovers and dialogs to `document.body`, which is outside
+   the `.shop` element — so inside one, every `--shop-*` token is undefined.
+   That does not fail loudly: `background-color: var(--shop-ink)` with no such
+   variable computes to nothing and paints transparent, while `border-color`
+   quietly falls back to `currentColor`. The result is a selected chip with no
+   fill sitting next to unselected chips that still have borders, i.e. the
+   selection reading backwards. Any portalled surface needs this class. */
+.shop,
+.shop-scope {
   /* shadcn contract — re-pointed at the editorial palette */
   --background: #ffffff;
   --foreground: #111111;

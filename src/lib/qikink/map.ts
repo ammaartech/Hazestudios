@@ -1,3 +1,4 @@
+import { nationalPhoneDigits } from "@/lib/shop/phone-codes";
 import type { Order, OrderItem } from "@/lib/types";
 import type { QikinkAddress, QikinkLineItem, QikinkOrderPayload } from "./client";
 
@@ -61,8 +62,12 @@ function buildAddress(order: Order): { address: QikinkAddress; problems: string[
   }
 
   // Qikink requires both on every order, and they live on the order rather
-  // than the address blob.
-  if (!order.phone?.trim()) problems.push("Order has no phone number, which Qikink requires.");
+  // than the address blob. Checked on the *normalised* number: an order holding
+  // only a dialling code would pass a non-empty test and still send nothing a
+  // courier can ring.
+  if (nationalPhoneDigits(order.phone ?? "").length < 7) {
+    problems.push("Order has no usable phone number, which Qikink requires.");
+  }
   if (!order.email?.trim()) problems.push("Order has no email address, which Qikink requires.");
 
   return {
@@ -73,7 +78,12 @@ function buildAddress(order: Order): { address: QikinkAddress; problems: string[
       last_name: a.last_name ?? "",
       address1: a.address1 ?? "",
       address2: a.address2 ?? "",
-      phone: order.phone ?? "",
+      // Normalised to the plain national digits Qikink's courier expects.
+      // Checkout stores phones with their dialling code (`+91 9876543210`), and
+      // sending that string through verbatim would hand an Indian printer a
+      // country code and two separators it never asked for. This also cleans up
+      // whatever historic orders hold, which is whatever the shopper typed.
+      phone: nationalPhoneDigits(order.phone ?? ""),
       email: order.email ?? "",
       city: a.city ?? "",
       zip: a.postal_code ?? "",

@@ -206,6 +206,91 @@ export async function removeLine(lineId: string): Promise<CartResult> {
   return setLineQuantity(lineId, 0);
 }
 
+/**
+ * Switches a line to a different variant of the same product — changing size
+ * without leaving the page you are on.
+ *
+ * The case that makes this more than an `update`: the shopper may already have
+ * the target size in their bag as its own line. Pointing this row at it would
+ * break the partial unique index that keeps one line per (cart, product,
+ * variant), so the two are merged instead and this row is deleted. Doing
+ * nothing, or failing, would both read as "the size picker is broken".
+ *
+ * The product is never taken from the request. Only the line id and the target
+ * variant come from the browser, and the variant is verified to belong to the
+ * product that line already names — so this can never be used to swap a cheap
+ * item for an expensive one.
+ */
+export async function setLineVariant(
+  lineId: string,
+  variantId: string
+): Promise<CartResult> {
+  if (!isUuid(lineId)) return fail("That item is not in your bag.");
+  if (!isUuid(variantId)) return fail("That option is not available.");
+
+  const admin = createAdminClient();
+  if (!admin) return fail("The store is not available right now.");
+
+  const cart = await getCartRow(await readCartToken());
+  if (!cart) return { ok: true, cart: EMPTY_CART };
+
+  // Scoped by cart_id: a line id from another shopper's bag simply is not found.
+  const { data: row } = await admin
+    .from("cart_items")
+    .select("id, product_id, variant_id, quantity")
+    .eq("id", lineId)
+    .eq("cart_id", cart.id)
+    .maybeSingle();
+
+  const line = row as {
+    id: string;
+    product_id: string;
+    variant_id: string | null;
+    quantity: number;
+  } | null;
+
+  if (!line) return fail("That item is not in your bag.");
+  if (line.variant_id === variantId) return { ok: true, cart: await getCart() };
+
+  // Same purchasability rules as `addToCart`, and for the same reason: a select
+  // that omitted the sold-out size is a hint, not a constraint on the request.
+  const [product] = await getProductsByIds([line.product_id]);
+  if (!product) return fail("That item is no longer available.");
+
+  const variant = product.variants.find((v) => v.id === variantId) ?? null;
+  if (!variant) return fail("That option is no longer available.");
+  if (!variant.available) return fail("That option is sold out.");
+
+  const { data: twin } = await admin
+    .from("cart_items")
+    .select("id, quantity")
+    .eq("cart_id", cart.id)
+    .eq("product_id", line.product_id)
+    .eq("variant_id", variantId)
+    .maybeSingle();
+
+  if (twin) {
+    const other = twin as { id: string; quantity: number };
+    await admin
+      .from("cart_items")
+      .update({
+        quantity: Math.min(other.quantity + line.quantity, MAX_LINE_QUANTITY),
+      })
+      .eq("id", other.id)
+      .eq("cart_id", cart.id);
+
+    await admin.from("cart_items").delete().eq("id", line.id).eq("cart_id", cart.id);
+  } else {
+    await admin
+      .from("cart_items")
+      .update({ variant_id: variantId })
+      .eq("id", line.id)
+      .eq("cart_id", cart.id);
+  }
+
+  return { ok: true, cart: await getCart() };
+}
+
 export async function clearCart(): Promise<CartResult> {
   const admin = createAdminClient();
   if (!admin) return fail("The store is not available right now.");

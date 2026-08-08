@@ -16,16 +16,26 @@
 const COUNTRY_CODES = [
   // Anchored to the top because "which country" has one overwhelmingly likely
   // answer per store, and scrolling past Afghanistan to reach it is friction
-  // paid by every single shopper.
-  "US", "CA", "GB", "AU",
+  // paid by every single shopper. India leads: the printer ships domestically,
+  // prices are in rupees, and `DEFAULT_COUNTRY` below points here.
+  "IN", "US", "CA", "GB", "AU",
 
   "AE", "AR", "AT", "BE", "BG", "BH", "BR", "CH", "CL", "CN", "CO", "CY", "CZ",
   "DE", "DK", "EE", "EG", "ES", "FI", "FR", "GH", "GR", "HK", "HR", "HU", "ID",
-  "IE", "IL", "IN", "IS", "IT", "JP", "KE", "KR", "KW", "LT", "LU", "LV", "MA",
+  "IE", "IL", "IS", "IT", "JP", "KE", "KR", "KW", "LT", "LU", "LV", "MA",
   "MT", "MX", "MY", "NG", "NL", "NO", "NZ", "OM", "PA", "PE", "PH", "PK", "PL",
   "PT", "QA", "RO", "RS", "SA", "SE", "SG", "SI", "SK", "TH", "TR", "TW", "UA",
   "UY", "VN", "ZA",
 ] as const;
+
+/**
+ * Preselected at checkout. A country the shopper has to change is friction for
+ * a minority; a country they have to *find* is friction for everyone.
+ */
+export const DEFAULT_COUNTRY = "IN";
+
+/** How many of the codes above are pinned rather than sorted alphabetically. */
+const PINNED_COUNT = 5;
 
 export interface Country {
   code: string;
@@ -53,8 +63,8 @@ export function getCountries(locale = "en"): Country[] {
     display = null;
   }
 
-  const pinned = COUNTRY_CODES.slice(0, 4);
-  const rest = COUNTRY_CODES.slice(4)
+  const pinned = COUNTRY_CODES.slice(0, PINNED_COUNT);
+  const rest = COUNTRY_CODES.slice(PINNED_COUNT)
     .map((code) => ({ code, name: nameFor(code, display) }))
     .sort((a, b) => a.name.localeCompare(b.name, locale));
 

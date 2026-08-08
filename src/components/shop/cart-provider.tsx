@@ -297,6 +297,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               compareAtPrice: compareAt,
               image: image ?? null,
               lineTotal: price * capped(quantity, maxQuantity),
+              // Empty rather than guessed: the caller knows the variant it just
+              // added, not its siblings. The real cart arrives with them a
+              // moment later, and nothing renders a size menu from this line.
+              options: [],
+              optionNames: [],
               available: true,
               maxQuantity,
               reduced: false,

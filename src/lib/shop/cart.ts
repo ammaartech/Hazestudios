@@ -29,6 +29,28 @@ const CART_COOKIE_MAX_AGE = 60 * 60 * 24 * 60;
 /** Per-line ceiling, mirroring the check constraint on cart_items.quantity. */
 export const MAX_LINE_QUANTITY = 99;
 
+/**
+ * A variant the shopper could switch this line to.
+ *
+ * Carried on the line because `resolveLines` already holds the whole product to
+ * price it — projecting the siblings costs one map over data that is otherwise
+ * thrown away, and saves the checkout summary a second round trip just to
+ * populate a size menu.
+ */
+export interface CartLineOption {
+  id: string;
+  title: string;
+  price: number;
+  /** False for sold-out sizes, which are shown disabled rather than hidden. */
+  available: boolean;
+  /**
+   * This variant's value on each axis — `["Black", "L"]` — positionally aligned
+   * with `CartLine.optionNames`. Carried so a picker can offer two short lists
+   * (two colours, six sizes) instead of one list of all twelve combinations.
+   */
+  values: string[];
+}
+
 export interface CartLine {
   id: string;
   productId: string;
@@ -48,6 +70,13 @@ export interface CartLine {
   maxQuantity: number | null;
   /** True when quantity had to be capped because stock fell below it. */
   reduced: boolean;
+  /**
+   * Every variant of this product, including the one selected. Empty for a
+   * simple product, which has nothing to switch between.
+   */
+  options: CartLineOption[];
+  /** The product's option axes in order, e.g. `["Colour", "Size"]`. */
+  optionNames: string[];
 }
 
 export interface Cart {
@@ -259,6 +288,18 @@ function resolveLines(
       available,
       maxQuantity: ceiling,
       reduced: available && quantity < row.quantity,
+      options: product.variants.map((v) => ({
+        id: v.id,
+        title: v.title,
+        price: v.price,
+        available: v.available,
+        // Trimmed to the axes the product actually declares, so a variant
+        // carrying a stale `option3` cannot invent a third column.
+        values: [v.option1, v.option2, v.option3]
+          .slice(0, product.options.length)
+          .map((value) => value ?? ""),
+      })),
+      optionNames: product.options.map((o) => o.name),
     });
   }
 

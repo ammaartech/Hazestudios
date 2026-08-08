@@ -6,6 +6,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { clearCartCookie, readCartToken } from "@/lib/shop/cart";
 import { isPayableMethod } from "@/lib/shop/payment-methods";
+import { formatPhone } from "@/lib/shop/phone-codes";
+import { lookupPincode, type PincodeArea } from "@/lib/shop/pincode";
+import { phoneProblem, postalCodeProblem } from "@/lib/shop/validate";
 import { formatMoney } from "@/lib/format";
 import type { Discount } from "@/lib/types";
 
@@ -91,17 +94,36 @@ export async function placeOrder(
   // Checked here as well as in the function so the shopper gets the field back,
   // not just a sentence. The function keeps its own copy of these rules because
   // it is reachable without this action.
+  //
+  // province is required alongside the rest: Qikink's create-order call fails
+  // outright without it (src/lib/qikink/map.ts), and unlike postal_code that
+  // was never enforced here until now.
   const required: [keyof typeof address, string][] = [
     ["first_name", "Enter a first name."],
     ["last_name", "Enter a last name."],
     ["address1", "Enter a street address."],
     ["city", "Enter a city."],
-    ["postal_code", "Enter a postal code."],
+    ["province", "Enter a state or province."],
     ["country", "Choose a country."],
   ];
   for (const [field, message] of required) {
     if (!address[field]) return { error: message, field };
   }
+
+  // Shape, not just presence, and from the same module the form validates
+  // against — so a number the field ticked green is never one this rejects.
+  const postalProblem = postalCodeProblem(address.postal_code, address.country);
+  if (postalProblem) return { error: postalProblem, field: "postal_code" };
+
+  // The number and the country it dials from arrive as two inputs. Validated
+  // against the *phone's* country, not the delivery country — someone abroad
+  // may well be shipping to an Indian address, and the ten-digit rule belongs
+  // to the number rather than the destination.
+  const phoneCountry = text(form, "phone_country", 2).toUpperCase();
+  const phone = text(form, "phone", 40);
+
+  const phoneIssue = phoneProblem(phone, phoneCountry || address.country);
+  if (phoneIssue) return { error: phoneIssue, field: "phone" };
 
   // Empty means "same as delivery" — see the column comment in 0014. An
   // unchecked box submits nothing at all, so presence is the test: absent means
@@ -151,7 +173,10 @@ export async function placeOrder(
     payload: {
       cart_token: cartToken,
       email,
-      phone: text(form, "phone", 40),
+      // Stored with its dialling code, so a number is never ambiguous about
+      // which country it belongs to. `nationalPhoneDigits` recovers the plain
+      // ten digits for Qikink, which is an Indian printer and wants those.
+      phone: formatPhone(phone, phoneCountry || address.country),
       first_name: address.first_name,
       last_name: address.last_name,
       shipping_address: address,
@@ -159,6 +184,10 @@ export async function placeOrder(
       payment_method: paymentMethod,
       discount_code: text(form, "discount_code", 64),
       marketing_opt_in: form.get("marketing_opt_in") === "on",
+      // What to file this address under in the shopper's book. Blank is fine —
+      // place_order() falls back to "Home", which is the right guess for a
+      // first address and harmless for a guest who will never see the book.
+      address_label: text(form, "address_label", 24),
       note: text(form, "note", 500),
       // Attribution. The session key ties this order back to the
       // analytics_sessions row holding referrer, geo and device; the rest is
@@ -232,6 +261,23 @@ export async function placeOrder(
   // page lives under the ordinary storefront shell on purpose: the shopper has
   // finished, and the next thing they might want is to keep looking.
   redirect(`/orders/${result.checkout_token}`);
+}
+
+/* -------------------------------------------------------------------------- */
+/* PIN code lookup                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * City and state for an Indian PIN code.
+ *
+ * Advisory, exactly like `quoteDiscount`: the shopper can overwrite whatever
+ * comes back, and `place_order()` validates the address it is actually given.
+ * Its value is that the two fields most often mistyped — district, and the
+ * spelling of a state Qikink matches on by name — get filled in correctly
+ * without anyone typing them.
+ */
+export async function resolvePincode(pin: string): Promise<PincodeArea | null> {
+  return lookupPincode(pin.trim().slice(0, 6));
 }
 
 /* -------------------------------------------------------------------------- */
