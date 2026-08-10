@@ -36,7 +36,38 @@ export function ProductGallery({
   const [active, setActive] = useState(0);
   const stage = useRef<HTMLUListElement>(null);
   const frames = useRef<(HTMLLIElement | null)[]>([]);
+  const rail = useRef<HTMLUListElement>(null);
   const thumbs = useRef<(HTMLLIElement | null)[]>([]);
+
+  /**
+   * The filmstrip scrolls for two reasons — the shopper dragging it, and us
+   * centring the current thumb after a swipe on the stage — and only the first
+   * should move the photograph. A scroll event carries no such flag, so we set
+   * one before every scroll we cause, and clear it once the strip goes quiet.
+   *
+   * `scrubbing` is the mirror of it: while the shopper is dragging, the strip
+   * belongs to their finger and we must not scroll it under them.
+   */
+  const railProgrammatic = useRef(false);
+  const scrubbing = useRef(false);
+  const railIdle = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const railFrame = useRef<number | null>(null);
+
+  /** Restarts the quiet-timer that ends both flags. */
+  const armRailIdle = useCallback((delay: number) => {
+    if (railIdle.current) clearTimeout(railIdle.current);
+    railIdle.current = setTimeout(() => {
+      railProgrammatic.current = false;
+      scrubbing.current = false;
+    }, delay);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (railIdle.current) clearTimeout(railIdle.current);
+      if (railFrame.current !== null) cancelAnimationFrame(railFrame.current);
+    };
+  }, []);
 
   /**
    * Which shot is on screen is owned by the stage's scroll position, not by
@@ -79,13 +110,108 @@ export function ProductGallery({
     root.scrollTo({ left: clamped * root.clientWidth });
   }, [images.length]);
 
-  /** Keeps the current thumbnail in view once the rail is long enough to scroll. */
-  useEffect(() => {
-    thumbs.current[active]?.scrollIntoView({
-      block: "nearest",
-      inline: "nearest",
+  /**
+   * Which thumbnail is sitting on the strip's centre line — the one the
+   * selection is read from while the shopper drags.
+   *
+   * Measured with `getBoundingClientRect` rather than `offsetLeft`, because the
+   * two are relative to different origins: `scrollLeft` is the strip's own
+   * content box, while `offsetLeft` is whatever positioned ancestor the browser
+   * finds above it. Comparing viewport coordinates is right whatever that
+   * ancestor turns out to be.
+   */
+  const centeredThumb = useCallback(() => {
+    const root = rail.current;
+    if (!root) return null;
+
+    const bounds = root.getBoundingClientRect();
+    const line = bounds.left + bounds.width / 2;
+
+    let best: number | null = null;
+    let shortest = Infinity;
+    thumbs.current.forEach((node, i) => {
+      if (!node) return;
+      const box = node.getBoundingClientRect();
+      const distance = Math.abs(box.left + box.width / 2 - line);
+      if (distance < shortest) {
+        shortest = distance;
+        best = i;
+      }
     });
-  }, [active]);
+    return best;
+  }, []);
+
+  /**
+   * Dragging the strip moves the photograph, live — the gallery-app gesture.
+   * The stage is scrolled instantly rather than smoothly: this is a scrub, so
+   * the shot has to track the finger rather than chase it.
+   */
+  const handleRailScroll = () => {
+    armRailIdle(140);
+    if (railProgrammatic.current) return;
+
+    scrubbing.current = true;
+
+    // One read per frame at most. Scroll fires far faster than the screen
+    // refreshes, and every measurement here forces layout.
+    if (railFrame.current !== null) return;
+    railFrame.current = requestAnimationFrame(() => {
+      railFrame.current = null;
+      const index = centeredThumb();
+      if (index !== null && index !== active) show(index);
+    });
+  };
+
+  /**
+   * A finger or cursor landing on the strip hands ownership of the scroll back
+   * to the shopper. Without it, a drag that interrupts our own smooth centring
+   * would keep the quiet-timer alive while the programmatic flag was still up —
+   * the strip would move and the photograph would not, for as long as they
+   * kept dragging.
+   *
+   * Deliberately does *not* raise `scrubbing`: a tap is a pointer event too,
+   * and a tap has to leave the strip free to centre what it selected.
+   */
+  const claimRail = () => {
+    railProgrammatic.current = false;
+  };
+
+  /** Brings a thumb to the centre line, flagged as ours so it isn't read back. */
+  const centerThumb = useCallback(
+    (index: number) => {
+      const node = thumbs.current[index];
+      if (!node) return;
+
+      // Armed *before* the scroll and with room to spare: if the strip is
+      // already centred this produces no scroll events at all, and a flag left
+      // standing would swallow the shopper's next drag.
+      railProgrammatic.current = true;
+      armRailIdle(400);
+      node.scrollIntoView({ block: "nearest", inline: "center" });
+    },
+    [armRailIdle]
+  );
+
+  /**
+   * A tap on a thumbnail takes this path rather than falling out of the effect
+   * below, so it behaves the same whether or not the strip happens to be moving
+   * when the tap lands: the shot changes and the thumb comes to the centre.
+   */
+  const select = (index: number) => {
+    scrubbing.current = false;
+    show(index);
+    centerThumb(index);
+  };
+
+  /**
+   * The other direction: a swipe on the stage pulls the strip along so the
+   * current shot is always the one under the centre line. Skipped while the
+   * shopper is scrubbing — that is their finger's scroll, not ours.
+   */
+  useEffect(() => {
+    if (scrubbing.current) return;
+    centerThumb(active);
+  }, [active, centerThumb]);
 
   if (!images.length) {
     return (
@@ -174,8 +300,10 @@ export function ProductGallery({
 
       {many && (
         <ul
-          className="rail mt-2 auto-cols-[4.5rem] gap-2 md:auto-cols-[5.25rem]"
-          style={{ ["--rail-gutter" as string]: "0px" }}
+          ref={rail}
+          onScroll={handleRailScroll}
+          onPointerDown={claimRail}
+          className="filmstrip mt-2 gap-2"
         >
           {images.map((image, i) => (
             <li
@@ -186,15 +314,16 @@ export function ProductGallery({
             >
               <button
                 type="button"
-                onClick={() => show(i)}
+                onClick={() => select(i)}
                 aria-label={`View ${i + 1} of ${images.length}`}
                 aria-current={i === active ? "true" : undefined}
                 className={cn(
                   "relative block aspect-square w-full cursor-pointer bg-[var(--shop-cloud)] transition-opacity duration-200",
                   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--shop-ink)]",
-                  i === active
-                    ? "outline-2 -outline-offset-2 outline-[var(--shop-ink)]"
-                    : "opacity-60 hover:opacity-100"
+                  // The active thumb is the one at full strength; the rest sit
+                  // back. No rim — on a wall of product shots the frame was
+                  // louder than the photograph it was pointing at.
+                  i !== active && "opacity-60 hover:opacity-100"
                 )}
               >
                 <Image

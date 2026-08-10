@@ -871,6 +871,59 @@ body {
   }
 
   /* -------------------------------------------------------------------------
+     Filmstrip — the scrubbable thumbnail strip under the product stage
+     -------------------------------------------------------------------------
+     A rail whose selection is read off its own centre line: whichever thumb is
+     under the middle of the strip is the shot on the stage, so dragging the
+     strip flips through the photographs the way a gallery app does.
+
+     That is why it is a separate class and not `.rail` with a modifier — the
+     rail snaps to `start` and bleeds to the viewport edge, which is right for a
+     row of products you are browsing and wrong for a control whose whole
+     meaning sits in the middle.
+  ------------------------------------------------------------------------- */
+  .shop .filmstrip {
+    --thumb: 4.5rem;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--thumb);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    /* Half the strip minus half a thumb: the padding is what lets the first and
+       last shot reach the centre line at all. Without it the run of thumbs
+       stops at the edges and the outermost two are unreachable by scrubbing. */
+    padding-inline: calc(50% - var(--thumb) / 2);
+    /* Keeps a scrub that runs past the last thumb from being handed to the
+       browser as a back-navigation gesture. */
+    overscroll-behavior-x: contain;
+  }
+  .shop .filmstrip::-webkit-scrollbar {
+    display: none;
+  }
+  .shop .filmstrip > * {
+    scroll-snap-align: center;
+    /* Same containment guarantee as `.rail > *` above, and for the same reason:
+       anything absolutely positioned inside a thumb must be clipped by the
+       strip that owns it rather than widening the document. */
+    position: relative;
+  }
+
+  @media (min-width: 768px) {
+    .shop .filmstrip {
+      --thumb: 5.25rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* Only the strip we scroll for the shopper is affected — a drag is a drag. */
+    .shop .filmstrip {
+      scroll-behavior: auto;
+    }
+  }
+
+  /* -------------------------------------------------------------------------
      Marquee — the announcement bar
      -------------------------------------------------------------------------
      Two identical tracks translate as one; when the first has travelled its own

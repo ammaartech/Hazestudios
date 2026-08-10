@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.impeccable\\hook.cache.json": {
-    "mtime": 1786363500.7484066,
-    "ast_hash": "1756c9d0a36562c6ee43c05cb1847a8f",
+    "mtime": 1786367154.0900095,
+    "ast_hash": "51f40f5b1d9a88a430b4211584b5c5b4",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\db-config.mjs": {
@@ -845,13 +845,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\product-gallery.tsx": {
-    "mtime": 1785418203.1295416,
-    "ast_hash": "8e95d521c39fab5bb7b446411330b0fa",
+    "mtime": 1786366334.3865328,
+    "ast_hash": "6480306b48ffadbf22a055b21436fc97",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\shop\\variant-picker.tsx": {
-    "mtime": 1786353226.735138,
-    "ast_hash": "0acf7273c460800c9f54c85ef2449408",
+    "mtime": 1786365695.477015,
+    "ast_hash": "e851e7c62ed449dabde7926baf4a63b2",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\form-store.ts": {
@@ -2085,8 +2085,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(checkout)\\checkout\\checkout-form.tsx": {
-    "mtime": 1786363320.3961153,
-    "ast_hash": "ca8ed0147dd326f35687a9e005f33da8",
+    "mtime": 1786366305.7748487,
+    "ast_hash": "b5599a8f43d68b867f3955a2a52613cb",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(checkout)\\checkout\\fields.tsx": {

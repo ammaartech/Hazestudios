@@ -99,6 +99,45 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
     ? Boolean(selected?.available)
     : product.inStock;
 
+  /**
+   * The axis the shopper still has to answer — the one the CTA is naming when
+   * it reads "Select colour". Held as a ref per axis so the button can take the
+   * shopper *to* it rather than just telling them it exists: on a phone the
+   * pills are usually a screen above the sticky bar the tap came from.
+   */
+  const optionRefs = useRef<Record<string, HTMLFieldSetElement | null>>({});
+
+  const pendingOption = options.find((o) => !selection[o.name]) ?? null;
+  /** The CTA is a "take me there" button, not a dead end, while a choice is open. */
+  const needsSelection = product.inStock && Boolean(pendingOption);
+
+  function revealPendingOption() {
+    if (!pendingOption) return;
+    const node = optionRefs.current[pendingOption.name];
+    if (!node) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    node.scrollIntoView({
+      behavior: reduced ? "auto" : "smooth",
+      block: "center",
+    });
+
+    // Keyboard and screen-reader users get moved too, not just the viewport.
+    // preventScroll so this doesn't fight the smooth scroll already running.
+    const firstEnabled = node.querySelector<HTMLButtonElement>(
+      "button:not([disabled])"
+    );
+    firstEnabled?.focus({ preventScroll: true });
+  }
+
+  function handleCta() {
+    if (needsSelection) {
+      revealPendingOption();
+      return;
+    }
+    addToBag();
+  }
+
   const lowStock =
     selected && selected.available && selected.stock > 0 && selected.stock <= 3;
 
@@ -133,8 +172,8 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
    */
   const ctaLabel = !product.inStock
     ? "Sold out"
-    : !allChosen && options.length
-      ? `Select ${options.find((o) => !selection[o.name])?.name.toLowerCase()}`
+    : pendingOption
+      ? `Select ${pendingOption.name.toLowerCase()}`
       : canAdd
         ? "Add to bag"
         : "Sold out";
@@ -192,7 +231,13 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
           }
 
           return (
-            <fieldset key={option.id}>
+            <fieldset
+              key={option.id}
+              ref={(node) => {
+                optionRefs.current[option.name] = node;
+              }}
+              className="scroll-mt-24"
+            >
               <legend className="meta text-[var(--shop-mute)]">
                 {option.name}
                 {selection[option.name] && (
@@ -260,16 +305,20 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
       <button
         ref={inlineCta}
         type="button"
-        onClick={addToBag}
-        disabled={!canAdd}
+        onClick={handleCta}
+        disabled={!canAdd && !needsSelection}
         className={cn(
           "glass glass-pill glass-press mt-4 min-h-14 w-full cursor-pointer px-8 text-base font-medium",
           "focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)",
           canAdd
             ? "glass-primary"
-            : // Flat and unlifted: with the live CTA now carried by elevation
-              // rather than by fill, the shadow is what has to go.
-              "cursor-not-allowed bg-(--shop-cloud) text-(--shop-stone) shadow-none"
+            : needsSelection
+              ? // Live, but quieter than "Add to bag": it moves the shopper to
+                // the choice, it doesn't complete the purchase.
+                "glass-on-light glass-quiet text-(--shop-ink)"
+              : // Flat and unlifted: with the live CTA now carried by elevation
+                // rather than by fill, the shadow is what has to go.
+                "cursor-not-allowed bg-(--shop-cloud) text-(--shop-stone) shadow-none"
         )}
       >
         {ctaLabel}
@@ -350,15 +399,17 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
           </div>
           <button
             type="button"
-            onClick={addToBag}
-            disabled={!canAdd}
+            onClick={handleCta}
+            disabled={!canAdd && !needsSelection}
             tabIndex={ctaVisible ? -1 : 0}
             className={cn(
               "glass glass-pill glass-press min-h-12 shrink-0 cursor-pointer px-6 text-sm font-medium",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--shop-ink)",
               canAdd
                 ? "glass-primary"
-                : "cursor-not-allowed bg-(--shop-cloud) text-(--shop-stone) shadow-none"
+                : needsSelection
+                  ? "glass-on-light glass-quiet text-(--shop-ink)"
+                  : "cursor-not-allowed bg-(--shop-cloud) text-(--shop-stone) shadow-none"
             )}
           >
             {ctaLabel}

@@ -355,7 +355,12 @@ export function CheckoutForm({
    * Animate the real distance travelled. The summary moves about 1,300px down
    * the document, and playing that literally is a streak across the screen at
    * two thousand pixels a second. What sells "it came from up there" is a
-   * short descent with a long settle, not an accurate one.
+   * short descent with a long settle, not an accurate one. (A full-length
+   * version of this was built and thrown away: the card and the address fields
+   * have very different distances to cover, so they come apart mid-flight and
+   * leave the viewport half empty. Fixing that costs a held position, a capped
+   * travel and a stack of timing that all has to stay in sync with a layout
+   * nobody promised to keep. Not worth it for a second of scenery.)
    *
    * Animate what cannot be seen. To have tapped a payment method the shopper
    * is near the end of the form, so the blocks above are off-screen — and
