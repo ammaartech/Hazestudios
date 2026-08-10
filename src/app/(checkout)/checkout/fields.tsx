@@ -609,6 +609,9 @@ export function RadioField({
   name,
   options,
   defaultValue,
+  value,
+  onChange,
+  hint,
 }: {
   label: string;
   name: string;
@@ -618,9 +621,22 @@ export function RadioField({
     description?: string;
     available?: boolean;
     unavailableReason?: string | null;
+    /** A short flag beside the label — "Save 5%". Shown on live options only. */
+    badge?: string | null;
+    /** What choosing this does to the total, already formatted. */
+    priceNote?: string | null;
+    /** Tints `priceNote` as a saving rather than a charge. */
+    priceIsSaving?: boolean;
   }[];
   defaultValue?: string;
+  /** Supply with `onChange` to drive the group from the parent. */
+  value?: string;
+  onChange?: (value: string) => void;
+  /** A line under the legend. Used to say the group is still unanswered. */
+  hint?: string;
 }) {
+  const controlled = value !== undefined;
+
   return (
     // `id` and a negative tabIndex so the form's error effect can find and focus
     // this the same way it focuses a text input — it looks the field up by
@@ -628,6 +644,16 @@ export function RadioField({
     // has nowhere else to put it. Not in the tab order; the radios still are.
     <fieldset id={name} tabIndex={-1} className="block outline-none">
       <legend className="meta text-(--shop-mute)">{label}</legend>
+
+      {/* Announced, because the commonest way to arrive here is the commit
+          button sending the shopper back for this one answer — and a screen
+          reader user who lands on a group with nothing checked should be told
+          why they were moved rather than left to work it out. */}
+      {hint && (
+        <p role="status" className="mt-1.5 text-xs text-(--shop-mute)">
+          {hint}
+        </p>
+      )}
 
       <div className="mt-2 flex flex-col gap-3">
         {options.map((option) => {
@@ -650,7 +676,12 @@ export function RadioField({
                 type="radio"
                 name={name}
                 value={option.value}
-                defaultChecked={option.value === defaultValue}
+                {...(controlled
+                  ? {
+                      checked: option.value === value,
+                      onChange: () => onChange?.(option.value),
+                    }
+                  : { defaultChecked: option.value === defaultValue })}
                 disabled={disabled}
                 className={cn(
                   "mt-0.5 size-5 shrink-0 accent-(--shop-ink)",
@@ -669,6 +700,14 @@ export function RadioField({
                       {option.unavailableReason}
                     </span>
                   )}
+                  {/* The incentive, stated where the choice is made. Solid
+                      rather than tinted, because it is the one thing on this
+                      card meant to be read before the label it sits beside. */}
+                  {!disabled && option.badge && (
+                    <span className="meta rounded-full bg-(--shop-success) px-2 py-0.5 text-[10px] text-(--shop-canvas)">
+                      {option.badge}
+                    </span>
+                  )}
                 </span>
                 {option.description && (
                   <span className="mt-0.5 block text-xs text-(--shop-mute)">
@@ -676,6 +715,23 @@ export function RadioField({
                   </span>
                 )}
               </span>
+
+              {/* The money, on the right where a shopper scanning two rows can
+                  compare the two figures without reading either sentence. It is
+                  the sum, not a decoration: `aria-hidden` is wrong here, so it
+                  is announced as part of the label the radio belongs to. */}
+              {option.priceNote && (
+                <span
+                  className={cn(
+                    "shrink-0 self-center text-sm font-medium tabular-nums",
+                    option.priceIsSaving
+                      ? "text-(--shop-success)"
+                      : "text-(--shop-mute)"
+                  )}
+                >
+                  {option.priceNote}
+                </span>
+              )}
             </label>
           );
         })}

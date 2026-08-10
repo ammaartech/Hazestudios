@@ -18,6 +18,14 @@
  * `place_order()` have to move together.
  */
 
+import {
+  COD_FEE,
+  isCodMethod,
+  isPrepaidMethod,
+  NO_PAYMENT_METHOD,
+  prepaidSaving,
+} from "./payment-methods";
+
 export interface CheckoutSettings {
   /** Flat shipping charge, before any threshold or free-shipping code. */
   flatRate: number;
@@ -31,8 +39,12 @@ export interface CheckoutSettings {
 export interface CheckoutTotals {
   subtotal: number;
   discount: number;
+  /** Money off for paying up front. Zero on a COD order. */
+  prepaidDiscount: number;
   shipping: number;
   tax: number;
+  /** The courier's collection charge. Zero on a prepaid order. */
+  codFee: number;
   total: number;
   /** True when shipping came out at zero, so the summary can say "Free". */
   freeShipping: boolean;
@@ -93,12 +105,31 @@ export const DEFAULT_CHECKOUT_SETTINGS: CheckoutSettings = {
  * Tax is charged on the discounted merchandise total and not on shipping, for
  * the reason given in the migration: whether shipping is taxable is a
  * jurisdiction question, and this stand-in should not pretend to answer it.
+ *
+ * How the payment method enters the sum matters, because the shopper is being
+ * shown the difference and will check it:
+ *
+ *   - The prepaid saving comes off *after* any coupon and is taxable value the
+ *     store is giving up, so tax is charged on what is left of the merchandise,
+ *     not on what it was before.
+ *   - The free-shipping threshold is tested before the prepaid saving, so
+ *     choosing to pay online can never push an order back under the bar and
+ *     hand the shopper a shipping charge for saving the store money.
+ *   - The COD fee is a service charge on top of everything and is not taxed
+ *     here, for the same jurisdiction reason shipping is not.
+ *
+ * Called with no method — which is how checkout starts, see
+ * `NO_PAYMENT_METHOD` — this prices neither, and the total it returns is the
+ * one the shopper owes before the payment section moves it in one direction or
+ * the other. That figure is a real number they can check against their bag; it
+ * is simply not the last word, which is what the summary says beside it.
  */
 export function quoteTotals(
   subtotal: number,
   discount: number,
   settings: CheckoutSettings,
-  freeShippingCode = false
+  freeShippingCode = false,
+  paymentMethod: string = NO_PAYMENT_METHOD
 ): CheckoutTotals {
   const merchandise = Math.max(subtotal - discount, 0);
 
@@ -111,14 +142,24 @@ export function quoteTotals(
     shipping = 0;
   }
 
-  const tax = Math.round(merchandise * settings.taxRate * 100) / 100;
+  /* Both tested positively, never as each other's negation: until the shopper
+     picks, neither applies and the total is the plain merchandise total. */
+  const prepaidDiscount = isPrepaidMethod(paymentMethod)
+    ? prepaidSaving(merchandise)
+    : 0;
+  const codFee = isCodMethod(paymentMethod) ? COD_FEE : 0;
+
+  const taxable = Math.max(merchandise - prepaidDiscount, 0);
+  const tax = Math.round(taxable * settings.taxRate * 100) / 100;
 
   return {
     subtotal,
     discount,
+    prepaidDiscount,
     shipping,
     tax,
-    total: merchandise + shipping + tax,
+    codFee,
+    total: taxable + shipping + tax + codFee,
     freeShipping: shipping === 0,
   };
 }

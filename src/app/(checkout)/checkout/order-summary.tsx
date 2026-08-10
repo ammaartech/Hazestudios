@@ -39,6 +39,9 @@ const QUANTITY_CHOICES = 10;
 export function OrderSummary({
   cart,
   totals,
+  prepaidSaving,
+  codFee,
+  methodChosen,
   quote,
   applying,
   onApply,
@@ -50,6 +53,17 @@ export function OrderSummary({
 }: {
   cart: Cart;
   totals: CheckoutTotals;
+  /**
+   * What switching to prepaid would take off this bag — which is *not*
+   * `totals.prepaidDiscount`, since that is zero on the COD order this line is
+   * shown to. Computed by the form, which is the only place that can price a
+   * method the shopper has not chosen.
+   */
+  prepaidSaving: number;
+  /** What COD would add. Constant, but formatted in the cart's own currency. */
+  codFee: number;
+  /** False until the shopper picks a method — the total is not final yet. */
+  methodChosen: boolean;
   quote: DiscountQuote | null;
   applying: boolean;
   onApply: (code: string) => void;
@@ -222,6 +236,19 @@ export function OrderSummary({
                   </Row>
                 )}
 
+                {/* Its own row rather than folded into "Discount", because the
+                    two are earned differently — one is a code the shopper
+                    found, this one is a choice they can still change from the
+                    control a few centimetres to the left. Naming the method in
+                    the label is what makes that connection. */}
+                {totals.prepaidDiscount > 0 && (
+                  <Row label="Prepaid discount (5%)" accent>
+                    <span className="flex items-center gap-1.5">
+                      −{formatMoney(totals.prepaidDiscount, cart.currency)}
+                    </span>
+                  </Row>
+                )}
+
                 <Row label="Shipping">
                   {totals.freeShipping ? (
                     <span className="text-(--shop-success)">Free</span>
@@ -233,7 +260,28 @@ export function OrderSummary({
                 {totals.tax > 0 && (
                   <Row label="Tax">{formatMoney(totals.tax, cart.currency)}</Row>
                 )}
+
+                {/* Last before the total, and not tinted as a warning. It is a
+                    charge, and a charge the shopper opted into — colouring it
+                    red would be scolding them for a choice the store offered. */}
+                {totals.codFee > 0 && (
+                  <Row label="Cash on delivery fee">
+                    +{formatMoney(totals.codFee, cart.currency)}
+                  </Row>
+                )}
               </dl>
+
+              {/* The nudge, at the moment of maximum leverage: directly under
+                  the fee it would remove, above the total it would lower. It
+                  says nothing the payment cards do not, but it says it where
+                  the shopper is looking at the number they dislike. */}
+              {totals.codFee > 0 && prepaidSaving > 0 && (
+                <p className="mt-3 text-xs text-(--shop-success)">
+                  Pay online instead and save{" "}
+                  {formatMoney(prepaidSaving + totals.codFee, cart.currency)} on
+                  this order.
+                </p>
+              )}
 
               <div className="mt-5 flex items-baseline justify-between border-t border-(--shop-ink)/10 pt-5">
                 <span className="font-medium">Total</span>
@@ -241,6 +289,24 @@ export function OrderSummary({
                   {formatMoney(totals.total, cart.currency)}
                 </span>
               </div>
+
+              {/* Nothing picked yet, so this total is real but not final — it
+                  is the bag before the payment section moves it either way.
+                  Saying so is the honest half; putting both figures in one
+                  sentence is the persuasive half, and a shopper who reads
+                  "−₹64.95" against "+₹49" has been given the comparison rather
+                  than a slogan about it. */}
+              {!methodChosen && (
+                <p className="mt-3 text-xs text-(--shop-mute)">
+                  Before payment.{" "}
+                  <span className="text-(--shop-success)">
+                    Pay online to take{" "}
+                    {formatMoney(prepaidSaving, cart.currency)} off
+                  </span>
+                  , or add {formatMoney(codFee, cart.currency)} for cash on
+                  delivery.
+                </p>
+              )}
             </div>
           </div>
         </div>

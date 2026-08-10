@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ShopProduct, ShopVariant } from "@/lib/shop/queries";
 import {
   shortSizeLabel,
@@ -20,7 +20,8 @@ import { useCart } from "./cart-provider";
  * combination's own stock then drives the CTA.
  */
 export function VariantPicker({ product }: { product: ShopProduct }) {
-  const { add } = useCart();
+  const { add, buyNow, buying } = useCart();
+  const prepaidTagId = useId();
   const options = product.options;
   const [selection, setSelection] = useState<Record<string, string>>(() => {
     // Preselect a single-value axis (e.g. "One Size") — there's no choice to make.
@@ -143,6 +144,15 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
    * guard is about not sending a request that is known to be pointless — not
    * about trusting the client.
    */
+  /**
+   * The same add, minus the drawer, plus a redirect — see `buyNow` in
+   * cart-provider.tsx. Guarded identically, and for the same reason.
+   */
+  function buyItNow() {
+    if (!canAdd || buying) return;
+    buyNow({ productId: product.id, variantId: selected?.id ?? null });
+  }
+
   function addToBag() {
     if (!canAdd) return;
 
@@ -264,6 +274,52 @@ export function VariantPicker({ product }: { product: ShopProduct }) {
       >
         {ctaLabel}
       </button>
+
+      {/* ----------------------------------------------------------------- */}
+      {/* Buy it now                                                         */}
+      {/* ----------------------------------------------------------------- */}
+      {/* Outlined rather than filled, and second: "Add to bag" stays the
+          primary action because it is the reversible one. This is the shortcut
+          for a shopper who has already decided, and the tag is the reason to
+          take it — 5% off is a fact about checkout, and the product page is
+          where the decision to go there gets made.
+
+          Hidden entirely when the selection cannot be bought, rather than
+          disabled beside an equally dead "Sold out" button. Two dead controls
+          say nothing the first one did not. */}
+      {canAdd && (
+        <div className="relative mt-3">
+          <button
+            type="button"
+            onClick={buyItNow}
+            disabled={buying}
+            aria-describedby={prepaidTagId}
+            className={cn(
+              "glass-press min-h-14 w-full cursor-pointer rounded-full border border-(--shop-ink) bg-(--shop-canvas) px-8 text-base font-medium text-(--shop-ink)",
+              "transition-colors duration-200 hover:bg-(--shop-ink) hover:text-(--shop-canvas)",
+              "focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink)",
+              buying && "cursor-wait opacity-70"
+            )}
+          >
+            {buying ? "Taking you to checkout…" : "Buy it now"}
+          </button>
+
+          {/* Straddles the button's top edge, which is what makes it read as a
+              label *on* this action rather than a note above it. Pointer events
+              off so the 20px it overlaps stay part of the button's hit area.
+
+              Bound to the button by `aria-describedby` rather than hidden from
+              assistive tech: it is the incentive, not decoration, and a shopper
+              who cannot see it is exactly the one who would otherwise never
+              learn that paying online is cheaper. */}
+          <span
+            id={prepaidTagId}
+            className="meta pointer-events-none absolute -top-2 left-5 rounded-full bg-(--shop-success) px-2.5 py-1 text-[10px] leading-none font-semibold text-(--shop-canvas)"
+          >
+            5% off on prepaid
+          </span>
+        </div>
+      )}
 
       {/* ----------------------------------------------------------------- */}
       {/* Sticky mobile buy bar                                              */}

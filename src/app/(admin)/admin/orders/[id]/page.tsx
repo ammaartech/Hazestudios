@@ -190,6 +190,16 @@ export default async function OrderDetailPage({
                     </span>
                   </div>
                 )}
+                {Number(order.prepaid_discount) > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      Prepaid discount (5%)
+                    </span>
+                    <span className="tabular-nums">
+                      −{formatMoney(order.prepaid_discount)}
+                    </span>
+                  </div>
+                )}
                 {/* Present on every storefront order since 0014; admin-created
                     orders still default both to zero, so they stay hidden there
                     rather than adding two "—" rows to every draft. */}
@@ -205,6 +215,15 @@ export default async function OrderDetailPage({
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Tax</span>
                     <span className="tabular-nums">{formatMoney(order.tax_total)}</span>
+                  </div>
+                )}
+                {/* The courier collects this alongside the goods — it is inside
+                    the total Qikink is told to collect, not a separate charge
+                    the operator has to remember. */}
+                {Number(order.cod_fee) > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">COD fee</span>
+                    <span className="tabular-nums">{formatMoney(order.cod_fee)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-semibold">

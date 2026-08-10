@@ -216,6 +216,12 @@ export interface Order {
   shipping_total: number;
   tax_total: number;
   payment_method: string;
+  /* Added in 0022_payment_pricing.sql. What the payment method itself cost or
+     saved, kept apart from shipping_total and discount_total so a report can
+     still tell a coupon from a prepaid incentive. Zero on every order placed
+     before that migration, and exactly one of the two is ever non-zero. */
+  cod_fee: number;
+  prepaid_discount: number;
   /** Bearer token for the storefront order status page; null on admin orders. */
   checkout_token: string | null;
   source: string;

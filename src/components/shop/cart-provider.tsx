@@ -11,6 +11,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   addToCart,
@@ -82,6 +83,22 @@ interface CartContextValue {
     compareAt?: number | null;
     maxQuantity?: number | null;
   }) => void;
+  /**
+   * Adds to the bag and goes straight to checkout.
+   *
+   * Same write as `add`, and deliberately not a different one: buy-now is not
+   * a separate purchase path with its own cart, it is `add` plus a navigation.
+   * Anything already in the bag comes along, which is the behaviour a shopper
+   * expects and the only one that cannot silently lose an item.
+   *
+   * The two differences from `add` are both about not being interrupted: the
+   * drawer stays shut, and the navigation waits for the server rather than
+   * racing it — checkout reads the cart on the server, so arriving before the
+   * write lands is arriving at an empty bag.
+   */
+  buyNow: (input: { productId: string; variantId?: string | null; quantity?: number }) => void;
+  /** True while `buyNow` is writing, so the button can say so. */
+  buying: boolean;
   setQuantity: (lineId: string, quantity: number) => void;
   remove: (lineId: string) => void;
   clear: () => void;
@@ -333,6 +350,44 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [markPending, patch]
   );
 
+  /* Buy it now.
+   *
+   * No optimistic line, because there is nothing to look at: the shopper is
+   * leaving this page. `buying` carries the wait instead, and the button it
+   * came from is what shows it. The redirect is left to `router.push` rather
+   * than a `redirect()` in the action, so a failed write keeps the shopper on
+   * the product page with the reason, instead of dropping them on a checkout
+   * for a bag that was never written. */
+  const [buying, setBuying] = useState(false);
+  const router = useRouter();
+
+  const buyNow = useCallback<CartContextValue["buyNow"]>(
+    ({ productId, variantId = null, quantity = 1 }) => {
+      setBuying(true);
+      markPending(true);
+
+      startTransition(async () => {
+        const result = await addToCart({ productId, variantId, quantity });
+        setCart(result.cart);
+        markPending(false);
+
+        if (!result.ok) {
+          setBuying(false);
+          toast.error(result.error);
+          return;
+        }
+
+        track("add_to_cart", { productId, value: undefined });
+
+        // `buying` is deliberately never cleared on success. The navigation is
+        // in flight and the button is about to be unmounted; clearing it would
+        // flash the idle label for the frame in between.
+        router.push("/checkout");
+      });
+    },
+    [markPending, router]
+  );
+
   const setQuantity = useCallback<CartContextValue["setQuantity"]>(
     (lineId, quantity) => {
       markPending(true);
@@ -378,6 +433,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       openDrawer,
       closeDrawer,
       add,
+      buyNow,
+      buying,
       setQuantity,
       remove,
       clear,
@@ -389,6 +446,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       openDrawer,
       closeDrawer,
       add,
+      buyNow,
+      buying,
       setQuantity,
       remove,
       clear,

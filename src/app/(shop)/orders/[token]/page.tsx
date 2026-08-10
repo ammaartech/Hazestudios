@@ -129,6 +129,14 @@ export default async function OrderConfirmationPage({
               value={`−${formatMoney(order.discount_total, order.currency)}`}
             />
           )}
+          {/* Both added in 0022, and both zero on every order placed before it —
+              so an old order renders exactly as it always did. */}
+          {Number(order.prepaid_discount) > 0 && (
+            <Row
+              label="Prepaid discount (5%)"
+              value={`−${formatMoney(order.prepaid_discount, order.currency)}`}
+            />
+          )}
           <Row
             label="Shipping"
             value={
@@ -139,6 +147,12 @@ export default async function OrderConfirmationPage({
           />
           {Number(order.tax_total) > 0 && (
             <Row label="Tax" value={formatMoney(order.tax_total, order.currency)} />
+          )}
+          {Number(order.cod_fee) > 0 && (
+            <Row
+              label="Cash on delivery fee"
+              value={formatMoney(order.cod_fee, order.currency)}
+            />
           )}
         </dl>
 

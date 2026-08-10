@@ -1,10 +1,12 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { flushSync } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Lock } from "lucide-react";
 import { formatMoney } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { getLanding, getSessionKey, track } from "@/lib/analytics/track";
 // From `checkout-totals`, not `checkout`: the latter reaches for the request
 // through the Supabase server client and cannot be pulled into this bundle.
@@ -12,7 +14,11 @@ import { quoteTotals } from "@/lib/shop/checkout-totals";
 import type { CheckoutPrefill, CheckoutSettings } from "@/lib/shop/checkout-totals";
 import type { Cart } from "@/lib/shop/cart";
 import type { Country } from "@/lib/shop/countries";
-import type { PaymentMethodOption } from "@/lib/shop/payment-methods";
+import {
+  isPrepaidMethod,
+  NO_PAYMENT_METHOD,
+  type PaymentMethodOption,
+} from "@/lib/shop/payment-methods";
 import { DEFAULT_COUNTRY } from "@/lib/shop/countries";
 import { hasDialCode } from "@/lib/shop/phone-codes";
 import {
@@ -62,14 +68,12 @@ export function CheckoutForm({
   prefill,
   countries,
   paymentMethods,
-  defaultPaymentMethod,
 }: {
   cart: Cart;
   settings: CheckoutSettings;
   prefill: CheckoutPrefill;
   countries: Country[];
   paymentMethods: PaymentMethodOption[];
-  defaultPaymentMethod: string;
 }) {
   const [state, formAction, submitting] = useActionState<CheckoutState, FormData>(
     placeOrder,
@@ -151,15 +155,64 @@ export function CheckoutForm({
   /** The last PIN whose lookup was applied — see the effect below. */
   const resolved = useRef("");
 
-  const totals = useMemo(
+  /* The payment method is the one control on this form that changes the bill,
+     so it is the one control the summary has to hear about. Everything else
+     here can stay uncontrolled.
+
+     Starts empty on purpose — see `NO_PAYMENT_METHOD`. Nothing is checked
+     until the shopper checks it, which is what makes the totals below a
+     running answer to a question they are being asked rather than a receipt
+     for a decision that was made for them. */
+  const [paymentMethod, setPaymentMethod] = useState(NO_PAYMENT_METHOD);
+  const chosen = paymentMethod !== NO_PAYMENT_METHOD;
+
+  /* The summary's grid cell, and whether it has already made its one move —
+     see `choosePayment`. A ref rather than state for the flag: nothing renders
+     from it, and it must be readable inside the handler that sets it. */
+  const summaryColumn = useRef<HTMLDivElement>(null);
+  const swapped = useRef(false);
+
+  /* The other three blocks of the swap, so the cascade can reach them. */
+  const fieldsColumn = useRef<HTMLDivElement>(null);
+  const paymentBlock = useRef<HTMLDivElement>(null);
+  const commitBlock = useRef<HTMLDivElement>(null);
+
+  /* Priced per method rather than once, because the radio cards each quote
+     their own effect on the total. Three calls to a pure function on a handful
+     of numbers — cheaper than the state that would avoid them. */
+  const priceFor = useMemo(() => {
+    const discount = quote?.ok ? quote.amount : 0;
+    const freeShipping = Boolean(quote?.ok && quote.freeShipping);
+    return (method: string) =>
+      quoteTotals(cart.subtotal, discount, settings, freeShipping, method);
+  }, [cart.subtotal, quote, settings]);
+
+  const totals = priceFor(paymentMethod);
+
+  /* What each card says on its right-hand edge. Both are stated as what this
+     choice does to *this* order — a shopper comparing "− ₹64.95" against
+     "+ ₹49" is comparing two real numbers about their own bag, which is a far
+     more honest nudge than "5% off" against nothing. */
+  const methodOptions = useMemo(
     () =>
-      quoteTotals(
-        cart.subtotal,
-        quote?.ok ? quote.amount : 0,
-        settings,
-        Boolean(quote?.ok && quote.freeShipping)
-      ),
-    [cart.subtotal, quote, settings]
+      paymentMethods.map((method) => {
+        const priced = priceFor(method.value);
+        const saving = priced.prepaidDiscount;
+        const fee = priced.codFee;
+
+        return {
+          ...method,
+          badge: saving > 0 ? "Save 5%" : null,
+          priceNote:
+            saving > 0
+              ? `−${formatMoney(saving, cart.currency)}`
+              : fee > 0
+                ? `+${formatMoney(fee, cart.currency)}`
+                : null,
+          priceIsSaving: saving > 0,
+        };
+      }),
+    [paymentMethods, priceFor, cart.currency]
   );
 
   /* Reaching checkout is the funnel step before purchase, and 0007 has been
@@ -282,6 +335,171 @@ export function CheckoutForm({
     setAddressSeed((n) => n + 1);
   }
 
+  /**
+   * The swap's motion: one settle per block, top to bottom, like the card
+   * landing and the weight of it travelling down the page.
+   *
+   * Each block starts a few pixels above where it belongs and eases down into
+   * it, and each one starts a little after the one above — so the eye reads a
+   * sequence rather than four things twitching at once. Only the summary
+   * fades; the rest are already on screen and fading them would look like the
+   * page reloading rather than reacting.
+   *
+   * Transforms and opacity only. Nothing here changes layout, which is the
+   * whole reason it can be this liberal — the positions were settled
+   * synchronously before any of this runs, and this is decoration over a page
+   * that has already stopped moving.
+   *
+   * Two things it deliberately does not do:
+   *
+   * Animate the real distance travelled. The summary moves about 1,300px down
+   * the document, and playing that literally is a streak across the screen at
+   * two thousand pixels a second. What sells "it came from up there" is a
+   * short descent with a long settle, not an accurate one.
+   *
+   * Animate what cannot be seen. To have tapped a payment method the shopper
+   * is near the end of the form, so the blocks above are off-screen — and
+   * transforming a 1,300px subtree of live inputs costs a compositor layer to
+   * animate nothing anybody is looking at. Blocks outside the viewport keep
+   * their slot in the rhythm and are simply skipped.
+   */
+  function cascade(summary: HTMLElement) {
+    const steps: { el: HTMLElement | null; from: number; fade?: boolean }[] = [
+      { el: fieldsColumn.current, from: -6 },
+      { el: summary, from: -34, fade: true },
+      { el: paymentBlock.current, from: -10 },
+      { el: commitBlock.current, from: -14 },
+    ];
+
+    steps.forEach(({ el, from, fade }, index) => {
+      if (!el) return;
+
+      const box = el.getBoundingClientRect();
+      if (box.bottom < 0 || box.top > window.innerHeight) return;
+
+      el.animate(
+        fade
+          ? [
+              { transform: `translateY(${from}px) scale(0.985)`, opacity: 0 },
+              // Solid well before it has finished moving, so most of what the
+              // shopper watches is a card settling rather than one appearing.
+              { opacity: 1, offset: 0.45 },
+              { transform: "none", opacity: 1 },
+            ]
+          : [{ transform: `translateY(${from}px)` }, { transform: "none" }],
+        {
+          duration: fade ? 620 : 540,
+          delay: index * 95,
+          // The curve the rest of this checkout eases with: quick off the mark,
+          // then a long, slowing arrival. It is what makes a 34px move read as
+          // unhurried instead of abrupt.
+          easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+          fill: "backwards",
+        }
+      );
+    });
+  }
+
+  /**
+   * Picking a payment method, and the swap that comes with it.
+   *
+   * On a phone the summary starts at the top of the form and drops into the
+   * slot directly above the payment cards — so the total, the method and the
+   * button that commits both sit in one screenful, and nobody has to scroll
+   * back to the top to check what they are about to buy. The choice of payment
+   * is the right moment for it: the point where the form stops asking what
+   * they want and starts asking whether they are sure.
+   *
+   * Landing *above* the payment section rather than below it has a property
+   * worth keeping: the summary leaves the space above the address fields and
+   * takes up the same space immediately before Payment, so the payment cards
+   * do not move at all. The shopper's thumb is on one of them.
+   *
+   * Three things have to happen in the right order for that to feel like one
+   * motion rather than the page falling over:
+   *
+   * 1. `flushSync` commits the reorder immediately, inside this handler, so the
+   *    two measurements below straddle it. Without it React would batch the
+   *    render to after this function returns and the "before" and "after"
+   *    positions would be the same number.
+   *
+   * 2. The scroll is corrected by however far the payment section moved. A tall
+   *    block leaving the space above the viewport drags everything up with it,
+   *    which would fling the shopper down the page at the exact moment they
+   *    touched a control. Correcting it here — synchronously, before the
+   *    browser paints — means the section they are looking at does not move at
+   *    all. (It can under-correct if they are near the top of the document and
+   *    there is not that much scroll to give back. On a form this long, by the
+   *    time the payment section is on screen, there is.)
+   *
+   * 3. Only then does the summary animate, and only into its arrival. What it
+   *    actually did was travel a thousand pixels from off-screen, and playing
+   *    that literally would be a cartoon; what the shopper perceives is a card
+   *    settling into a space that just opened for it.
+   *
+   * Runs once, ever. Switching between the two methods afterwards re-prices the
+   * order and moves nothing, because the summary is already where it belongs
+   * and re-animating a card the shopper is reading is a distraction, not
+   * polish.
+   */
+  function choosePayment(next: string) {
+    const group = document.getElementById("payment_method");
+    const column = summaryColumn.current;
+
+    // Desktop keeps the summary in its own sticky column, so there is nothing
+    // to move and the `lg:` placement below would override it anyway.
+    const swapping =
+      !swapped.current &&
+      column != null &&
+      !window.matchMedia("(min-width: 64rem)").matches;
+
+    if (!swapping) {
+      setPaymentMethod(next);
+      return;
+    }
+
+    swapped.current = true;
+    const before = group?.getBoundingClientRect().top ?? 0;
+
+    flushSync(() => setPaymentMethod(next));
+
+    const drift = (group?.getBoundingClientRect().top ?? before) - before;
+    if (drift) window.scrollBy(0, drift);
+
+    // Measured before the animation starts, or the transform below would be
+    // baked into the answer.
+    const landed = column.getBoundingClientRect();
+
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      cascade(column);
+    }
+
+    /* Landing directly above the payment card usually means it is already on
+       screen, and moving the page under someone who just tapped a control is
+       worse than leaving it. Only when it landed wholly outside the viewport
+       is there a "where did it go" to answer, and `nearest` answers it with
+       the smallest scroll that works. */
+    const offScreen =
+      landed.bottom < 72 || landed.top > window.innerHeight - 96;
+    if (offScreen) {
+      column.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+
+  /**
+   * Sends the shopper to the one question they have not answered.
+   *
+   * Looks the fieldset up by id the same way the error effect does — the group
+   * carries `id="payment_method"` precisely so both can find it — and focuses
+   * it rather than the first radio, so a keyboard user lands on the group and
+   * arrows into it instead of having one option quietly selected on arrival.
+   */
+  function focusPayment() {
+    const group = document.getElementById("payment_method");
+    group?.scrollIntoView({ block: "center", behavior: "smooth" });
+    group?.focus({ preventScroll: true });
+  }
+
   function applyDiscount(code: string) {
     startQuoting(async () => {
       setQuote(await quoteDiscount(code, cart.subtotal));
@@ -305,14 +523,35 @@ export function CheckoutForm({
   }
 
   return (
+    /* Three grid items on mobile, stacked, and the middle one moves — see
+       `choosePayment`. On desktop the explicit col/row placement below pins
+       all three regardless of the `order` classes, so the swap is a phone
+       behaviour that costs the two-column layout nothing.
+
+       `lg:gap-y-0` because the desktop grid gained a second row that the old
+       single-row version never had, and a 3.5rem row gap between the fields
+       and the button they submit is not the spacing that was there before.
+       The commit block carries its own margin instead.
+
+       `overflow-anchor: none` because the swap has to behave the same on every
+       phone. Chrome and Firefox implement scroll anchoring and would silently
+       correct for the reorder themselves; Safari implements none of it and
+       would not. Left on, the two corrections compose — the browser's, then
+       ours — and the section under the shopper's thumb ends up ~20px from
+       where it was, which is precisely the jitter this is all trying to avoid.
+       Turning it off inside this form makes `choosePayment` the only thing
+       moving the page, and it moves it identically everywhere. */
     <form
       action={formAction}
-      className="mx-auto grid max-w-6xl gap-8 px-4 py-8 md:px-8 lg:grid-cols-[minmax(0,1fr)_23rem] lg:gap-14 lg:py-12"
+      className="mx-auto grid max-w-6xl gap-8 px-4 py-8 [overflow-anchor:none] md:px-8 lg:grid-cols-[minmax(0,1fr)_23rem] lg:gap-x-14 lg:gap-y-0 lg:py-12"
     >
       {/* ------------------------------------------------------------------ */}
       {/* Fields                                                              */}
       {/* ------------------------------------------------------------------ */}
-      <div className="min-w-0">
+      <div
+        ref={fieldsColumn}
+        className="order-2 min-w-0 lg:order-0 lg:col-start-1 lg:row-start-1"
+      >
         <Section
           title="Contact"
           description={
@@ -540,18 +779,114 @@ export function CheckoutForm({
           )}
         </Section>
 
+        {/* Hidden, and populated after mount — see the effect above. Kept with
+            the fields rather than beside the button: it is part of what this
+            column submits, and it renders nothing either way. */}
+        <div ref={attribution} hidden>
+          <input type="hidden" name="session_key" defaultValue="" />
+          <input type="hidden" name="landing_path" defaultValue="" />
+          <input type="hidden" name="referrer" defaultValue="" />
+        </div>
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Summary                                                             */}
+      {/* ------------------------------------------------------------------ */}
+      {/* Between the delivery fields and the payment choice in the DOM, which
+          is the order the keyboard and a screen reader take: contact →
+          delivery → what it costs → how to pay → place it.
+
+          Visually it starts *above* all of that on a phone, because a shopper
+          wants to see what they are buying before they type an address. The
+          moment they pick a payment method it drops into the slot it holds in
+          the DOM, directly above the payment card they just touched — so the
+          total, the method and the button that commits both end up in one
+          screenful, and nobody has to scroll back to the top to check what
+          they are about to buy. See `choosePayment`. */}
+      <div
+        ref={summaryColumn}
+        className={cn(
+          "lg:order-0 lg:col-start-2 lg:row-start-1 lg:row-span-3",
+          chosen ? "order-3" : "order-1"
+        )}
+      >
+        <OrderSummary
+          cart={cart}
+          totals={totals}
+          prepaidSaving={priceFor("prepaid").prepaidDiscount}
+          codFee={priceFor("cod").codFee}
+          methodChosen={chosen}
+          quote={quote}
+          applying={quoting}
+          onApply={applyDiscount}
+          editing={editing}
+          editError={editError}
+          onLineQuantity={(lineId, quantity) =>
+            runEdit(() => setLineQuantity(lineId, quantity))
+          }
+          onLineVariant={(lineId, variantId) =>
+            runEdit(() => setLineVariant(lineId, variantId))
+          }
+          onLineRemove={(lineId) => runEdit(() => removeLine(lineId))}
+        />
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Payment                                                             */}
+      {/* ------------------------------------------------------------------ */}
+      {/* Its own grid item, so the summary has a slot to land in between this
+          and the address above it. `mt-2` against the grid's 2rem row gap
+          restores the 2.5rem `Section` gives itself when it has siblings;
+          desktop has no row gap, so it takes the margin outright. */}
+      <div
+        ref={paymentBlock}
+        className="order-4 mt-2 lg:order-0 lg:col-start-1 lg:row-start-2 lg:mt-10"
+      >
         <Section title="Payment">
-          {/* Still no gateway, and the screen says so rather than implying a
-              charge that never happens. What changed is that the shopper now
-              states how they intend to pay, because the answer routes the
-              order: only COD is auto-sent to the printer, and map.ts reports
-              the order as COD or Prepaid on the strength of it. */}
+          {/* The answer routes the order and prices it. Only COD is auto-sent
+              to the printer, map.ts reports the order as COD or Prepaid on the
+              strength of it, and since 0022 the choice is worth real money in
+              both directions — see payment-methods.ts for the two numbers. */}
           <RadioField
             label="How would you like to pay?"
             name="payment_method"
-            options={paymentMethods}
-            defaultValue={defaultPaymentMethod}
+            options={methodOptions}
+            value={paymentMethod}
+            onChange={choosePayment}
+            /* Always a line, never absent, and short enough to stay one line
+               on the narrowest phone. A hint that unmounts on selection takes
+               22px of document with it, and the payment section sits close
+               enough to the end of the form that the shopper is usually
+               scrolled to the very bottom when they tap — where there is no
+               scroll left to give back and the whole page drops instead. The
+               swap is engineered not to move anything; this would have moved
+               it anyway. */
+            hint={
+              chosen
+                ? "You can change this until you place the order."
+                : "Pick one to see your final total."
+            }
           />
+
+          {/* The gateway is not live yet, and a shopper who picks prepaid has
+              earned the right to know that before they commit rather than
+              after. Saying what happens next is also the difference between an
+              order that gets paid and one that sits pending: without this line
+              there is nothing on screen telling them a link is coming. */}
+          {isPrepaidMethod(paymentMethod) && (
+            <p
+              role="status"
+              className="rounded-2xl bg-(--shop-success)/8 px-4 py-3 text-xs text-(--shop-charcoal)"
+            >
+              We&rsquo;ll send a secure payment link to your email and phone as
+              soon as this order is placed. Your {formatMoney(
+                totals.prepaidDiscount,
+                cart.currency
+              )}{" "}
+              saving is already in the total below — nothing is charged on this
+              page.
+            </p>
+          )}
 
           <p className="flex items-center gap-2 text-xs text-(--shop-mute)">
             <Lock className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
@@ -621,71 +956,65 @@ export function CheckoutForm({
             </div>
           )}
         </Section>
-
-        {/* Hidden, and populated after mount — see the effect above. */}
-        <div ref={attribution} hidden>
-          <input type="hidden" name="session_key" defaultValue="" />
-          <input type="hidden" name="landing_path" defaultValue="" />
-          <input type="hidden" name="referrer" defaultValue="" />
-        </div>
-
-        {/* ---- Commit ---- */}
-        <div className="mt-10">
-          {state.error && (
-            <p
-              ref={errorBox}
-              role="alert"
-              tabIndex={-1}
-              className="mb-4 rounded-2xl bg-(--shop-sale)/8 px-4 py-3 text-sm text-(--shop-sale) outline-none"
-            >
-              {state.error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="glass glass-pill glass-press glass-primary flex min-h-14 w-full cursor-pointer items-center justify-center gap-2 px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink) disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submitting ? (
-              "Placing your order…"
-            ) : (
-              <>
-                Place order · {formatMoney(totals.total, cart.currency)}
-                <ArrowRight className="size-4" aria-hidden />
-              </>
-            )}
-          </button>
-
-          <p className="mt-4 text-center text-xs text-(--shop-mute)">
-            By placing this order you agree to our terms of sale.
-          </p>
-        </div>
       </div>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Summary                                                             */}
+      {/* Commit                                                              */}
       {/* ------------------------------------------------------------------ */}
-      {/* Second in the DOM so the keyboard and screen-reader path runs
-          contact → delivery → payment → total, and visually first on mobile
-          where a shopper wants to confirm what they are buying before typing. */}
-      <div className="order-first lg:order-none lg:col-start-2 lg:row-start-1">
-        <OrderSummary
-          cart={cart}
-          totals={totals}
-          quote={quote}
-          applying={quoting}
-          onApply={applyDiscount}
-          editing={editing}
-          editError={editError}
-          onLineQuantity={(lineId, quantity) =>
-            runEdit(() => setLineQuantity(lineId, quantity))
-          }
-          onLineVariant={(lineId, variantId) =>
-            runEdit(() => setLineVariant(lineId, variantId))
-          }
-          onLineRemove={(lineId) => runEdit(() => removeLine(lineId))}
-        />
+      {/* Its own grid item for the same reason Payment is. `mt-2` against the
+          grid's 2rem row gap comes to the 2.5rem this block had as `mt-10`
+          when it lived inside the fields column; desktop has no row gap, so it
+          keeps the margin outright. */}
+      <div
+        ref={commitBlock}
+        className="order-5 mt-2 lg:order-0 lg:col-start-1 lg:row-start-3 lg:mt-10"
+      >
+        {state.error && (
+          <p
+            ref={errorBox}
+            role="alert"
+            tabIndex={-1}
+            className="mb-4 rounded-2xl bg-(--shop-sale)/8 px-4 py-3 text-sm text-(--shop-sale) outline-none"
+          >
+            {state.error}
+          </p>
+        )}
+
+        {/* Two buttons' worth of behaviour in one control.
+
+            Until a method is picked there is no final total to put on it, so
+            quoting one would be quoting a number that is about to move. It
+            becomes a plain button that sends the shopper to the decision
+            instead — not disabled, because a disabled button pressed by
+            someone who cannot see why is a dead end, and this one answers.
+
+            The server action rejects an empty method regardless, which is
+            what happens with JavaScript off; this only saves the round trip
+            and the scroll back up. */}
+        <button
+          type={chosen ? "submit" : "button"}
+          onClick={chosen ? undefined : focusPayment}
+          disabled={submitting}
+          className="glass glass-pill glass-press glass-primary flex min-h-14 w-full cursor-pointer items-center justify-center gap-2 px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink) disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {submitting ? (
+            "Placing your order…"
+          ) : chosen ? (
+            <>
+              Place order · {formatMoney(totals.total, cart.currency)}
+              <ArrowRight className="size-4" aria-hidden />
+            </>
+          ) : (
+            <>
+              Choose how to pay
+              <ArrowRight className="size-4" aria-hidden />
+            </>
+          )}
+        </button>
+
+        <p className="mt-4 text-center text-xs text-(--shop-mute)">
+          By placing this order you agree to our terms of sale.
+        </p>
       </div>
     </form>
   );
