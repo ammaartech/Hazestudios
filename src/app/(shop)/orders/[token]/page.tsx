@@ -2,11 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Check } from "lucide-react";
+import { Check, Clock } from "lucide-react";
 import { formatDate, formatMoney } from "@/lib/format";
 import { getOrderByToken } from "@/lib/shop/checkout";
 import { countryName } from "@/lib/shop/countries";
+import { getPaymentAttempts } from "@/lib/cashfree/payment";
+import { isPrepaidMethod } from "@/lib/shop/payment-methods";
 import type { CheckoutAddress } from "@/lib/shop/checkout-totals";
+import { PayNow } from "./pay-now";
 import { PurchaseBeacon } from "./purchase-beacon";
 
 export const metadata: Metadata = {
@@ -43,16 +46,51 @@ export default async function OrderConfirmationPage({
   const address = order.shipping_address as Partial<CheckoutAddress>;
   const hasAddress = Boolean(address?.address1);
 
+  /* Money owed on an order the shopper chose to pay for up front. The only
+     state in which this page has anything left to ask of them, and the reason
+     it is computed here rather than inside the block below: the heading copy
+     and the delivery estimate both change when an order is not yet paid. */
+  const awaitingPayment =
+    isPrepaidMethod(order.payment_method) && order.payment_status === "pending";
+
+  /* Whether to open the payment window without waiting for a click.
+     "No attempt has ever been made on this order" is only true on the first
+     render after checkout redirected here, and the attempt the auto-open
+     creates is what makes it false — so a reload cannot replay it. Preferred
+     over a `?pay=1` marker for exactly that reason: a query parameter survives
+     a refresh and a bookmark, and this must not. */
+  const autoStartPayment =
+    awaitingPayment && (await getPaymentAttempts(order.id)).length === 0;
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 md:px-8 md:py-20">
-      <PurchaseBeacon orderId={order.id} total={Number(order.total)} />
+      {/* Held back while a prepaid order is unpaid. A purchase event is a claim
+          that money changed hands, and counting one the moment a shopper opens
+          a payment window would inflate every conversion figure by the people
+          who closed it. The beacon dedupes on the order id, so it still fires
+          exactly once — on whichever visit finds the order paid. */}
+      {!awaitingPayment && (
+        <PurchaseBeacon orderId={order.id} total={Number(order.total)} />
+      )}
 
       <header className="flex flex-col items-start gap-5">
+        {/* A tick means finished, and an unpaid order is not. The clock is the
+            same size and weight in the same circle, so the page does not
+            restructure itself between the two states — only its claim
+            changes. */}
         <span
-          className="flex size-11 items-center justify-center rounded-full bg-(--shop-success)/10 text-(--shop-success)"
+          className={
+            awaitingPayment
+              ? "flex size-11 items-center justify-center rounded-full bg-(--shop-ink)/8 text-(--shop-charcoal)"
+              : "flex size-11 items-center justify-center rounded-full bg-(--shop-success)/10 text-(--shop-success)"
+          }
           aria-hidden
         >
-          <Check className="size-5" strokeWidth={2.5} />
+          {awaitingPayment ? (
+            <Clock className="size-5" strokeWidth={2.5} />
+          ) : (
+            <Check className="size-5" strokeWidth={2.5} />
+          )}
         </span>
 
         <div>
@@ -60,18 +98,31 @@ export default async function OrderConfirmationPage({
             Order #{order.order_number} · {formatDate(order.created_at)}
           </p>
           <h1 className="display mt-2 text-3xl tracking-[-0.03em] md:text-4xl">
-            Thank you{order.shipping_address?.first_name
-              ? `, ${(address.first_name ?? "").trim()}`
-              : ""}
-            .
+            {awaitingPayment
+              ? "One step left."
+              : `Thank you${
+                  order.shipping_address?.first_name
+                    ? `, ${(address.first_name ?? "").trim()}`
+                    : ""
+                }.`}
           </h1>
           <p className="mt-3 max-w-prose text-(--shop-mute)">
-            Your order is confirmed and reserved, under{" "}
-            <span className="text-(--shop-ink)">{order.email}</span>.{" "}
+            {/* "Reserved" stays true in both states — the stock came out of
+                inventory when the order was placed, whether or not the money
+                has. What follows is the part that differs. */}
+            Your order is {awaitingPayment ? "reserved" : "confirmed and reserved"},
+            under <span className="text-(--shop-ink)">{order.email}</span>.{" "}
             {paymentNote(order.payment_method, order.payment_status)}
           </p>
         </div>
       </header>
+
+      {/* Directly under the header, above the items: the one thing this page
+          still needs from the shopper goes before the things it is merely
+          telling them. */}
+      {awaitingPayment && (
+        <PayNow token={token} autoStart={autoStartPayment} />
+      )}
 
       {/* ---- Items ---- */}
       <section className="mt-12">
@@ -216,11 +267,12 @@ export default async function OrderConfirmationPage({
  *
  * This page is the status page as well as the confirmation, so it is read again
  * weeks later — the sentence has to stay true, not just be true at the moment
- * of purchase. It previously promised an emailed payment link, which no code in
- * this repo has ever sent.
+ * of purchase. It once promised an emailed payment link that no code in this
+ * repo has ever sent; the prepaid branch below is what finally makes that
+ * promise into something the store actually does.
  *
  * `payment_status` is checked before the method because an order paid by any
- * route is finished, and the operator can mark one paid by hand.
+ * route is finished, and the operator can still mark one paid by hand.
  */
 function paymentNote(method: string, status: string): string {
   if (status === "paid") return "It's paid in full — nothing more to do.";
@@ -229,8 +281,11 @@ function paymentNote(method: string, status: string): string {
   if (method === "cod") {
     return "Pay the courier when it arrives — nothing has been charged now.";
   }
-  if (method === "upi") {
-    return "We'll be in touch with payment details shortly. Nothing has been charged yet.";
+  // 'upi' is the legacy spelling of the same choice; both mean the shopper
+  // opted to pay up front and has not yet. The block above this one is where
+  // they actually do it, so the sentence only has to point at it.
+  if (isPrepaidMethod(method)) {
+    return "Payment hasn't gone through yet — you can finish it above. Nothing has been charged.";
   }
   // 'manual', and anything imported. Deliberately vague: the store knows how
   // these were arranged and this page does not.

@@ -1,5 +1,11 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { getCashfreeConfig } from "@/lib/cashfree/config";
+import {
+  PAYMENT_METHODS,
+  isPrepaidMethod,
+  type PaymentMethodOption,
+} from "./payment-methods";
 import {
   DEFAULT_CHECKOUT_SETTINGS,
   type CheckoutAddress,
@@ -149,6 +155,38 @@ export async function getCheckoutPrefill(): Promise<CheckoutPrefill> {
   } catch {
     return empty;
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Payment methods                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The payment methods this store can actually collect through, right now.
+ *
+ * `PAYMENT_METHODS` is a constant and cannot know whether a gateway is
+ * connected; this is where that fact gets folded in. When Cashfree is off or
+ * half-configured, prepaid comes back disabled with a reason rather than
+ * missing — `RadioField` already renders that state, and the reasoning is the
+ * one written at the top of payment-methods.ts: a shopper who cannot see a
+ * method assumes the store will never have it, and one who sees it greyed out
+ * knows to come back.
+ *
+ * Advisory in exactly the sense `quoteDiscount` is. The submission is gated
+ * again in `placeOrder`, because a disabled radio stops a browser and not a
+ * request.
+ */
+export async function getOfferedPaymentMethods(): Promise<PaymentMethodOption[]> {
+  const gateway = await getCashfreeConfig();
+
+  return PAYMENT_METHODS.map((method) => {
+    if (gateway || !isPrepaidMethod(method.value)) return { ...method };
+    return {
+      ...method,
+      available: false,
+      unavailableReason: "Temporarily unavailable — pay on delivery instead.",
+    };
+  });
 }
 
 /* -------------------------------------------------------------------------- */

@@ -1,13 +1,10 @@
 import { notFound } from "next/navigation";
 import { ComingSoon } from "@/components/admin/coming-soon";
 
+// 'payments' is no longer here: settings/payments is a real page as of the
+// Cashfree integration, and a static route wins over this dynamic one anyway —
+// leaving the entry would only mean a placeholder nothing can reach.
 const PLACEHOLDERS: Record<string, { title: string; phase: string; description: string }> = {
-  payments: {
-    title: "Payments",
-    phase: "Phase S (Storefront)",
-    description:
-      "Stripe and other payment gateways are wired up together with the customer checkout.",
-  },
   checkout: {
     title: "Checkout",
     phase: "Phase S (Storefront)",

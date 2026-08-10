@@ -873,23 +873,25 @@ export function CheckoutForm({
             }
           />
 
-          {/* The gateway is not live yet, and a shopper who picks prepaid has
-              earned the right to know that before they commit rather than
-              after. Saying what happens next is also the difference between an
-              order that gets paid and one that sits pending: without this line
-              there is nothing on screen telling them a link is coming. */}
+          {/* What happens the instant they press the button, said before they
+              press it. A payment window opening unannounced reads as a popup,
+              and the shopper who dismisses it on reflex is the one whose order
+              sits unpaid — so the surprise is spent here, where it costs a line
+              of text, rather than there, where it costs the sale.
+
+              It also names the saving at the moment the choice is being made,
+              which is the only moment the 5% can still change the answer. */}
           {isPrepaidMethod(paymentMethod) && (
             <p
               role="status"
               className="rounded-2xl bg-(--shop-success)/8 px-4 py-3 text-xs text-(--shop-charcoal)"
             >
-              We&rsquo;ll send a secure payment link to your email and phone as
-              soon as this order is placed. Your {formatMoney(
+              Your order is placed first, then a secure Cashfree window opens —
+              UPI, cards, net banking or wallets. Your {formatMoney(
                 totals.prepaidDiscount,
                 cart.currency
               )}{" "}
-              saving is already in the total below — nothing is charged on this
-              page.
+              saving is already in the total below.
             </p>
           )}
 
@@ -1003,6 +1005,9 @@ export function CheckoutForm({
           className="glass glass-pill glass-press glass-primary flex min-h-14 w-full cursor-pointer items-center justify-center gap-2 px-8 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--shop-ink) disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting ? (
+            /* Prepaid redirects to the order page and opens the payment window
+               there — see the comment at the end of `placeOrder`. So this
+               button's job ends at "placed", for both methods. */
             "Placing your order…"
           ) : chosen ? (
             <>

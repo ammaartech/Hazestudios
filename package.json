@@ -14,6 +14,7 @@
     "db:verify": "node scripts/verify-product-save.mjs",
     "verify:variants": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-variant-remap.mjs",
     "verify:cart": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-cart.mjs",
+    "verify:cashfree": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-cashfree.mjs",
     "verify:collections": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-collections.mjs",
     "verify:ai": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-ai.mjs",
     "verify:sql": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/verify-sql-reports.mjs",
@@ -28,6 +29,7 @@
     "optimize:images": "node scripts/optimize-public-images.mjs"
   },
   "dependencies": {
+    "@cashfreepayments/cashfree-js": "^1.0.7",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",

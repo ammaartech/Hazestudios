@@ -8,11 +8,22 @@
  * places have to agree, and a typo in any of them is either an order that
  * cannot be placed or a total that disagrees with the one the shopper was shown.
  *
+ * The gateway makes a fifth reader, and the one with the most at stake: what
+ * Cashfree is asked to charge is `orders.total` read back from the database
+ * after `place_order()` has arbitrated between the copies. So a drift here can
+ * still show a shopper the wrong number — it can no longer charge them one.
+ *
  * `available` is the honest half of this file. A method listed here is a
  * promise the store makes at the moment someone clicks it, so a method whose
  * plumbing does not exist yet is rendered and disabled rather than quietly
  * omitted — a shopper who cannot see a method at all assumes the store will
  * never have it, and one who sees it greyed out knows to come back.
+ *
+ * The flag below is the static half of that answer: whether the store offers a
+ * method at all. Whether it can collect through it *today* depends on a
+ * gateway being connected, which is a database read — see
+ * `getOfferedPaymentMethods()` in `./checkout`, which folds that in before the
+ * form ever sees this list.
  */
 
 /**
@@ -96,8 +107,8 @@ const AVAILABLE: readonly string[] = PAYMENT_METHODS.filter(
  * store picked would be the one most orders arrived as — a preselected COD is
  * a COD business, because the payment section is the part of checkout people
  * scroll past. Neither is worth defaulting to on its own terms either: COD is
- * the expensive option, and prepaid has no gateway behind it yet, so drifting
- * into it would mean an order the shopper has no way to pay for.
+ * the expensive option, and prepaid opens a payment window the moment the
+ * order is placed — not something to spring on somebody who never chose it.
  *
  * So the form starts empty and both options state their price. The cost is one
  * more required field; what it buys is that every order carries a payment
@@ -112,6 +123,9 @@ export const NO_PAYMENT_METHOD = "";
  * form posts to a Server Action, and everything a Server Action receives is
  * untrusted. This is what actually stops an order being placed against a method
  * the store cannot collect through.
+ *
+ * Half of the gate. `placeOrder` pairs it with a check that the gateway behind
+ * a prepaid choice is switched on, which this cannot know without a query.
  */
 export function isPayableMethod(value: unknown): value is PaymentMethod {
   return typeof value === "string" && AVAILABLE.includes(value);

@@ -1,11 +1,17 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { getCashfreeConfig, type CashfreeMode } from "@/lib/cashfree/config";
+import {
+  reconcilePayment,
+  startCashfreePayment,
+} from "@/lib/cashfree/payment";
 import { clearCartCookie, readCartToken } from "@/lib/shop/cart";
-import { isPayableMethod } from "@/lib/shop/payment-methods";
+import { isPayableMethod, isPrepaidMethod } from "@/lib/shop/payment-methods";
 import { formatPhone } from "@/lib/shop/phone-codes";
 import { lookupPincode, type PincodeArea } from "@/lib/shop/pincode";
 import { phoneProblem, postalCodeProblem } from "@/lib/shop/validate";
@@ -35,6 +41,15 @@ export interface CheckoutState {
   error: string | null;
   /** Names the field to focus, when the failure belongs to one. */
   field: string | null;
+}
+
+/** Everything the browser needs to open Cashfree, and nothing more. */
+export interface PaymentHandoff {
+  /** Scoped by Cashfree to one order and one amount. Not a credential. */
+  sessionId: string;
+  mode: CashfreeMode;
+  /** Where to land once the window closes, paid or not. */
+  token: string;
 }
 
 /** SQLSTATE raised by place_order() for failures written to be shown as-is. */
@@ -157,6 +172,19 @@ export async function placeOrder(
     return { error: "Choose a payment method.", field: "payment_method" };
   }
 
+  // The second half of that gate, and the half that needs a database read.
+  // `isPayableMethod` knows which methods the store offers; only this knows
+  // whether the one they picked has a gateway switched on behind it right now.
+  // Checked before the order is written, because an order placed with no way to
+  // pay for it is worse than a rejected submission.
+  if (isPrepaidMethod(paymentMethod) && !(await getCashfreeConfig())) {
+    return {
+      error:
+        "Online payment is unavailable right now — please choose cash on delivery.",
+      field: "payment_method",
+    };
+  }
+
   const cartToken = await readCartToken();
   if (!cartToken) {
     return { error: "Your bag is empty.", field: null };
@@ -238,8 +266,8 @@ export async function placeOrder(
   // `payment_status === 'paid'`, and a prepaid order is pending at this point —
   // so auto-sending one would put goods into production, billed to the customer
   // on delivery, for money the store is separately about to ask for. A prepaid
-  // order waits for its payment; until there is a gateway to settle it, the
-  // operator sends it by hand from the order page.
+  // order is pushed by `settlePayment` instead, the moment its payment lands
+  // and not a step before.
   if (result.order_id && paymentMethod === "cod") {
     const orderId = result.order_id;
     after(async () => {
@@ -257,10 +285,139 @@ export async function placeOrder(
     });
   }
 
-  // Throws a control-flow exception, so nothing below runs. The confirmation
-  // page lives under the ordinary storefront shell on purpose: the shopper has
-  // finished, and the next thing they might want is to keep looking.
+  // Every path leaves this page, prepaid included, and that is load-bearing
+  // rather than tidy.
+  //
+  // A Server Action that *returns* makes Next re-render the route it was called
+  // from. `place_order()` has just deleted the cart, so a re-rendered /checkout
+  // finds an empty bag and fires its own redirect to /cart — taking any payment
+  // window opened from this page with it. The first version of this returned a
+  // payment session here to save a page load, and that is exactly what it
+  // bought: a shopper on /cart, an unpaid order, and no popup.
+  //
+  // So the payment window belongs on the order page, which is stable, reachable
+  // by its own token, and already has the retry and the reconcile. This is a
+  // page load slower and is the only version that works.
   redirect(`/orders/${result.checkout_token}`);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Payment                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Where Cashfree sends a browser back to.
+ *
+ * Only needed by the payment methods that navigate away — UPI intent, some 3DS
+ * flows — but it has to be an absolute URL, and the only place that knows this
+ * deployment's own origin is the request. `NEXT_PUBLIC_SITE_URL` overrides it
+ * for the case where a proxy rewrites the host into something the public
+ * internet cannot reach back to.
+ *
+ * `?cf=1` is not read for anything security-relevant. It only tells the status
+ * page that this arrival came from a payment, so it can check before rendering
+ * rather than after.
+ */
+async function paymentReturnUrl(): Promise<(token: string) => string> {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "");
+
+  let origin = configured ?? "";
+  if (!origin) {
+    const headerList = await headers();
+    const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
+    const proto =
+      headerList.get("x-forwarded-proto") ??
+      (host?.startsWith("localhost") ? "http" : "https");
+    origin = host ? `${proto}://${host}` : "";
+  }
+
+  return (token: string) => `${origin}/orders/${token}?cf=1`;
+}
+
+/**
+ * Resolves an order from the bearer token in its URL.
+ *
+ * The same authorisation `getOrderByToken` uses and for the same reason: the
+ * token is 256 bits of unguessable, matched exactly, and holding it is what
+ * makes someone this order's owner. Malformed tokens never reach the database.
+ */
+async function orderIdForToken(token: string): Promise<string | null> {
+  if (!/^[0-9a-f]{64}$/.test(token)) return null;
+
+  const admin = createAdminClient();
+  if (!admin) return null;
+
+  const { data } = await admin
+    .from("orders")
+    .select("id")
+    .eq("checkout_token", token)
+    .maybeSingle();
+
+  return (data?.id as string) ?? null;
+}
+
+/**
+ * Asks Cashfree what happened, then sends the shopper to their order.
+ *
+ * Called when the payment window closes, whichever way it closed. The answer is
+ * never taken from the browser — the SDK's result decides only *when* to ask,
+ * and `reconcilePayment` reads the outcome from Cashfree's own record. That
+ * distinction is the entire security model of the client half of this flow: a
+ * forged POST to this action can, at most, make the server double-check an
+ * order it already knows the status of.
+ */
+export async function confirmPayment(token: string): Promise<void> {
+  const orderId = await orderIdForToken(token);
+  if (orderId) {
+    try {
+      await reconcilePayment(orderId);
+    } catch {
+      // The order page is the right place to be either way, and it reconciles
+      // again on arrival. Failing here would strand the shopper on checkout.
+    }
+  }
+
+  redirect(`/orders/${token}`);
+}
+
+/**
+ * Opens a fresh payment window for an order that is still unpaid.
+ *
+ * The recovery path for every way the first attempt can end without money: a
+ * closed modal, a declined card, a gateway that was down when the order was
+ * placed, a phone that ran out of battery on the UPI app. Each call mints a new
+ * Cashfree order — theirs may never be reused — against the same order of ours.
+ *
+ * Safe to expose to anyone holding the token, because it cannot do anything to
+ * an order that is already paid: `startCashfreePayment` refuses on any status
+ * but pending.
+ */
+export async function retryPayment(
+  token: string
+): Promise<{ ok: true; payment: PaymentHandoff } | { ok: false; error: string }> {
+  const orderId = await orderIdForToken(token);
+  if (!orderId) return { ok: false, error: "We could not find that order." };
+
+  // Cheap insurance against paying twice: if a webhook landed while this page
+  // was open, the order is already paid and the button should not have been
+  // there. Reconciling first turns that into an honest refusal.
+  try {
+    await reconcilePayment(orderId);
+  } catch {
+    // Advisory. startCashfreePayment re-reads the order and refuses on its own.
+  }
+
+  const started = await startCashfreePayment(orderId, await paymentReturnUrl());
+  if (!started.ok) return { ok: false, error: started.error };
+
+  return {
+    ok: true,
+    payment: {
+      sessionId: started.paymentSessionId,
+      mode: started.mode,
+      token,
+    },
+  };
 }
 
 /* -------------------------------------------------------------------------- */

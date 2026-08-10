@@ -15,8 +15,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\package.json": {
-    "mtime": 1785443575.3037784,
-    "ast_hash": "02abddb8d0d5a775db6a84c479dcebb6",
+    "mtime": 1786392708.276383,
+    "ast_hash": "798fe1390959de1f13c43b4dab72c197",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\postcss.config.mjs": {
@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.impeccable\\hook.cache.json": {
-    "mtime": 1786367154.0900095,
-    "ast_hash": "51f40f5b1d9a88a430b4211584b5c5b4",
+    "mtime": 1786392771.2849064,
+    "ast_hash": "3db1435384b279756271946c9413acea",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\db-config.mjs": {
@@ -715,8 +715,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\[section]\\page.tsx": {
-    "mtime": 1784460678.4451454,
-    "ast_hash": "0dc7733315fbd2768caad61ab9de570b",
+    "mtime": 1786392145.2653852,
+    "ast_hash": "fc0b32e12a56da39a88b837bcf2abaa1",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\actions.ts": {
@@ -775,8 +775,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\settings-nav.tsx": {
-    "mtime": 1785182373.1244144,
-    "ast_hash": "dfbf52fb9ec6a6b191742d30b0034ac5",
+    "mtime": 1786392136.083521,
+    "ast_hash": "4ce786600df24e31d67ad3869568e5e9",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\users\\page.tsx": {
@@ -2080,13 +2080,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(checkout)\\checkout\\actions.ts": {
-    "mtime": 1786181198.9834304,
-    "ast_hash": "c21599bf7b9ea73c8334285f7c64c11b",
+    "mtime": 1786391768.328082,
+    "ast_hash": "45f04bf1cc96150ca8fd383728acfdae",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(checkout)\\checkout\\checkout-form.tsx": {
-    "mtime": 1786366305.7748487,
-    "ast_hash": "b5599a8f43d68b867f3955a2a52613cb",
+    "mtime": 1786391896.3561084,
+    "ast_hash": "44675fe64908868b670b6c172d0d6933",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(checkout)\\checkout\\fields.tsx": {
@@ -2100,8 +2100,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(checkout)\\checkout\\page.tsx": {
-    "mtime": 1786360605.8237398,
-    "ast_hash": "38c6f90644d693e5c815fff4ff29739f",
+    "mtime": 1786391814.2390766,
+    "ast_hash": "1fb83f9b781dfbb67b3686df890d84c2",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(checkout)\\layout.tsx": {
@@ -2110,8 +2110,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\orders\\[token]\\page.tsx": {
-    "mtime": 1786353130.436978,
-    "ast_hash": "e3a2c1d1a461a7a575c9725c656d1a52",
+    "mtime": 1786392031.2303267,
+    "ast_hash": "79e49d9beff5a6229bc45872c5100904",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\orders\\[token]\\purchase-beacon.tsx": {
@@ -2125,8 +2125,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\shop\\checkout.ts": {
-    "mtime": 1786181198.9976268,
-    "ast_hash": "e44e9e2ca03677c263d65925c1eab4a2",
+    "mtime": 1786391795.0993862,
+    "ast_hash": "b351f5391f392707808c1352cc3cb696",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\shop\\countries.ts": {
@@ -2920,8 +2920,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\shop\\payment-methods.ts": {
-    "mtime": 1786360562.2792873,
-    "ast_hash": "500c4f08b0fb7b9bc41a7f1f43242b63",
+    "mtime": 1786392209.7934177,
+    "ast_hash": "1da82e43776f3b5b22647d6d11e10f4a",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\supabase\\migrations\\0019_payment_method.sql": {
@@ -3037,6 +3037,71 @@
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\soundeffects-claude-code\\sfx\\textdigitalreadout.wav": {
     "mtime": 1786285211.200474,
     "ast_hash": "27a8822e6ca2d97cf7e47b3134882dd0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\verify-cashfree.mjs": {
+    "mtime": 1786392688.87036,
+    "ast_hash": "131cfad8a5257a7237cda2eef7e2b4c5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\payments\\actions.ts": {
+    "mtime": 1786392060.7999837,
+    "ast_hash": "fe9ff8cf3f09df1d15084155592aa856",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\payments\\cashfree-form.tsx": {
+    "mtime": 1786392379.6565678,
+    "ast_hash": "a1b782e55f6b15c85ec57cad31168268",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\payments\\page.tsx": {
+    "mtime": 1786392354.8641224,
+    "ast_hash": "8275dc31549c9740518a5f09a8b8da1c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(checkout)\\checkout\\cashfree-modal.ts": {
+    "mtime": 1786391681.7563913,
+    "ast_hash": "a5bf808e40889b3135a817e30e00d828",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\orders\\[token]\\pay-now.tsx": {
+    "mtime": 1786391939.2275155,
+    "ast_hash": "e840d0e0ef7bc0987333aec885dae5f8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\api\\webhooks\\cashfree\\route.ts": {
+    "mtime": 1786391641.9240685,
+    "ast_hash": "5482f339b19c2cb52134fd9c3a7f3203",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\cashfree\\client.ts": {
+    "mtime": 1786391467.854682,
+    "ast_hash": "d812c35dcad8052c34199ac7dc284470",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\cashfree\\config.ts": {
+    "mtime": 1786391430.7458217,
+    "ast_hash": "cdd3b495887404202608994ad3df050f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\cashfree\\payment.ts": {
+    "mtime": 1786391586.1656365,
+    "ast_hash": "6533f9d817c398d1e480af359ff52b5c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\cashfree\\webhook.ts": {
+    "mtime": 1786391498.271121,
+    "ast_hash": "c2f62430e4aaa77bd318fa76c5c9019c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\types\\cashfree-js.d.ts": {
+    "mtime": 1786391659.318995,
+    "ast_hash": "55bcd4273678eb77040674086a58f406",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\supabase\\migrations\\0023_cashfree.sql": {
+    "mtime": 1786391407.6340573,
+    "ast_hash": "eefbfe5e6818ae0c6b68a8e5398be9d6",
     "semantic_hash": ""
   }
 }

@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCart } from "@/lib/shop/cart";
-import { getCheckoutPrefill, getCheckoutSettings } from "@/lib/shop/checkout";
+import {
+  getCheckoutPrefill,
+  getCheckoutSettings,
+  getOfferedPaymentMethods,
+} from "@/lib/shop/checkout";
 import { getCountries } from "@/lib/shop/countries";
-import { PAYMENT_METHODS } from "@/lib/shop/payment-methods";
 import { CheckoutForm } from "./checkout-form";
 
 export const metadata: Metadata = {
@@ -35,9 +38,10 @@ export default async function CheckoutPage() {
   // one means a stale tab or a hand-typed URL.
   if (cart.lines.some((line) => !line.available)) redirect("/cart");
 
-  const [settings, prefill] = await Promise.all([
+  const [settings, prefill, paymentMethods] = await Promise.all([
     getCheckoutSettings(),
     getCheckoutPrefill(),
+    getOfferedPaymentMethods(),
   ]);
 
   return (
@@ -46,11 +50,12 @@ export default async function CheckoutPage() {
       settings={settings}
       prefill={prefill}
       countries={getCountries()}
-      // Passed rather than imported by the form, like `countries` beside it.
-      // Which methods a store offers is a property of the store, and the day it
-      // comes from the database instead of a constant, this line is the only
-      // thing that changes.
-      paymentMethods={[...PAYMENT_METHODS]}
+      // Passed rather than imported by the form, like `countries` beside it —
+      // and as of the gateway, no longer a constant: `getOfferedPaymentMethods`
+      // disables prepaid when Cashfree is not connected, so the form renders
+      // what the store can collect through today rather than what it offers in
+      // principle.
+      paymentMethods={paymentMethods}
     />
   );
 }

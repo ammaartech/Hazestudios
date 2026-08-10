@@ -11,7 +11,7 @@ const SECTIONS: { label: string; href: string; placeholder?: boolean }[] = [
   { label: "Brand", href: "/admin/settings/brand" },
   { label: "Policies", href: "/admin/settings/policies" },
   { label: "Qikink", href: "/admin/settings/qikink" },
-  { label: "Payments", href: "/admin/settings/payments", placeholder: true },
+  { label: "Payments", href: "/admin/settings/payments" },
   { label: "Checkout", href: "/admin/settings/checkout", placeholder: true },
   { label: "Shipping and delivery", href: "/admin/settings/shipping", placeholder: true },
   { label: "Taxes and duties", href: "/admin/settings/taxes", placeholder: true },
