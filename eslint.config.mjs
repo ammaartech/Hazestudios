@@ -14,6 +14,14 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Bundled skill examples — reference material, not app code.
     ".agents/**",
+    ".claude/**",
+    // A Python virtualenv that happens to vendor a few .js files (torch's
+    // model_dump viewer, urllib3's emscripten worker). Linting it added ~70
+    // warnings and an error about third-party code we do not ship, own, or
+    // edit — enough noise to bury a real finding in our own source.
+    "soundeffects-claude-code/**",
+    // Generated knowledge-graph output.
+    "graphify-out/**",
   ]),
   {
     rules: {

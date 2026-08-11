@@ -407,27 +407,6 @@ export const getLatestProducts = cache(
   async (limit = 8): Promise<ShopProduct[]> => readLatestProducts(limit)
 );
 
-async function readRelatedProducts(
-  excludeId: string,
-  limit: number
-): Promise<ShopProduct[]> {
-  "use cache";
-  cacheLife("catalog");
-  cacheTag(CATALOG_TAG);
-
-  const { data } = await activeProducts()
-    .neq("id", excludeId)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  return rowsToProducts(data);
-}
-
-/** Other active products, excluding one — used for "more from the drop". */
-export const getRelatedProducts = cache(
-  async (excludeId: string, limit = 4): Promise<ShopProduct[]> =>
-    readRelatedProducts(excludeId, limit)
-);
-
 /**
  * Free-text product search over title, type and vendor.
  *

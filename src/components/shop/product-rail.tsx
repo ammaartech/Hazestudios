@@ -54,7 +54,18 @@ export function ProductRail({
     if (!el) return;
     const card = el.firstElementChild as HTMLElement | null;
     const width = card ? card.offsetWidth + 24 : el.clientWidth * 0.8;
-    el.scrollBy({ left: width * direction });
+    /* Smooth is requested here rather than declared on the container.
+       `scroll-behavior: smooth` in CSS applies to every scroll the browser
+       performs on that element, including the ones nobody asked for — pulling a
+       focused card into view, restoring a position on back navigation — so the
+       rail appeared to move by itself. A press of an arrow is the one scroll
+       that should be animated, so it is the one that asks. */
+    el.scrollBy({
+      left: width * direction,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+    });
   };
 
   if (!products.length) return null;

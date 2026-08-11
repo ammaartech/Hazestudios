@@ -236,9 +236,16 @@ export function ProductGallery({
       aria-label={`${title} — ${images.length} ${images.length === 1 ? "view" : "views"}`}
     >
       <div className="relative">
+        {/* `overscroll-x-contain`: mandatory snap is right here — a photo
+            gallery should always come to rest on a photograph — but it means
+            the shopper reaches the ends often, and a swipe past the last shot
+            was handing its leftover momentum to the page. On iOS a horizontal
+            over-swipe at the first frame is read as the back gesture, so
+            flicking backwards through the photographs could navigate off the
+            product entirely. The scroll now stops at the edge of the stage. */}
         <ul
           ref={stage}
-          className="flex snap-x snap-mandatory overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {images.map((image, i) => (
             <li

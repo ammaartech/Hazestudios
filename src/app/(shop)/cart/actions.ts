@@ -7,6 +7,7 @@ import {
   EMPTY_CART,
   MAX_LINE_QUANTITY,
   getCart,
+  getCartFor,
   getCartRow,
   readCartToken,
   writeCartCookie,
@@ -166,7 +167,7 @@ export async function addToCart(input: {
     }
   }
 
-  return { ok: true, cart: await getCart() };
+  return { ok: true, cart: await getCartFor(cart) };
 }
 
 /**
@@ -199,7 +200,7 @@ export async function setLineQuantity(
 
   await query.eq("id", lineId).eq("cart_id", cart.id);
 
-  return { ok: true, cart: await getCart() };
+  return { ok: true, cart: await getCartFor(cart) };
 }
 
 export async function removeLine(lineId: string): Promise<CartResult> {
@@ -250,7 +251,7 @@ export async function setLineVariant(
   } | null;
 
   if (!line) return fail("That item is not in your bag.");
-  if (line.variant_id === variantId) return { ok: true, cart: await getCart() };
+  if (line.variant_id === variantId) return { ok: true, cart: await getCartFor(cart) };
 
   // Same purchasability rules as `addToCart`, and for the same reason: a select
   // that omitted the sold-out size is a hint, not a constraint on the request.
@@ -288,7 +289,7 @@ export async function setLineVariant(
       .eq("cart_id", cart.id);
   }
 
-  return { ok: true, cart: await getCart() };
+  return { ok: true, cart: await getCartFor(cart) };
 }
 
 export async function clearCart(): Promise<CartResult> {

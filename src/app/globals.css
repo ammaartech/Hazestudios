@@ -376,6 +376,45 @@ body {
   min-width: 0;
 }
 
+/* ---------------------------------------------------------------------------
+   iOS focus zoom
+   ---------------------------------------------------------------------------
+   Mobile Safari zooms the page in whenever a focused form control's font-size
+   is under 16px. That alone would be a nuisance; what makes it a layout bug is
+   that Safari does not zoom back out on blur. The shopper taps a field, the
+   page jumps to ~114% and *stays* there, and from then on the viewport is
+   narrower than the layout so the whole storefront pans left and right under
+   the thumb. Both halves of "it randomly zooms in, and then I can slide the
+   page sideways" are this one rule, and no amount of overflow containment
+   touches it — the document was never too wide.
+
+   Measured offenders at the time of writing: the footer newsletter field (14px,
+   and the footer is on every route including the home page), the search page's
+   field (14px), the checkout's shared control (15px), its discount code box
+   (12px) and its country-code `<select>`.
+
+   Fixed as a floor rather than field by field, because the next hand-rolled
+   input would reintroduce it — `<Input>` and the search spotlight already got
+   this right individually, which is exactly how the others slipped through. The
+   rule is unlayered so it outranks Tailwind's `text-sm`/`text-xs` utilities
+   without a specificity fight: unlayered declarations beat layered ones outright
+   in the cascade, whatever their selectors look like.
+
+   Phone widths only. On a desktop there is no focus zoom to avoid and the
+   denser type is the intended design. Controls with no text to zoom towards
+   are left alone, and `[type="file"]` keeps its own button metrics.
+
+   Regression-checked by `npm run check:mobile`. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(
+      [type="file"]
+    ):not([type="hidden"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 /* Sonner's own mobile rule sets `left`, `right` *and* `width: 100%` on the
    toast container. All three at once is over-constrained, so the browser drops
    `right` and the layer ends up a full viewport wide starting at the left
@@ -824,8 +863,36 @@ body {
     display: grid;
     grid-auto-flow: column;
     overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
+    /* `proximity`, not `mandatory`.
+
+       Mandatory means the rail is never *allowed* to rest between two cards, so
+       the browser is entitled to move it whenever anything invalidates the
+       current offset — a lazy image landing, a font swapping in, the URL bar
+       collapsing and resizing the viewport. On a phone that reads as a carousel
+       sliding on its own while the shopper is trying to read the page. It also
+       makes a rail grabby: a mostly-vertical swipe with a few degrees of
+       horizontal in it gets captured and glided to the next card, which is the
+       other half of "the screen moves left and right by itself".
+
+       Proximity keeps the alignment where a drag ends near a card edge — which
+       is what the snapping was ever for — and otherwise leaves the rail exactly
+       where the shopper put it. */
+    scroll-snap-type: x proximity;
+    /* A flick that runs past the end stays in the rail instead of being handed
+       up to the page. Without this the leftover momentum scrolls the document,
+       and on iOS a horizontal over-flick at the start of a rail is taken as the
+       back-navigation gesture — a shopper browsing a carousel gets navigated
+       off the store. Measured `auto` on all six home page rails. */
+    overscroll-behavior-x: contain;
+    /* `auto`, deliberately: see `step()` in product-rail.tsx, which asks for
+       smooth explicitly.
+
+       As a container default this also animated every scroll the *browser*
+       started — focusing a card link on tap, scroll restoration on back, a
+       re-snap — so the rail visibly glided at moments the shopper had not asked
+       it to move. The arrows are the only thing that should animate, so the
+       arrows are what request it. */
+    scroll-behavior: auto;
     scrollbar-width: none;
     /* Bleeds to the viewport edge so the last card is visibly cut off, which is
        what tells a shopper there is more to the right. */
@@ -864,11 +931,9 @@ body {
     position: relative;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .shop .rail {
-      scroll-behavior: auto;
-    }
-  }
+  /* No reduced-motion override here any more: the rail no longer smooth-scrolls
+     by default, and the one caller that does ask for it — the desktop arrows —
+     checks the preference itself before it does. */
 
   /* -------------------------------------------------------------------------
      Filmstrip — the scrubbable thumbnail strip under the product stage
@@ -954,6 +1019,10 @@ body {
   @media (prefers-reduced-motion: reduce) {
     .shop .marquee {
       overflow-x: auto;
+      /* The ticker becomes a real scroll container here, so it inherits the
+         rail's problem: a flick past either end would chain to the page and, on
+         iOS, arm the back gesture. Contained for the same reason. */
+      overscroll-behavior-x: contain;
     }
     .shop .marquee__track {
       animation: none;

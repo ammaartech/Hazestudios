@@ -307,22 +307,25 @@ function resolveLines(
 }
 
 /**
- * The cart as the shopper should see it right now.
+ * The cart as the shopper should see it right now, for a cart row the caller
+ * has already resolved.
+ *
+ * This split exists for the mutations. Every action in `cart/actions.ts` looks
+ * the cart row up to scope its write by `cart_id`, and then used to finish by
+ * calling `getCart()` — which read the cookie and selected the very same row a
+ * second time. That was a guaranteed wasted round trip on every add, every
+ * quantity change and every size swap, on the one interaction a shopper repeats
+ * most and notices most. Handing the row we already hold to this function
+ * removes it.
  *
  * Defensive throughout: an unconfigured or unreachable Supabase yields an empty
  * cart rather than an error page. A storefront that cannot reach its database
  * should still render.
  */
-export async function getCart(): Promise<Cart> {
+export async function getCartFor(cart: { id: string }): Promise<Cart> {
   try {
-    const token = await readCartToken();
-    if (!token) return EMPTY_CART;
-
     const admin = createAdminClient();
     if (!admin) return EMPTY_CART;
-
-    const cart = await getCartRow(token);
-    if (!cart) return EMPTY_CART;
 
     const { data } = await admin
       .from("cart_items")
@@ -360,6 +363,27 @@ export async function getCart(): Promise<Cart> {
       // One message per distinct reason, however many lines hit it.
       removed: [...new Set(removed)],
     };
+  } catch {
+    return EMPTY_CART;
+  }
+}
+
+/**
+ * The cart as the shopper should see it right now, resolved from their cookie.
+ *
+ * The entry point for anything that does *not* already hold the cart row —
+ * pages, the client provider's resync. Mutations should prefer `getCartFor`
+ * with the row they looked up to perform the write.
+ */
+export async function getCart(): Promise<Cart> {
+  try {
+    const token = await readCartToken();
+    if (!token) return EMPTY_CART;
+
+    const cart = await getCartRow(token);
+    if (!cart) return EMPTY_CART;
+
+    return await getCartFor(cart);
   } catch {
     return EMPTY_CART;
   }

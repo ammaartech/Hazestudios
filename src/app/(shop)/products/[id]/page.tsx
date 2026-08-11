@@ -8,8 +8,8 @@ import { ProductViewTracker } from "@/components/shop/product-view-tracker";
 import { SizeGuide } from "@/components/shop/size-guide";
 import {
   getCatalogHandles,
+  getLatestProducts,
   getProduct,
-  getRelatedProducts,
 } from "@/lib/shop/queries";
 import {
   hasSizeChartData,
@@ -73,10 +73,25 @@ export default async function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const product = await getProduct(id);
+
+  /*
+   * The rail below used to be `getRelatedProducts(product.id, 4)` — "the four
+   * newest products that are not this one" — which had to wait for `getProduct`
+   * to learn the id to exclude, and was cached *per excluded id*. That is one
+   * sequential round trip per PDP and one cache entry per product in the
+   * catalogue, to hold what is very nearly the same four items every time.
+   *
+   * Asking for five and dropping this one gives an identical rail from a single
+   * entry the whole catalogue shares, and no longer depends on the product, so
+   * the two reads go out together.
+   */
+  const [product, latest] = await Promise.all([
+    getProduct(id),
+    getLatestProducts(5),
+  ]);
   if (!product) notFound();
 
-  const related = await getRelatedProducts(product.id, 4);
+  const related = latest.filter((p) => p.id !== product.id).slice(0, 4);
 
   // Parsed and pruned here, on the server, so the client component receives
   // only columns and rows that actually carry values. `null` means there is
