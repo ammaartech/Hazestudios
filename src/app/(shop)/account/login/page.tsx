@@ -8,6 +8,10 @@ export const metadata = { title: "Sign in" };
 const NOTICES: Record<string, string> = {
   "staff-only":
     "That account is a customer account, so it can’t open the admin. You’re signed in here instead.",
+  // Set by the testing-phase gate in `@/lib/supabase/proxy.ts`. The standing
+  // explanation is in `AuthShell`; this line is only for the person who was
+  // bounced here from somewhere specific, and says what happens next.
+  preview: "Sign in to keep looking around — we’ll take you back where you were.",
 };
 
 export default async function LoginPage({

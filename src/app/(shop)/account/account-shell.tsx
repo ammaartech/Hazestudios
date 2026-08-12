@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { LogOut } from "lucide-react";
+import { PREVIEW_LOCK } from "@/lib/shop/preview-lock";
 import { signOut } from "./actions";
 import { AccountNav } from "./account-nav";
 
@@ -59,6 +61,39 @@ export function AccountShell({
   );
 }
 
+/**
+ * Why the account screen is in the way.
+ *
+ * TEMPORARY, and paired with the gate in `@/lib/supabase/proxy.ts`. Rendered on
+ * every signed-out auth screen rather than only on the redirect that carries
+ * `?notice=preview`, because someone can reach `/account/register` directly
+ * from a link and deserves the same explanation.
+ *
+ * It names the way out as well as the reason: most people arriving here right
+ * now came for the event, and the waitlist is the page they actually wanted.
+ */
+function TestPhaseNotice() {
+  return (
+    <aside className="mb-8 rounded-2xl border border-(--shop-hairline-soft) bg-(--shop-cloud) p-4 md:p-5">
+      <p className="meta text-[11px] text-(--shop-mute)">Testing phase</p>
+      <p className="mt-2 text-sm leading-relaxed text-(--shop-ink)">
+        The store isn’t open yet — we’re still building it, so browsing needs an
+        account for now.
+      </p>
+      <p className="mt-2 text-sm leading-relaxed text-(--shop-mute)">
+        Here for Summer Sands?{" "}
+        <Link
+          href="/waitlist"
+          className="font-medium text-(--shop-ink) underline underline-offset-4"
+        >
+          The waitlist is open to everyone
+        </Link>{" "}
+        — no account needed.
+      </p>
+    </aside>
+  );
+}
+
 /** Centred column for the signed-out auth screens. */
 export function AuthShell({
   title,
@@ -77,7 +112,8 @@ export function AuthShell({
           {description}
         </p>
       )}
-      <div className={description ? "" : "mt-8"}>{children}</div>
+      {PREVIEW_LOCK && <TestPhaseNotice />}
+      <div className={description || PREVIEW_LOCK ? "" : "mt-8"}>{children}</div>
     </div>
   );
 }

@@ -305,8 +305,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.impeccable\\hook.cache.json": {
-    "mtime": 1786552970.5612304,
-    "ast_hash": "27e5a140a950f25854b22bf2c9dcca3e",
+    "mtime": 1786567206.2788768,
+    "ast_hash": "6789e43140b2353f4957b99d6064bb10",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\db-config.mjs": {
@@ -850,13 +850,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\supabase\\proxy.ts": {
-    "mtime": 1784896210.49877,
-    "ast_hash": "ec20ce77acd6e7d3e943ffcac169bc59",
+    "mtime": 1786566382.0877404,
+    "ast_hash": "093d7745ae1d7462cecd9c2b36893d6c",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\proxy.ts": {
-    "mtime": 1784573080.3457294,
-    "ast_hash": "11c1d25e2f65e0a2c53050e6ea828228",
+    "mtime": 1786566682.8304846,
+    "ast_hash": "9bf867153850a6e1ceca2e5308a48fa9",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\supabase\\migrations\\0002_fix_owner_trigger.sql": {
@@ -1810,8 +1810,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\account\\account-shell.tsx": {
-    "mtime": 1785508483.6916976,
-    "ast_hash": "96791d66f798f822f5e5757fe18699e6",
+    "mtime": 1786566422.0823433,
+    "ast_hash": "f3933f73ce80d89156604669fcd10240",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\account\\actions.ts": {
@@ -1835,8 +1835,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\account\\login\\page.tsx": {
-    "mtime": 1785399308.9892771,
-    "ast_hash": "d75cf0cd27422393bb671b24b56a6aa8",
+    "mtime": 1786566431.8918002,
+    "ast_hash": "523d6bf74a61cc809b281e6c6f62599d",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\account\\order-parts.tsx": {
@@ -3307,6 +3307,11 @@
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\waitlist\\ticket-image.ts": {
     "mtime": 1786552970.2487237,
     "ast_hash": "88e6443e285d9358e47945460b138855",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\shop\\preview-lock.ts": {
+    "mtime": 1786566353.0511332,
+    "ast_hash": "3d8e7f1313df338c5e4180b925ac0209",
     "semantic_hash": ""
   }
 }
