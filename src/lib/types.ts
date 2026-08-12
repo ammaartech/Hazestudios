@@ -298,6 +298,30 @@ export interface FileRecord {
   created_at: string;
 }
 
+/**
+ * A row of `waitlist_entries` (0024_waitlist.sql).
+ *
+ * `position` is a `bigint` identity column. PostgREST hands bigints back as
+ * JavaScript numbers, which is safe here — the sequence starts at 139 and this
+ * is one event, not an audit log.
+ */
+export interface WaitlistEntry {
+  id: string;
+  position: number;
+  email: string;
+  phone: string;
+  /** Stored without the leading '@'; empty when they did not give one. */
+  instagram: string;
+  craft: string;
+  status: WaitlistStatus;
+  notes: string;
+  source: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type WaitlistStatus = "waiting" | "invited" | "confirmed" | "declined";
+
 export interface StaffMember {
   user_id: string;
   role: StaffRole;

@@ -21,6 +21,8 @@ export const CATALOG_TAG = "catalog";
 export const COLLECTIONS_TAG = "collections";
 /** `shop_settings`, i.e. the store name in the header and footer. */
 export const SETTINGS_TAG = "shop-settings";
+/** The event waitlist count behind the "seats left" line on /waitlist. */
+export const WAITLIST_TAG = "waitlist";
 
 /**
  * A single product, by id *and* by handle.
@@ -76,4 +78,13 @@ export function revalidateCollections(): void {
 /** Store-level settings changed. */
 export function revalidateSettings(): void {
   updateTag(SETTINGS_TAG);
+}
+
+/**
+ * Someone joined the event waitlist, so the "seats left" line on /waitlist is
+ * one behind. Called from the sign-up action, which — per the note above — is
+ * the only kind of caller `updateTag` permits.
+ */
+export function revalidateWaitlist(): void {
+  updateTag(WAITLIST_TAG);
 }

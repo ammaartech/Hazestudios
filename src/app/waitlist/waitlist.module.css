@@ -1,0 +1,1486 @@
+/*
+  Summer Sands waitlist — the campaign page's own stylesheet.
+
+  A CSS Module rather than a block in `globals.css`, which is the one place this
+  route departs from the rest of the codebase. The reason is weight: globals.css
+  is imported by the root layout, so every rule in it is downloaded by someone
+  who only ever visits a product page. This file is twenty-odd keyframes for a
+  single marketing page, and a module is code-split with the route that imports
+  it. The `.shop` scoping convention exists to solve the same problem — a
+  palette that must not leak — and a module solves it more completely.
+
+  Motion policy, since this page is almost entirely motion:
+
+    * Only `transform` and `opacity` are animated. Both are composited, so the
+      thirty-odd elements moving at once never touch layout or paint. The one
+      place the original design animated `background-position` (the button
+      sheen) is rebuilt as a translating child for exactly this reason.
+    * Nothing that loops forever also carries a `filter`. A `drop-shadow` on a
+      moving element re-rasterises it every frame, and the ambient layer has
+      fourteen of them.
+    * `will-change` appears only on the handful of elements that genuinely
+      animate for their whole life. It promotes a layer, and a page that
+      promotes everything has simply moved the cost to memory.
+    * Every loop, every entrance and the whole opening sequence collapse under
+      `prefers-reduced-motion`. See the block at the foot of the file.
+*/
+
+.page {
+  --wl-ink: #3a2229;
+  --wl-rose: #a8455f;
+  --wl-rose-deep: #b04b6c;
+  --wl-rose-bright: #c1567a;
+  --wl-paper: #fffdf8;
+  --wl-line: rgba(168, 69, 95, 0.22);
+  --wl-shadow: rgba(168, 69, 95, 0.14);
+
+  position: relative;
+  /* `dvh`, not `vh`: on mobile Safari `100vh` is the height with the URL bar
+     hidden, so the page would start with a scroll it never asked for. */
+  min-height: 100dvh;
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--wl-ink);
+  font-family: var(--font-wl-body), system-ui, sans-serif;
+
+  /* The pink graph paper. Two hard-stop gradients rather than a tiled image. */
+  background-color: #fff;
+  background-image:
+    linear-gradient(to right, rgba(255, 150, 177, 0.5) 50%, rgba(255, 150, 177, 0) 50%),
+    linear-gradient(to bottom, rgba(255, 150, 177, 0.5) 50%, rgba(255, 150, 177, 0) 50%);
+  background-size: 88px 88px, 88px 88px;
+}
+
+/* Vignette: lifts the centre of the page out of the grid so type stays legible. */
+.wash {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    80% 55% at 50% 34%,
+    rgba(255, 255, 255, 0.86) 0%,
+    rgba(255, 255, 255, 0.52) 45%,
+    rgba(255, 255, 255, 0.12) 78%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+/* ==========================================================================
+   Ambient blooms
+   ==========================================================================
+   Fourteen flowers falling on independent loops. Each one's lane, size, speed
+   and phase come in as custom properties from the component, so this is one
+   rule rather than fourteen.
+
+   The original wrapped the whole layer in `filter: saturate() contrast()` and
+   gave every bloom its own `drop-shadow`. That is a full-viewport filter pass
+   plus fourteen shadow re-rasterisations on every frame of a permanent
+   animation — by far the most expensive thing on the page, and invisible at
+   46–88px. Both are gone; the blooms carry their weight with opacity alone.
+   ========================================================================== */
+.ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bloom {
+  position: absolute;
+  top: 0;
+  left: var(--wl-x);
+  width: var(--wl-size);
+  height: auto;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: wl-drift var(--wl-dur) linear var(--wl-delay) infinite;
+}
+
+@keyframes wl-drift {
+  0% {
+    transform: translate3d(0, -16vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.72;
+  }
+  88% {
+    opacity: 0.72;
+  }
+  100% {
+    transform: translate3d(-9vw, 114vh, 0) rotate(320deg);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   Masthead
+   ========================================================================== */
+.masthead {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px clamp(18px, 4vw, 54px);
+}
+
+.mastheadLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mastheadBloom {
+  width: clamp(42px, 5.1vw, 69px);
+  height: auto;
+  filter: drop-shadow(0 5px 11px rgba(168, 69, 95, 0.24));
+}
+
+.fogMark {
+  height: clamp(47px, 6.1vw, 85px);
+  width: auto;
+}
+
+.wordmark {
+  height: clamp(58px, 7.6vw, 104px);
+  width: auto;
+  filter: drop-shadow(0 5px 12px rgba(168, 69, 95, 0.24));
+}
+
+/* ==========================================================================
+   "hobby maxxing" letterforms
+   ==========================================================================
+   Cut-paper letters that drop in one by one. `--wl-rot` is the resting angle,
+   set per letter; the keyframe interpolates to it so each one twists as it
+   lands rather than appearing pre-rotated.
+   ========================================================================== */
+.letters {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.letter {
+  height: var(--wl-h);
+  width: auto;
+  animation: wl-pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) var(--wl-delay) both;
+}
+
+.letterSpace {
+  width: clamp(10px, 2vw, 26px);
+}
+
+@keyframes wl-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(-22px) rotate(0deg) scale(0.7);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) var(--wl-rot, rotate(0deg)) scale(1);
+  }
+}
+
+/* ==========================================================================
+   Stage one — the sealed invitation
+   ========================================================================== */
+.invite {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: min(7vh, 70px) 20px 90px;
+  animation: wl-rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* The exit. The original design defined this keyframe and never used it, so the
+   invitation cut to the form with no transition at all; wiring it in is what
+   makes the two stages feel like one movement. */
+.inviteLeaving {
+  animation: wl-scene-out 0.42s cubic-bezier(0.4, 0, 1, 1) 1.15s both;
+}
+
+@keyframes wl-scene-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+}
+
+.inviteLetters {
+  justify-content: center;
+  margin: 0 0 22px;
+  max-width: 96vw;
+  filter: drop-shadow(0 8px 14px rgba(168, 69, 95, 0.22));
+}
+
+.inviteHeading {
+  margin: 0 0 4px;
+  text-align: center;
+  font-family: var(--font-wl-display), serif;
+  font-weight: 600;
+  font-size: clamp(38px, 7.2vw, 78px);
+  line-height: 0.98;
+  letter-spacing: -0.015em;
+}
+
+.inviteHeading em {
+  font-style: italic;
+  color: var(--wl-rose);
+}
+
+.inviteSub {
+  margin: 14px 0 34px;
+  max-width: 34ch;
+  text-align: center;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: rgba(58, 34, 41, 0.62);
+}
+
+/* --------------------------------------------------------------------------
+   The envelope
+   --------------------------------------------------------------------------
+   A real <button>, not a div with `role="button"` and a hand-rolled key
+   handler: Enter, Space, focus ring and the disabled state during the opening
+   animation all come free and correct.
+-------------------------------------------------------------------------- */
+.envelope {
+  position: relative;
+  display: block;
+  width: min(560px, 90vw);
+  aspect-ratio: 1.46 / 1;
+  padding: 0;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  perspective: 1400px;
+  background: linear-gradient(168deg, #f6b3c8, #f0a2ba 62%, #eb98b2);
+  box-shadow:
+    0 30px 46px rgba(150, 52, 80, 0.26),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  transition:
+    transform 0.3s cubic-bezier(0.2, 0.9, 0.2, 1),
+    box-shadow 0.3s ease;
+}
+
+.envelope:hover:not(:disabled) {
+  transform: translateY(-8px) scale(1.012);
+  box-shadow:
+    0 40px 60px rgba(150, 52, 80, 0.32),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+
+.envelope:active:not(:disabled) {
+  transform: translateY(-2px) scale(0.998);
+}
+
+.envelope:focus-visible {
+  outline: 3px solid var(--wl-rose-bright);
+  outline-offset: 4px;
+}
+
+.envelope:disabled {
+  cursor: default;
+}
+
+/* The letter climbing out from behind the front panels. */
+.envelopeLetter {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 12%;
+  height: 76%;
+  z-index: 0;
+  box-sizing: border-box;
+  padding: clamp(14px, 4.6vw, 26px);
+  border-radius: 5px;
+  background: var(--wl-paper);
+  box-shadow: 0 14px 28px rgba(150, 52, 80, 0.22);
+  animation: wl-letter-out 0.9s cubic-bezier(0.35, 0, 0.25, 1) 0.5s both;
+}
+
+@keyframes wl-letter-out {
+  0% {
+    transform: translateY(6%) scale(1);
+  }
+  100% {
+    transform: translateY(-82%) scale(1.06);
+  }
+}
+
+.letterRule {
+  height: 6px;
+  border-radius: 4px;
+  background: #f7e9ee;
+  margin-bottom: 10px;
+}
+
+.letterRuleLead {
+  height: 9px;
+  width: 52%;
+  border-radius: 4px;
+  background: #ffd7e3;
+  margin-bottom: 15px;
+}
+
+/* The paper body: three fixed panels plus the flap, which is the only part that
+   moves. `z-index: 1` keeps the whole assembly in front of the rising letter. */
+.envelopeBody {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.panelLeft,
+.panelRight,
+.panelFront,
+.flap {
+  position: absolute;
+}
+
+.panelLeft {
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 52%;
+  background: linear-gradient(100deg, #f8bed0, #f2a8c0);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+.panelRight {
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 52%;
+  background: linear-gradient(260deg, #f8bed0, #f2a8c0);
+  clip-path: polygon(100% 0, 0 50%, 100% 100%);
+}
+
+.panelFront {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 56%;
+  background: linear-gradient(180deg, #f7b8cc, #f1a4bd);
+  clip-path: polygon(0 100%, 50% 0, 100% 100%);
+}
+
+.flap {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 58%;
+  transform-origin: top center;
+  background: linear-gradient(180deg, #fcccda, #f7b6ca 72%, #f2a6bd);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.flapOpening {
+  transform-style: preserve-3d;
+  animation: wl-flap 0.58s cubic-bezier(0.45, 0.05, 0.3, 1) 0.1s both;
+}
+
+@keyframes wl-flap {
+  0% {
+    transform: rotateX(0deg);
+  }
+  100% {
+    transform: rotateX(-168deg);
+  }
+}
+
+.envelopeSheen {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 55%),
+    radial-gradient(90% 70% at 50% 108%, rgba(150, 52, 80, 0.18), rgba(150, 52, 80, 0) 60%);
+}
+
+/* The wax seal, and the ring that breathes out of it. */
+.seal {
+  --wl-seal: clamp(76px, 15vw, 104px);
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  z-index: 2;
+  width: var(--wl-seal);
+  height: var(--wl-seal);
+  margin-left: calc(var(--wl-seal) / -2);
+  margin-top: calc(var(--wl-seal) / -2);
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  animation: wl-pulse 3.4s ease-in-out infinite;
+}
+
+.sealRing {
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  animation: wl-ring 3.4s ease-out infinite;
+}
+
+.sealImg {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 5px 9px rgba(150, 52, 80, 0.3));
+}
+
+/* The same box as `.seal`, but this one *is* the image rather than a grid
+   around it — so height goes back to auto and the 311 × 320 art keeps its
+   ratio instead of being squared off. */
+.sealBreaking {
+  height: auto;
+  display: block;
+  animation: wl-seal-off 0.26s ease-in both;
+}
+
+@keyframes wl-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.055);
+  }
+}
+
+@keyframes wl-ring {
+  0% {
+    transform: scale(0.86);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.75);
+    opacity: 0;
+  }
+}
+
+@keyframes wl-seal-off {
+  0% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.72) rotate(-16deg);
+  }
+}
+
+.tapHint {
+  display: block;
+  margin: 26px 0 0;
+  font-family: var(--font-wl-mono), monospace;
+  font-weight: 700;
+  font-size: clamp(15px, 2vw, 22px);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--wl-rose);
+  animation: wl-pulse 3s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   Stage two — the details and the form
+   ==========================================================================
+   `minmax(min(340px, 100%), 1fr)` and not `minmax(340px, 1fr)`. The original
+   would not fit a 360px phone: 340px of track plus 2 × 18px of gutter is 376px,
+   so the grid overflowed the viewport and the whole page scrolled sideways. The
+   `min()` lets the track collapse below its preferred width once there is less
+   room than that, which is exactly the case `auto-fit` cannot handle alone.
+   ========================================================================== */
+.open {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
+  gap: clamp(26px, 4vw, 64px);
+  align-items: start;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: min(4vh, 36px) clamp(18px, 4vw, 54px) 80px;
+}
+
+.detailCol {
+  min-width: 0;
+  animation: wl-rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes wl-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/*
+  The lockup in the detail column.
+  ---------------------------------------------------------------------------
+  One line on a phone — bigger, and the whole phrase readable at a glance — and
+  broken after "hobby" once there is a real column to sit in.
+
+  The break is done by turning the word space into a full-width flex item, which
+  is what forces a wrap without a second copy of the markup. Below the
+  breakpoint it goes back to being an ordinary gap and the row stays on one
+  line. The component ships one lockup either way; see `PaperWordmark`.
+*/
+.detailLetters {
+  margin: 0 0 18px;
+  row-gap: 5px;
+  filter: drop-shadow(0 5px 9px rgba(168, 69, 95, 0.2));
+}
+
+@media (min-width: 640px) {
+  .detailLetters {
+    flex-wrap: wrap;
+  }
+  .detailLetters .letterSpace {
+    flex-basis: 100%;
+    width: 100%;
+    height: 0;
+  }
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  font-family: var(--font-wl-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--wl-rose);
+  box-shadow: inset 0 0 0 1px rgba(168, 69, 95, 0.18);
+}
+
+.detailHeading {
+  margin: 16px 0 0;
+  font-family: var(--font-wl-display), serif;
+  font-weight: 600;
+  font-size: clamp(40px, 6.4vw, 74px);
+  line-height: 0.96;
+  letter-spacing: -0.02em;
+}
+
+.detailHeading em {
+  font-style: italic;
+  color: var(--wl-rose);
+}
+
+.detailBody {
+  margin: 18px 0 0;
+  max-width: 40ch;
+  font-size: 15px;
+  line-height: 1.7;
+  color: rgba(58, 34, 41, 0.66);
+}
+
+/* The taped-up notepad. */
+.notepad {
+  position: relative;
+  margin: 30px 0 0;
+  max-width: 420px;
+  padding: 26px 26px 22px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(180deg, var(--wl-paper) 0 27px, #f6e7ec 27px 28px);
+  box-shadow:
+    0 16px 34px var(--wl-shadow),
+    inset 0 0 0 1px rgba(168, 69, 95, 0.1);
+  transform: rotate(-0.7deg);
+}
+
+.tapeLeft,
+.tapeRight {
+  position: absolute;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.tapeLeft {
+  left: 16px;
+  top: -11px;
+  width: 86px;
+  height: 24px;
+  background: rgba(255, 214, 228, 0.72);
+  transform: rotate(-4deg);
+}
+
+.tapeRight {
+  right: 14px;
+  top: -9px;
+  width: 74px;
+  height: 22px;
+  background: rgba(255, 224, 236, 0.7);
+  transform: rotate(5deg);
+}
+
+.notepadTitle {
+  margin: 0 0 16px;
+  font-family: var(--font-wl-display), serif;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.notepadList {
+  display: grid;
+  gap: 11px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+  color: rgba(58, 34, 41, 0.78);
+}
+
+.notepadItem {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.tick {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px rgba(168, 69, 95, 0.45);
+}
+
+.social {
+  margin: 26px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 420px;
+}
+
+.avatars {
+  display: flex;
+  flex: none;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2.5px #fff5f8;
+}
+
+.avatar + .avatar {
+  margin-left: -11px;
+}
+
+.socialCopy {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(58, 34, 41, 0.55);
+}
+
+/* ==========================================================================
+   The form
+   ========================================================================== */
+.form {
+  position: relative;
+  min-width: 0;
+  padding: clamp(26px, 3.4vw, 40px);
+  border-radius: 4px;
+  background: linear-gradient(178deg, var(--wl-paper), #fff7fa);
+  box-shadow:
+    0 30px 60px rgba(168, 69, 95, 0.18),
+    inset 0 0 0 1px rgba(168, 69, 95, 0.12);
+  animation: wl-slide-in 0.9s cubic-bezier(0.2, 0.85, 0.2, 1) 0.12s both;
+}
+
+@keyframes wl-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateY(46px) rotate(1.6deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+.formTape {
+  position: absolute;
+  left: 50%;
+  top: -13px;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 120px;
+  height: 26px;
+  background: rgba(255, 209, 224, 0.8);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+
+.eyebrow {
+  margin: 0;
+  font-family: var(--font-wl-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(58, 34, 41, 0.45);
+}
+
+.formTitle {
+  margin: 8px 0 4px;
+  /* Two lines at this leading. Reserved up front so the typewriter effect does
+     not shove the rest of the form down as the second line arrives. */
+  min-height: 2.06em;
+  white-space: pre-line;
+  font-family: var(--font-wl-display), serif;
+  font-size: clamp(30px, 3.4vw, 40px);
+  font-weight: 600;
+  line-height: 1.02;
+}
+
+.caret {
+  display: inline-block;
+  width: 0.06em;
+  height: 0.92em;
+  margin-left: 0.06em;
+  vertical-align: -0.08em;
+  background: var(--wl-rose-bright);
+  animation: wl-blink 0.9s step-end infinite;
+}
+
+@keyframes wl-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  55%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.formNote {
+  margin: 0 0 24px;
+  font-size: 13px;
+  color: rgba(58, 34, 41, 0.55);
+}
+
+.field {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.fieldLabel {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(58, 34, 41, 0.5);
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 15px;
+  /* 16px floor: iOS zooms the viewport on focus for anything smaller, and the
+     root layout deliberately does not lock zoom to paper over it. */
+  font-size: 16px;
+  color: var(--wl-ink);
+  background: #fff;
+  border: none;
+  border-radius: 3px;
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--wl-line);
+  transition:
+    box-shadow 0.22s ease,
+    transform 0.22s ease;
+}
+
+.input::placeholder {
+  color: rgba(58, 34, 41, 0.32);
+}
+
+.input:focus {
+  box-shadow:
+    inset 0 0 0 1.5px #d4738f,
+    0 6px 18px rgba(168, 69, 95, 0.16);
+  transform: translateY(-1px);
+}
+
+.input[aria-invalid="true"] {
+  box-shadow: inset 0 0 0 1.5px #b03e5e;
+}
+
+.prefixWrap {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px var(--wl-line);
+  transition: box-shadow 0.22s ease;
+}
+
+.prefixWrap:focus-within {
+  box-shadow:
+    inset 0 0 0 1.5px #d4738f,
+    0 6px 18px rgba(168, 69, 95, 0.16);
+}
+
+.prefix {
+  padding: 0 4px 0 15px;
+  font-size: 16px;
+  color: rgba(58, 34, 41, 0.4);
+}
+
+.prefixInput {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 15px 14px 2px;
+  font-size: 16px;
+  color: var(--wl-ink);
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: rgba(58, 34, 41, 0.42);
+}
+
+.error {
+  display: block;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: #b03e5e;
+}
+
+/* Craft chips. */
+.chips {
+  margin-bottom: 22px;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.chip {
+  padding: 9px 14px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  line-height: 1.1;
+  background: #fff;
+  color: rgba(58, 34, 41, 0.7);
+  box-shadow: inset 0 0 0 1px var(--wl-line);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.chip:hover {
+  transform: translateY(-1px);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--wl-rose-bright);
+  outline-offset: 2px;
+}
+
+.chipOn {
+  background: linear-gradient(120deg, var(--wl-rose-bright), #e08aa7);
+  color: #fff7fa;
+  box-shadow: 0 8px 18px rgba(168, 69, 95, 0.28);
+}
+
+/* Submit. */
+.submit {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding: 16px 18px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fff7fa;
+  background: linear-gradient(120deg, var(--wl-rose-bright), #e08aa7 50%, var(--wl-rose-deep));
+  box-shadow: 0 14px 30px rgba(168, 69, 95, 0.32);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 38px rgba(168, 69, 95, 0.4);
+}
+
+.submit:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+}
+
+.submit:focus-visible {
+  outline: 3px solid var(--wl-rose-bright);
+  outline-offset: 3px;
+}
+
+.submit:disabled {
+  cursor: progress;
+  opacity: 0.86;
+}
+
+/*
+  The sheen. The original animated `background-position` on a 220%-wide
+  gradient, which is a paint-thread animation running forever on the page's
+  most prominent element. This is the same effect as a composited transform:
+  one child, twice as wide as the button, translated across it.
+*/
+.sheen {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 60%;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  will-change: transform;
+  animation: wl-sheen 3.6s linear infinite;
+}
+
+@keyframes wl-sheen {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(370%);
+  }
+}
+
+.submitLabel {
+  position: relative;
+}
+
+.seatsLine {
+  margin: 14px 0 0;
+  text-align: center;
+  font-family: var(--font-wl-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(58, 34, 41, 0.4);
+}
+
+/* ==========================================================================
+   The confirmation stub
+   ========================================================================== */
+.ticketWrap {
+  position: relative;
+  min-width: 0;
+  animation: wl-tear 0.9s cubic-bezier(0.2, 0.85, 0.2, 1) both;
+}
+
+@keyframes wl-tear {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) rotate(-2deg) scale(0.96);
+  }
+  60% {
+    transform: translateY(-6px) rotate(0.6deg) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
+/* Petals thrown outward from the middle of the stub on arrival. */
+.burst {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.burstPetal {
+  position: absolute;
+  width: var(--wl-size);
+  height: auto;
+  animation: wl-burst var(--wl-dur) ease-out var(--wl-delay) both;
+}
+
+@keyframes wl-burst {
+  0% {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--wl-bx), var(--wl-by)) scale(1);
+    opacity: 0;
+  }
+}
+
+.ticket {
+  position: relative;
+  border-radius: 4px;
+  background: linear-gradient(178deg, var(--wl-paper), #fff4f8);
+  box-shadow:
+    0 30px 60px rgba(168, 69, 95, 0.2),
+    inset 0 0 0 1px rgba(168, 69, 95, 0.14);
+  overflow: hidden;
+}
+
+.ticketTop {
+  padding: clamp(26px, 3.2vw, 38px) clamp(26px, 3.4vw, 40px) 26px;
+}
+
+.ticketEyebrow {
+  margin: 0;
+  font-family: var(--font-wl-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--wl-rose);
+}
+
+.ticketTitle {
+  margin: 10px 0 6px;
+  font-family: var(--font-wl-display), serif;
+  font-size: clamp(32px, 3.6vw, 44px);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.ticketBody {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: rgba(58, 34, 41, 0.6);
+}
+
+.ticketStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 26px;
+  margin: 26px 0 0;
+}
+
+.statLabel {
+  margin: 0 0 4px;
+  font-family: var(--font-wl-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(58, 34, 41, 0.42);
+}
+
+.statValue {
+  margin: 0;
+  font-family: var(--font-wl-display), serif;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  /* An Instagram handle can be 30 characters; without this it pushes the stub
+     wider than its column and the grid overflows. */
+  overflow-wrap: anywhere;
+}
+
+/* The perforation. */
+.perforation {
+  height: 20px;
+  background: radial-gradient(circle at 10px 10px, #ffeef3 8px, rgba(255, 238, 243, 0) 9px) 0 0 /
+    20px 20px repeat-x;
+  box-shadow:
+    inset 0 1px 0 rgba(168, 69, 95, 0.14),
+    inset 0 -1px 0 rgba(168, 69, 95, 0.14);
+}
+
+.ticketFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px clamp(26px, 3.4vw, 40px) 26px;
+}
+
+.ticketDate {
+  margin: 0 0 8px;
+  font-family: var(--font-wl-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(58, 34, 41, 0.45);
+}
+
+.barcode {
+  width: 150px;
+  max-width: 100%;
+  height: 38px;
+  opacity: 0.78;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--wl-ink) 0 2px,
+    transparent 2px 4px,
+    var(--wl-ink) 4px 5px,
+    transparent 5px 9px,
+    var(--wl-ink) 9px 12px,
+    transparent 12px 14px
+  );
+}
+
+.ticketSeal {
+  width: 72px;
+  height: auto;
+  flex: none;
+  filter: drop-shadow(0 6px 12px rgba(168, 69, 95, 0.22));
+}
+
+.ticketFooterRow {
+  margin: 18px 2px 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ticketFooterNote {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(58, 34, 41, 0.5);
+}
+
+.ticketActions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The primary of the two, because the ticket is the reason to still be here. */
+.download {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff7fa;
+  background: linear-gradient(120deg, var(--wl-rose-bright), #e08aa7);
+  box-shadow: 0 8px 18px rgba(168, 69, 95, 0.28);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    opacity 0.16s ease;
+}
+
+.download:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(168, 69, 95, 0.34);
+}
+
+.download:focus-visible {
+  outline: 2px solid var(--wl-rose-bright);
+  outline-offset: 2px;
+}
+
+.download:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.reset {
+  padding: 9px 14px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  flex: none;
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: inset 0 0 0 1px rgba(168, 69, 95, 0.2);
+  font-family: inherit;
+  font-size: 11.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--wl-rose);
+  transition: transform 0.16s ease;
+}
+
+.reset:hover {
+  transform: translateY(-1px);
+}
+
+.reset:focus-visible {
+  outline: 2px solid var(--wl-rose-bright);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Ticker
+   ========================================================================== */
+.ticker {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  overflow: hidden;
+  user-select: none;
+  padding: 14px 0;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(168, 69, 95, 0.14),
+    inset 0 -1px 0 rgba(168, 69, 95, 0.14);
+}
+
+.tickerTrack {
+  display: flex;
+  flex-shrink: 0;
+  width: max-content;
+  font-family: var(--font-wl-mono), monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(58, 34, 41, 0.45);
+  animation: wl-marquee 26s linear infinite;
+}
+
+.ticker:hover .tickerTrack {
+  animation-play-state: paused;
+}
+
+.tickerTrack span {
+  padding: 0 26px;
+}
+
+@keyframes wl-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* ==========================================================================
+   Footer
+   ==========================================================================
+   Both marks, and the one place to ask a human. Sits below whichever stage is
+   showing, so the sealed invitation has a way out too.
+   ========================================================================== */
+.footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 44px clamp(18px, 4vw, 54px) calc(48px + env(safe-area-inset-bottom));
+  text-align: center;
+  background: rgba(255, 255, 255, 0.42);
+  box-shadow: inset 0 1px 0 rgba(168, 69, 95, 0.14);
+}
+
+.footerMarks {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 3vw, 24px);
+}
+
+.footerFog {
+  height: clamp(34px, 4.4vw, 46px);
+  width: auto;
+}
+
+.footerWordmark {
+  height: clamp(40px, 5.2vw, 56px);
+  width: auto;
+}
+
+.footerDivider {
+  width: 1px;
+  height: clamp(24px, 3vw, 34px);
+  background: rgba(168, 69, 95, 0.24);
+}
+
+.footerCopy {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(58, 34, 41, 0.6);
+}
+
+/* The whole row is the target, not just the glyph — a 18px icon is well under
+   the 44px a thumb needs, and the handle beside it says where it goes. */
+.footerLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 16px 6px 6px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-family: var(--font-wl-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--wl-rose);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(168, 69, 95, 0.18);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.2s ease;
+}
+
+.footerLink:hover {
+  transform: translateY(-1px);
+  background: #fff;
+  box-shadow:
+    inset 0 0 0 1px rgba(168, 69, 95, 0.28),
+    0 10px 22px rgba(168, 69, 95, 0.16);
+}
+
+.footerLink:focus-visible {
+  outline: 2px solid var(--wl-rose-bright);
+  outline-offset: 3px;
+}
+
+.footerIcon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  color: #fff7fa;
+  background: linear-gradient(135deg, #f0a2ba, var(--wl-rose-bright));
+  box-shadow: 0 4px 10px rgba(168, 69, 95, 0.26);
+}
+
+/* ==========================================================================
+   Reduced motion
+   ==========================================================================
+   The original had none of this, and it is the case the query exists for: a
+   page with fourteen permanent falling animations, a pulsing seal, a blinking
+   caret, a looping sheen and a marquee.
+
+   Entrances are not merely shortened but removed, so nothing arrives at
+   `opacity: 0` and stays there — the usual failure mode of a blanket
+   `animation: none`. Loops stop outright. The invitation still opens; it just
+   cuts rather than unfolds, and the component shortens the stage timer to match.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  /* Ambient decoration is pure motion. With none of it, there is nothing left
+     worth painting. */
+  .ambient {
+    display: none;
+  }
+
+  .letter,
+  .invite,
+  .inviteLeaving,
+  .detailCol,
+  .form,
+  .ticketWrap,
+  .burstPetal,
+  .envelopeLetter,
+  .flapOpening {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* These two are only ever mounted mid-sequence, so they must vanish rather
+     than freeze on screen. */
+  .sealBreaking,
+  .burstPetal {
+    display: none;
+  }
+
+  .seal,
+  .sealRing,
+  .tapHint,
+  .caret,
+  .sheen,
+  .tickerTrack {
+    animation: none;
+  }
+
+  /* A caret that cannot blink reads as a stray mark. */
+  .caret,
+  .sheen {
+    display: none;
+  }
+
+  /* The ticker becomes a static row the reader can scroll themselves. */
+  .ticker {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  .envelope,
+  .chip,
+  .submit,
+  .reset,
+  .download,
+  .footerLink,
+  .input {
+    transition-duration: 0.01ms;
+  }
+
+  .envelope:hover:not(:disabled),
+  .chip:hover,
+  .submit:hover:not(:disabled),
+  .reset:hover,
+  .download:hover:not(:disabled),
+  .footerLink:hover {
+    transform: none;
+  }
+}

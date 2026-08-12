@@ -56,6 +56,10 @@ export const mainNav: NavItem[] = [
     children: [
       { label: "Segments", href: "/admin/customers/segments" },
       { label: "Companies", href: "/admin/customers/companies" },
+      // Event RSVPs, not CRM records — a waitlist entry is deliberately not a
+      // customer (see 0024_waitlist.sql) — but it is a list of people, and this
+      // is where someone looks for a list of people.
+      { label: "Waitlist", href: "/admin/waitlist" },
     ],
   },
   {
