@@ -43,27 +43,66 @@
   color: var(--wl-ink);
   font-family: var(--font-wl-body), system-ui, sans-serif;
 
-  /* The pink graph paper. Two hard-stop gradients rather than a tiled image. */
-  background-color: #fff;
-  background-image:
-    linear-gradient(to right, rgba(255, 150, 177, 0.5) 50%, rgba(255, 150, 177, 0) 50%),
-    linear-gradient(to bottom, rgba(255, 150, 177, 0.5) 50%, rgba(255, 150, 177, 0) 50%);
-  background-size: 88px 88px, 88px 88px;
+  /* The cream the photograph fades into at its edges, so the browser's
+     overscroll gutter and any strip the crop cannot reach match the art rather
+     than flashing white. */
+  background-color: #efe9db;
 }
 
-/* Vignette: lifts the centre of the page out of the grid so type stays legible. */
-.wash {
-  position: absolute;
+/*
+  The campaign photograph.
+  ---------------------------------------------------------------------------
+  A fixed layer rather than a background on `.page`, because `.page` is as tall
+  as the content: `cover` against a 3000px-tall scroll would scale a 1200 × 1600
+  photo to three thousand pixels of height and crop away everything but a sliver
+  of the middle. Fixed to the viewport, the crop is always one screen's worth —
+  which is the 3:4-into-9:16 framing this art was chosen for — and the page
+  scrolls over it.
+
+  `background-attachment: fixed` would say the same thing in one line, and is
+  the one thing that must not be used here: iOS Safari resizes the attachment
+  area to the *document* rather than the viewport, so the image jumps as the URL
+  bar collapses. A fixed element is the version that holds still. It is safe
+  from `.page`'s `overflow: hidden` and from `body { overflow-x: clip }` — an
+  ancestor only clips a fixed descendant if it is also its containing block, and
+  nothing between here and the viewport carries a transform or a filter.
+
+  Painted before `.wash` (a pseudo-element precedes its host's children at the
+  same z-index) and both sit under the `z-index: 1` content.
+*/
+.page::before {
+  content: "";
+  position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: radial-gradient(
-    80% 55% at 50% 34%,
-    rgba(255, 255, 255, 0.86) 0%,
-    rgba(255, 255, 255, 0.52) 45%,
-    rgba(255, 255, 255, 0.12) 78%,
-    rgba(255, 255, 255, 0) 100%
-  );
+  background-image: url("/waitlist/backdrop.webp");
+  background-repeat: no-repeat;
+  background-size: cover;
+  /* Horizontally centred is the whole story on a phone, where the crop only
+     takes width. The 38% is for wide screens, where it takes height instead and
+     the lily sits high in the frame. */
+  background-position: 50% 38%;
+}
+
+/* Scrim: the photograph is a pale one, but it is also a busy one, and the
+   headings, the sub-copy and the footer sit straight on top of it with no card
+   under them. Enough veil to hold 14px type, dialled back at the edges so the
+   petals and the confetti stars still read as the background of the page. */
+.wash {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      82% 56% at 50% 33%,
+      rgba(255, 253, 248, 0.9) 0%,
+      rgba(255, 253, 248, 0.66) 42%,
+      rgba(255, 253, 248, 0.24) 74%,
+      rgba(255, 253, 248, 0) 100%
+    ),
+    linear-gradient(180deg, rgba(255, 253, 248, 0.42) 0%, rgba(255, 250, 252, 0.54) 100%);
 }
 
 /* ==========================================================================
@@ -134,59 +173,18 @@
   gap: 10px;
 }
 
-.mastheadBloom {
-  width: clamp(42px, 5.1vw, 69px);
-  height: auto;
-  filter: drop-shadow(0 5px 11px rgba(168, 69, 95, 0.24));
-}
-
 .fogMark {
   height: clamp(47px, 6.1vw, 85px);
   width: auto;
 }
 
+/* Sized for a ~5:1 plate: at the old 104px this would have run 528px across
+   the masthead and pushed the fog mark off the row on anything under a laptop. */
 .wordmark {
-  height: clamp(58px, 7.6vw, 104px);
+  height: clamp(28px, 3.6vw, 46px);
   width: auto;
-  filter: drop-shadow(0 5px 12px rgba(168, 69, 95, 0.24));
-}
-
-/* ==========================================================================
-   "hobby maxxing" letterforms
-   ==========================================================================
-   Cut-paper letters that drop in one by one. `--wl-rot` is the resting angle,
-   set per letter; the keyframe interpolates to it so each one twists as it
-   lands rather than appearing pre-rotated.
-   ========================================================================== */
-.letters {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.letter {
-  height: var(--wl-h);
-  width: auto;
-  animation: wl-pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) var(--wl-delay) both;
-}
-
-.letterSpace {
-  width: clamp(10px, 2vw, 26px);
-}
-
-@keyframes wl-pop {
-  0% {
-    opacity: 0;
-    transform: translateY(-22px) rotate(0deg) scale(0.7);
-  }
-  70% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) var(--wl-rot, rotate(0deg)) scale(1);
-  }
+  border-radius: 4px;
+  box-shadow: 0 6px 16px rgba(168, 69, 95, 0.26);
 }
 
 /* ==========================================================================
@@ -219,15 +217,10 @@
   }
 }
 
-.inviteLetters {
-  justify-content: center;
-  margin: 0 0 22px;
-  max-width: 96vw;
-  filter: drop-shadow(0 8px 14px rgba(168, 69, 95, 0.22));
-}
-
 .inviteHeading {
-  margin: 0 0 4px;
+  margin: /* Was `0 0 4px`, with the sub-copy below it supplying the gap down to the
+     envelope. That paragraph is gone, so the margin has to carry it. */
+  0 0 34px;
   text-align: center;
   font-family: var(--font-wl-display), serif;
   font-weight: 600;
@@ -239,15 +232,6 @@
 .inviteHeading em {
   font-style: italic;
   color: var(--wl-rose);
-}
-
-.inviteSub {
-  margin: 14px 0 34px;
-  max-width: 34ch;
-  text-align: center;
-  font-size: 14.5px;
-  line-height: 1.65;
-  color: rgba(58, 34, 41, 0.62);
 }
 
 /* --------------------------------------------------------------------------
@@ -534,69 +518,6 @@
   }
 }
 
-/*
-  The lockup in the detail column.
-  ---------------------------------------------------------------------------
-  One line on a phone — bigger, and the whole phrase readable at a glance — and
-  broken after "hobby" once there is a real column to sit in.
-
-  The break is done by turning the word space into a full-width flex item, which
-  is what forces a wrap without a second copy of the markup. Below the
-  breakpoint it goes back to being an ordinary gap and the row stays on one
-  line. The component ships one lockup either way; see `PaperWordmark`.
-*/
-.detailLetters {
-  margin: 0 0 18px;
-  row-gap: 5px;
-  filter: drop-shadow(0 5px 9px rgba(168, 69, 95, 0.2));
-}
-
-@media (min-width: 640px) {
-  .detailLetters {
-    flex-wrap: wrap;
-  }
-  .detailLetters .letterSpace {
-    flex-basis: 100%;
-    width: 100%;
-    height: 0;
-  }
-}
-
-.badge {
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
-  font-family: var(--font-wl-mono), monospace;
-  font-size: 10.5px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--wl-rose);
-  box-shadow: inset 0 0 0 1px rgba(168, 69, 95, 0.18);
-}
-
-.detailHeading {
-  margin: 16px 0 0;
-  font-family: var(--font-wl-display), serif;
-  font-weight: 600;
-  font-size: clamp(40px, 6.4vw, 74px);
-  line-height: 0.96;
-  letter-spacing: -0.02em;
-}
-
-.detailHeading em {
-  font-style: italic;
-  color: var(--wl-rose);
-}
-
-.detailBody {
-  margin: 18px 0 0;
-  max-width: 40ch;
-  font-size: 15px;
-  line-height: 1.7;
-  color: rgba(58, 34, 41, 0.66);
-}
-
 /* The taped-up notepad. */
 .notepad {
   position: relative;
@@ -604,7 +525,19 @@
   max-width: 420px;
   padding: 26px 26px 22px;
   border-radius: 3px;
-  background: repeating-linear-gradient(180deg, var(--wl-paper) 0 27px, #f6e7ec 27px 28px);
+  /* Plain paper, and the rules drawn by the rows themselves.
+     ---------------------------------------------------------------------
+     This was a 28px repeating gradient painted behind everything, which meant
+     the ruling and the text were two rhythms that only lined up by accident:
+     the title's height, the list's gap and the item's line-height all had to
+     come out to a multiple of 28px, and none of them did, so every line of
+     text sat a little further off its rule than the one above it.
+
+     Ruling the rows instead makes the alignment structural — a row *is* the
+     space between two lines, whatever the type in it measures — and it
+     survives a font that loads late, a longer label that wraps, and the 16px
+     minimum a browser's own text-size setting can impose. */
+  background: var(--wl-paper);
   box-shadow:
     0 16px 34px var(--wl-shadow),
     inset 0 0 0 1px rgba(168, 69, 95, 0.1);
@@ -636,7 +569,14 @@
 }
 
 .notepadTitle {
-  margin: 0 0 16px;
+  /* Full-bleed rule under the heading, so the sheet still reads as ruled paper
+     rather than as a plain card with a list on it. The negative margins are the
+     card's own 26px padding, given back. */
+  margin: 0 0 6px;
+  padding: 0 26px 12px;
+  margin-left: -26px;
+  margin-right: -26px;
+  border-bottom: 1px solid #f6e7ec;
   font-family: var(--font-wl-display), serif;
   font-size: 25px;
   font-weight: 700;
@@ -645,7 +585,7 @@
 
 .notepadList {
   display: grid;
-  gap: 11px;
+  gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -657,6 +597,17 @@
   display: flex;
   align-items: center;
   gap: 11px;
+  /* The line the text sits on. `min-height`, not `height`: a label that wraps
+     on a narrow phone takes a second line rather than spilling over the rule
+     below it. */
+  min-height: 34px;
+  padding: 4px 26px;
+  margin: 0 -26px;
+  border-bottom: 1px solid #f6e7ec;
+}
+
+.notepadItem:last-child {
+  border-bottom: none;
 }
 
 .tick {
@@ -696,12 +647,23 @@
   margin: 0;
   font-size: 12.5px;
   line-height: 1.5;
-  color: rgba(58, 34, 41, 0.55);
+  color: rgba(58, 34, 41, 0.7);
 }
 
 /* ==========================================================================
    The form
    ========================================================================== */
+
+/* The right-hand column is two cards now, not one. A grid rather than a margin
+   on the dates card, so the gap belongs to the column and neither card has to
+   know what sits below it. */
+.formCol {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+  align-content: start;
+}
+
 .form {
   position: relative;
   min-width: 0;
@@ -922,6 +884,26 @@
   background: linear-gradient(120deg, var(--wl-rose-bright), #e08aa7);
   color: #fff7fa;
   box-shadow: 0 8px 18px rgba(168, 69, 95, 0.28);
+}
+
+/* The field the 'other' chip reveals. Indented under the chip row it belongs
+   to, and given the same entrance as the rest of the paper so it arrives rather
+   than appears. */
+.otherField {
+  display: block;
+  margin: 14px 0 0;
+  animation: wl-reveal 0.34s cubic-bezier(0.2, 0.85, 0.2, 1) both;
+}
+
+@keyframes wl-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Submit. */
@@ -1264,6 +1246,82 @@
 }
 
 /* ==========================================================================
+   Upcoming dates
+   ==========================================================================
+   The same paper as the notepad in the other column, tilted the other way so a
+   page with two taped cards on it does not look like a template.
+   ========================================================================== */
+.dates {
+  position: relative;
+  padding: 24px clamp(22px, 3vw, 30px) 22px;
+  border-radius: 3px;
+  background: linear-gradient(178deg, var(--wl-paper), #fff6fa);
+  box-shadow:
+    0 18px 38px var(--wl-shadow),
+    inset 0 0 0 1px rgba(168, 69, 95, 0.12);
+  transform: rotate(0.5deg);
+  animation: wl-slide-in 0.9s cubic-bezier(0.2, 0.85, 0.2, 1) 0.24s both;
+}
+
+.datesTape {
+  position: absolute;
+  right: 22px;
+  top: -11px;
+  width: 78px;
+  height: 23px;
+  background: rgba(255, 214, 228, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  transform: rotate(3deg);
+}
+
+.datesTitle {
+  margin: 0 0 14px;
+  font-family: var(--font-wl-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--wl-rose);
+}
+
+.datesList {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A ruled sheet: the line belongs to the row above it, so the last date does
+   not sit on a rule with nothing under it. */
+.datesItem {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+}
+
+.datesItem + .datesItem {
+  border-top: 1px solid rgba(168, 69, 95, 0.12);
+}
+
+.datesDate {
+  font-family: var(--font-wl-display), serif;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.datesDay {
+  flex: none;
+  font-family: var(--font-wl-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(58, 34, 41, 0.5);
+}
+
+/* ==========================================================================
    Ticker
    ========================================================================== */
 .ticker {
@@ -1339,8 +1397,10 @@
 }
 
 .footerWordmark {
-  height: clamp(40px, 5.2vw, 56px);
+  height: clamp(24px, 3vw, 32px);
   width: auto;
+  border-radius: 3px;
+  box-shadow: 0 4px 12px rgba(168, 69, 95, 0.2);
 }
 
 .footerDivider {
@@ -1354,7 +1414,18 @@
   max-width: 34ch;
   font-size: 13px;
   line-height: 1.6;
-  color: rgba(58, 34, 41, 0.6);
+  color: rgba(58, 34, 41, 0.72);
+}
+
+/* Two pills, side by side while there is room and stacked when there is not.
+   `center` rather than `stretch`, so a wrapped second pill sits under the first
+   instead of growing to the width of the row. */
+.footerLinks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 /* The whole row is the target, not just the glyph — a 18px icon is well under
@@ -1423,11 +1494,12 @@
     display: none;
   }
 
-  .letter,
   .invite,
   .inviteLeaving,
   .detailCol,
   .form,
+  .dates,
+  .otherField,
   .ticketWrap,
   .burstPetal,
   .envelopeLetter,

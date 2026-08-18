@@ -308,11 +308,15 @@ export interface FileRecord {
 export interface WaitlistEntry {
   id: string;
   position: number;
+  /** What they asked to be called. Empty on rows written before 0025. */
+  name: string;
   email: string;
   phone: string;
   /** Stored without the leading '@'; empty when they did not give one. */
   instagram: string;
   craft: string;
+  /** Free text, and only ever set when `craft` is 'other'. */
+  craft_note: string;
   status: WaitlistStatus;
   notes: string;
   source: string;

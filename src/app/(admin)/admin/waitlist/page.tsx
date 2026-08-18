@@ -130,7 +130,7 @@ export default async function WaitlistPage({
                 })),
               ]}
             />
-            <SearchInput placeholder="Search email, phone or handle" />
+            <SearchInput placeholder="Search name, email, phone or handle" />
           </div>
 
           <p className="mb-3 text-sm text-muted-foreground tabular-nums">
@@ -173,6 +173,7 @@ export default async function WaitlistPage({
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-16">#</TableHead>
+                      <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Phone</TableHead>
                       <TableHead>Instagram</TableHead>
@@ -187,7 +188,13 @@ export default async function WaitlistPage({
                         <TableCell className="font-medium tabular-nums text-muted-foreground">
                           {e.position}
                         </TableCell>
+                        {/* Blank for anyone who signed up before the form
+                            asked; an em dash rather than nothing, so the column
+                            reads as empty rather than broken. */}
                         <TableCell className="font-medium text-foreground">
+                          {e.name || "—"}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
                           {/* The one address they gave: worth being able to
                               click rather than retype. */}
                           <a
@@ -221,6 +228,14 @@ export default async function WaitlistPage({
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {craftTicketLabel(e.craft)}
+                          {/* What they typed into "other". Shown under the
+                              craft rather than in a column of its own, which
+                              would be empty on almost every row. */}
+                          {e.craft_note ? (
+                            <span className="block text-xs italic text-muted-foreground/80">
+                              {e.craft_note}
+                            </span>
+                          ) : null}
                         </TableCell>
                         <TableCell className="whitespace-nowrap text-muted-foreground">
                           {formatDateTime(e.created_at)}

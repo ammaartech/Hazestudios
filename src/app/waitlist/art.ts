@@ -21,7 +21,13 @@ function art(name: string, width: number, height: number): Art {
 }
 
 export const FOG_MARK = art("fog-mark", 420, 286);
-export const WORDMARK = art("summer-sands", 720, 373);
+/*
+  The wordmark is a plate, not a cut-out: white type on the campaign's pink,
+  trimmed to the letterforms and given back an even margin. Nearly 5:1 where the
+  old script mark was 2:1, so anything that sizes it by height had to come down
+  with it — see `.wordmark` and `.footerWordmark` in the module.
+*/
+export const WORDMARK = art("summer-sands", 852, 175);
 export const WAX_SEAL = art("wax-seal", 311, 320);
 
 /**

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Courier_Prime, Poppins } from "next/font/google";
 import { EVENT } from "@/lib/shop/waitlist";
-import { getWaitlistStats } from "./stats";
 import { WaitlistExperience } from "./waitlist-experience";
 
 /**
@@ -59,17 +58,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function WaitlistPage() {
-  /*
-    A `use cache`d count, so reading it does not opt this route out of being
-    prerendered — see `getWaitlistStats`. The sign-up action expires the tag, so
-    the number moves as people join without any of them waiting on Postgres.
-  */
-  const { seatsLeft } = await getWaitlistStats();
-
+/*
+  Nothing is read here any more. The page used to await a `use cache`d seat
+  count for the "20 seats · 18 left" line under the submit button; with that line
+  gone there is no data on this route at all, so it is a static shell and the
+  only thing the visitor waits for is the art. `getWaitlistStats` is left in
+  place — the admin's own count is separate, and this is the obvious thing to
+  call again if the counter comes back.
+*/
+export default function WaitlistPage() {
   return (
     <div className={`${display.variable} ${mono.variable} ${body.variable}`}>
-      <WaitlistExperience seatsLeft={seatsLeft} />
+      <WaitlistExperience />
     </div>
   );
 }

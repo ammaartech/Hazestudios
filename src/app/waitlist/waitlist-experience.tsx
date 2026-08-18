@@ -20,17 +20,18 @@ import {
   BURST_PETALS,
   DRIFTING_BLOOMS,
   FOG_MARK,
-  MASTHEAD_BLOOM,
   WAX_SEAL,
   WORDMARK,
-  WORDMARK_LETTERS,
-  WORDMARK_TEXT,
 } from "./art";
 import {
   CRAFTS,
+  CRAFT_NOTE_MAX,
   EVENT,
   EVENT_INSTAGRAM,
-  SEATS,
+  NAME_MAX,
+  OTHER_CRAFT,
+  STORE_INSTAGRAM,
+  UPCOMING_DATES,
   type CraftId,
 } from "@/lib/shop/waitlist";
 import styles from "./waitlist.module.css";
@@ -141,7 +142,7 @@ function prefersReducedMotion(): boolean {
   );
 }
 
-export function WaitlistExperience({ seatsLeft }: { seatsLeft: number }) {
+export function WaitlistExperience() {
   const [stage, setStage] = useState<Stage>("closed");
   const [craft, setCraft] = useState<CraftId>(CRAFTS[0].id);
 
@@ -181,7 +182,7 @@ export function WaitlistExperience({ seatsLeft }: { seatsLeft: number }) {
     if (openTimer.current) clearTimeout(openTimer.current);
     openTimer.current = setTimeout(
       () => setStage("open"),
-      prefersReducedMotion() ? OPEN_MS_REDUCED : OPEN_MS
+      prefersReducedMotion() ? OPEN_MS_REDUCED : OPEN_MS,
     );
   }, [stage]);
 
@@ -228,22 +229,13 @@ export function WaitlistExperience({ seatsLeft }: { seatsLeft: number }) {
       </div>
 
       {/*
-        The three marks above the fold. `priority` on all of them because the
-        wordmark is the page's LCP element and the two beside it are on the same
-        row — letting them queue behind the fourteen decorative blooms below
-        would be exactly backwards.
+        The two marks above the fold. `priority` on both because the wordmark is
+        the page's LCP element and the fog mark is on the same row — letting
+        them queue behind the fourteen decorative blooms below would be exactly
+        backwards.
       */}
       <header className={styles.masthead}>
         <div className={styles.mastheadLeft}>
-          <Image
-            src={MASTHEAD_BLOOM.src}
-            width={MASTHEAD_BLOOM.width}
-            height={MASTHEAD_BLOOM.height}
-            alt=""
-            aria-hidden
-            priority
-            className={styles.mastheadBloom}
-          />
           <Image
             src={FOG_MARK.src}
             width={FOG_MARK.width}
@@ -267,23 +259,11 @@ export function WaitlistExperience({ seatsLeft }: { seatsLeft: number }) {
         <section
           className={`${styles.invite} ${isOpening ? styles.inviteLeaving : ""}`}
         >
-          <PaperWordmark
-            className={styles.inviteLetters}
-            size="clamp(26px, 8.2vw, 84px)"
-            step={0.06}
-            start={0.06}
-          />
-
           <h1 className={styles.inviteHeading}>
             try something
             <br />
             <em>you&rsquo;ve never</em> done before
           </h1>
-          <p className={styles.inviteSub}>
-            A Sunday of hand-painted fans, paper lanterns and new friends.
-            Twenty seats, one room, zero experience needed.
-          </p>
-
           {/*
             A real button. The original was a `div` with `role="button"`, a
             `tabIndex` and a hand-written Enter/Space handler — three things a
@@ -339,44 +319,21 @@ export function WaitlistExperience({ seatsLeft }: { seatsLeft: number }) {
             )}
           </button>
 
-          {isClosed ? <span className={styles.tapHint}>tap to open</span> : null}
+          {isClosed ? (
+            <span className={styles.tapHint}>tap to open</span>
+          ) : null}
         </section>
       ) : (
         <>
           <div className={styles.open}>
             <div className={styles.detailCol}>
-              {/*
-                One line on a phone, two on a wide column — and that break is
-                the stylesheet's decision, not this component's, so there is one
-                lockup in the DOM rather than a mobile copy and a desktop copy.
-                See `.detailLetters` in the module.
-              */}
-              <PaperWordmark
-                className={styles.detailLetters}
-                size="clamp(28px, 7.4vw, 46px)"
-                step={0.05}
-                start={0.1}
-              />
-
-              <span className={styles.badge}>{EVENT.dateLine}</span>
-              <h1 className={styles.detailHeading}>
-                Get in touch with
-                <br />
-                <em>your creative side</em>
-              </h1>
-              <p className={styles.detailBody}>
-                Hand-paint a silk fan, letter a paper lantern, walk out with
-                something that is only yours. Twenty seats, tea and cake
-                included, art is free therapy.
-              </p>
-
               <div className={styles.notepad}>
                 <span className={styles.tapeLeft} aria-hidden />
                 <span className={styles.tapeRight} aria-hidden />
                 <p className={styles.notepadTitle}>what you&rsquo;ll make</p>
                 <ul className={styles.notepadList}>
                   {[
-                    "a hand-painted silk fan",
+                    "a hand-painted paper fan",
                     "a paper lantern, your florals",
                     "a beaded keychain to gift",
                     "a polaroid holder for the day",
@@ -420,156 +377,207 @@ export function WaitlistExperience({ seatsLeft }: { seatsLeft: number }) {
             {seat ? (
               <Stub seat={seat} onReset={reset} rootRef={rootRef} />
             ) : (
-              <form className={styles.form} action={formAction}>
-                <span className={styles.formTape} aria-hidden />
-                <p className={styles.eyebrow}>rsvp / waitlist</p>
+              <div className={styles.formCol}>
+                <form className={styles.form} action={formAction}>
+                  <span className={styles.formTape} aria-hidden />
+                  <p className={styles.eyebrow}>rsvp / waitlist</p>
 
-                <TypedTitle />
+                  <TypedTitle />
 
-                <p className={styles.formNote}>
-                  Seats go out in the order they&rsquo;re claimed. We&rsquo;ll
-                  text you the address the night before.
-                </p>
+                  <p className={styles.formNote}>
+                    Seats go out in the order they&rsquo;re claimed. We&rsquo;ll
+                    text you the address the night before.
+                  </p>
 
-                <label className={styles.field}>
-                  <span className={styles.fieldLabel}>Email</span>
-                  <input
-                    name="email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    placeholder="you@lovely.com"
-                    className={styles.input}
-                    aria-invalid={state?.errors?.email ? true : undefined}
-                    aria-describedby={
-                      state?.errors?.email ? "wl-email-error" : undefined
-                    }
-                  />
-                  {state?.errors?.email ? (
-                    <span
-                      id="wl-email-error"
-                      role="alert"
-                      className={styles.error}
-                    >
-                      {state.errors.email}
-                    </span>
-                  ) : null}
-                </label>
-
-                <label className={styles.field}>
-                  <span className={styles.fieldLabel}>Phone</span>
-                  <input
-                    name="phone"
-                    type="tel"
-                    required
-                    inputMode="tel"
-                    autoComplete="tel"
-                    placeholder="+91 98••• •••••"
-                    className={styles.input}
-                    aria-invalid={state?.errors?.phone ? true : undefined}
-                    aria-describedby={
-                      state?.errors?.phone ? "wl-phone-error" : undefined
-                    }
-                  />
-                  {state?.errors?.phone ? (
-                    <span
-                      id="wl-phone-error"
-                      role="alert"
-                      className={styles.error}
-                    >
-                      {state.errors.phone}
-                    </span>
-                  ) : null}
-                </label>
-
-                <label className={styles.field}>
-                  <span className={styles.fieldLabel}>Instagram</span>
-                  <span className={styles.prefixWrap}>
-                    <span className={styles.prefix} aria-hidden>
-                      @
-                    </span>
+                  <label className={styles.field}>
+                    <span className={styles.fieldLabel}>Name</span>
                     <input
-                      name="instagram"
+                      name="name"
                       type="text"
-                      autoComplete="off"
-                      autoCapitalize="none"
-                      spellCheck={false}
-                      placeholder="yourhandle"
-                      className={styles.prefixInput}
-                      aria-describedby="wl-ig-hint"
+                      required
+                      maxLength={NAME_MAX}
+                      autoComplete="name"
+                      placeholder="what should we call you"
+                      className={styles.input}
+                      aria-invalid={state?.errors?.name ? true : undefined}
+                      aria-describedby={
+                        state?.errors?.name ? "wl-name-error" : undefined
+                      }
                     />
-                  </span>
-                  <span id="wl-ig-hint" className={styles.hint}>
-                    so we can tag you in the photos
-                  </span>
-                </label>
-
-                {/*
-                  The chips are the control; this carries their value into the
-                  FormData. A `<select>` would be the conventional answer, but
-                  these have to wrap onto two rows and read as a row of paper
-                  tags, which a select cannot do.
-                */}
-                <input type="hidden" name="craft" value={craft} />
-                <fieldset className={styles.chips}>
-                  <legend className={styles.fieldLabel}>Most excited for</legend>
-                  <div className={styles.chipRow}>
-                    {CRAFTS.map((c) => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => setCraft(c.id)}
-                        aria-pressed={craft === c.id}
-                        className={`${styles.chip} ${
-                          craft === c.id ? styles.chipOn : ""
-                        }`}
+                    {state?.errors?.name ? (
+                      <span
+                        id="wl-name-error"
+                        role="alert"
+                        className={styles.error}
                       >
-                        {c.label}
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
+                        {state.errors.name}
+                      </span>
+                    ) : null}
+                  </label>
 
-                <button
-                  type="submit"
-                  className={styles.submit}
-                  disabled={pending}
-                  onClick={(e) => {
-                    /*
-                      Only when the browser is actually going to submit. A
-                      failed `required`/`type=email` check leaves the form
-                      exactly where it is, and a confirmation sound for a form
-                      that did not go anywhere tells the person the opposite of
-                      what happened.
-                    */
-                    if (e.currentTarget.form?.checkValidity()) {
-                      playClaimChime();
-                    }
-                  }}
-                >
-                  <span className={styles.sheen} aria-hidden />
-                  <span className={styles.submitLabel}>
-                    {pending ? "sealing your letter…" : "claim my seat"}
-                  </span>
-                </button>
+                  <label className={styles.field}>
+                    <span className={styles.fieldLabel}>Username</span>
+                    <span className={styles.prefixWrap}>
+                      <span className={styles.prefix} aria-hidden>
+                        @
+                      </span>
+                      <input
+                        name="instagram"
+                        type="text"
+                        autoComplete="off"
+                        autoCapitalize="none"
+                        spellCheck={false}
+                        placeholder="yourhandle"
+                        className={styles.prefixInput}
+                        aria-describedby="wl-ig-hint"
+                      />
+                    </span>
+                    <span id="wl-ig-hint" className={styles.hint}>
+                      so we can tag you in the photos
+                    </span>
+                  </label>
 
-                {state?.message ? (
-                  <p
-                    role="alert"
-                    className={`${styles.error} ${styles.seatsLine}`}
+                  <label className={styles.field}>
+                    <span className={styles.fieldLabel}>Number</span>
+                    <input
+                      name="phone"
+                      type="tel"
+                      required
+                      inputMode="tel"
+                      autoComplete="tel"
+                      placeholder="+91 98••• •••••"
+                      className={styles.input}
+                      aria-invalid={state?.errors?.phone ? true : undefined}
+                      aria-describedby={
+                        state?.errors?.phone ? "wl-phone-error" : undefined
+                      }
+                    />
+                    {state?.errors?.phone ? (
+                      <span
+                        id="wl-phone-error"
+                        role="alert"
+                        className={styles.error}
+                      >
+                        {state.errors.phone}
+                      </span>
+                    ) : null}
+                  </label>
+
+                  <label className={styles.field}>
+                    <span className={styles.fieldLabel}>Email</span>
+                    <input
+                      name="email"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      placeholder="you@lovely.com"
+                      className={styles.input}
+                      aria-invalid={state?.errors?.email ? true : undefined}
+                      aria-describedby={
+                        state?.errors?.email ? "wl-email-error" : undefined
+                      }
+                    />
+                    {state?.errors?.email ? (
+                      <span
+                        id="wl-email-error"
+                        role="alert"
+                        className={styles.error}
+                      >
+                        {state.errors.email}
+                      </span>
+                    ) : null}
+                  </label>
+
+                  {/*
+                    The chips are the control; this carries their value into the
+                    FormData. A `<select>` would be the conventional answer, but
+                    these have to wrap onto two rows and read as a row of paper
+                    tags, which a select cannot do.
+                  */}
+                  <input type="hidden" name="craft" value={craft} />
+                  <fieldset className={styles.chips}>
+                    <legend className={styles.fieldLabel}>
+                      Most excited for
+                    </legend>
+                    <div className={styles.chipRow}>
+                      {CRAFTS.map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => setCraft(c.id)}
+                          aria-pressed={craft === c.id}
+                          className={`${styles.chip} ${
+                            craft === c.id ? styles.chipOn : ""
+                          }`}
+                        >
+                          {c.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/*
+                      Revealed rather than always present, and only mounted while
+                      'other' is the selection — so the value cannot survive a
+                      change of mind and arrive in the payload beside a craft it
+                      does not describe. `autoFocus` is safe here because the
+                      mount is a direct response to a tap on the chip.
+                    */}
+                    {craft === OTHER_CRAFT ? (
+                      <label className={styles.otherField}>
+                        <span className={styles.fieldLabel}>
+                          What would you like to do?
+                        </span>
+                        <input
+                          name="craftNote"
+                          type="text"
+                          autoFocus
+                          maxLength={CRAFT_NOTE_MAX}
+                          autoComplete="off"
+                          placeholder="tell us what you'd love to make"
+                          className={styles.input}
+                        />
+                      </label>
+                    ) : null}
+                  </fieldset>
+
+                  <button
+                    type="submit"
+                    className={styles.submit}
+                    disabled={pending}
+                    onClick={(e) => {
+                      /*
+                        Only when the browser is actually going to submit. A
+                        failed `required`/`type=email` check leaves the form
+                        exactly where it is, and a confirmation sound for a form
+                        that did not go anywhere tells the person the opposite of
+                        what happened.
+                      */
+                      if (e.currentTarget.form?.checkValidity()) {
+                        playClaimChime();
+                      }
+                    }}
                   >
-                    {state.message}
-                  </p>
-                ) : (
-                  <p className={styles.seatsLine} aria-live="polite">
-                    {pending
-                      ? "one moment"
-                      : seatsLeft > 0
-                        ? `${SEATS} seats · ${seatsLeft} left`
-                        : `${SEATS} seats · waitlist only`}
-                  </p>
-                )}
-              </form>
+                    <span className={styles.sheen} aria-hidden />
+                    <span className={styles.submitLabel}>
+                      {pending ? "sealing your letter…" : "claim my seat"}
+                    </span>
+                  </button>
+
+                  {/* Only the failure now. The seat count that used to live
+                      here is gone, and the submit button already says what is
+                      happening while the action runs. */}
+                  {state?.message ? (
+                    <p
+                      role="alert"
+                      className={`${styles.error} ${styles.seatsLine}`}
+                    >
+                      {state.message}
+                    </p>
+                  ) : null}
+                </form>
+
+                <UpcomingDates />
+              </div>
             )}
           </div>
 
@@ -583,6 +591,30 @@ export function WaitlistExperience({ seatsLeft }: { seatsLeft: number }) {
 }
 
 /**
+ * The dates the workshop actually runs, under the form.
+ *
+ * A card of its own rather than a line inside the form: the form is a thing you
+ * fill in, and a list of dates is a thing you read. Sharing the paper would
+ * make the dates look like another field.
+ */
+function UpcomingDates() {
+  return (
+    <aside className={styles.dates}>
+      <span className={styles.datesTape} aria-hidden />
+      <p className={styles.datesTitle}>upcoming dates</p>
+      <ul className={styles.datesList}>
+        {UPCOMING_DATES.map((d) => (
+          <li key={`${d.date}-${d.day}`} className={styles.datesItem}>
+            <span className={styles.datesDate}>{d.date}</span>
+            <span className={styles.datesDay}>{d.day}</span>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  );
+}
+
+/**
  * The form's heading, typed out.
  *
  * A component of its own so the animation begins when the form mounts, without
@@ -592,7 +624,7 @@ export function WaitlistExperience({ seatsLeft }: { seatsLeft: number }) {
  */
 function TypedTitle() {
   const [shown, setShown] = useState(() =>
-    prefersReducedMotion() ? FORM_TITLE.length : 0
+    prefersReducedMotion() ? FORM_TITLE.length : 0,
   );
   const done = shown >= FORM_TITLE.length;
 
@@ -600,7 +632,7 @@ function TypedTitle() {
     if (done) return;
     const id = setInterval(
       () => setShown((n) => Math.min(n + 1, FORM_TITLE.length)),
-      TYPE_MS
+      TYPE_MS,
     );
     return () => clearInterval(id);
   }, [done]);
@@ -613,78 +645,6 @@ function TypedTitle() {
       {!done ? <span className={styles.caret} aria-hidden /> : null}
       <span className="sr-only">{FORM_TITLE}</span>
     </h2>
-  );
-}
-
-/**
- * The "hobby maxxing" lockup.
- *
- * Always one flex row. Whether it stays on one line or breaks after "hobby" is
- * left to CSS — the word space is an element, so a stylesheet can turn it into
- * a full-width flex break at a chosen width without this component knowing the
- * viewport. That is what keeps the phone and desktop treatments from being two
- * different DOM trees.
- *
- * Every letter is `aria-hidden` and the phrase supplied once as real text — the
- * original gave each image its own single-character `alt`, so a screen reader
- * spelled the whole thing out letter by letter.
- */
-function PaperWordmark({
-  className,
-  size,
-  step,
-  start,
-}: {
-  className: string;
-  /** CSS length for the rendered height of each letter. */
-  size: string;
-  /** Seconds between one letter landing and the next. */
-  step: number;
-  /** Seconds before the first letter lands. */
-  start: number;
-}) {
-  const renderLetter = (
-    entry: (typeof WORDMARK_LETTERS)[number],
-    key: number,
-    order: number
-  ) => {
-    if (entry.kind === "gap") {
-      return <span key={key} className={styles.letterSpace} aria-hidden />;
-    }
-    return (
-      <Image
-        key={key}
-        src={entry.art.src}
-        width={entry.art.width}
-        height={entry.art.height}
-        alt=""
-        aria-hidden
-        className={styles.letter}
-        style={
-          {
-            "--wl-rot": entry.rot,
-            "--wl-h": size,
-            "--wl-delay": `${start + order * step}s`,
-          } as React.CSSProperties
-        }
-      />
-    );
-  };
-
-  /* The gap is not a letter, so it must not consume a beat of the stagger. */
-  const withOrder = (() => {
-    let order = 0;
-    return WORDMARK_LETTERS.map((entry) => {
-      const at = entry.kind === "letter" ? order++ : -1;
-      return { entry, at };
-    });
-  })();
-
-  return (
-    <div className={`${styles.letters} ${className}`}>
-      <span className="sr-only">{WORDMARK_TEXT}</span>
-      {withOrder.map(({ entry, at }, i) => renderLetter(entry, i, at))}
-    </div>
   );
 }
 
@@ -742,23 +702,34 @@ function PageFooter() {
       </div>
 
       <p className={styles.footerCopy}>
-        For more info or help, contact us on Instagram — tap the icon.
+        For more info or help, message us on Instagram.
       </p>
 
-      <a
-        href={EVENT_INSTAGRAM.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={styles.footerLink}
-        /* The visible label is the handle; the icon is decoration beside it,
-           so the accessible name says what following it will do. */
-        aria-label={`Contact us on Instagram at ${EVENT_INSTAGRAM.handle} (opens in a new tab)`}
-      >
-        <span className={styles.footerIcon} aria-hidden>
-          <InstagramGlyph />
-        </span>
-        <span aria-hidden>{EVENT_INSTAGRAM.handle}</span>
-      </a>
+      {/*
+        Two accounts, one row: the campaign's, and the store's. Both are the
+        same control rather than one pill and one text link — they are the same
+        kind of destination, and giving one of them a louder treatment would
+        suggest they are not.
+      */}
+      <div className={styles.footerLinks}>
+        {[EVENT_INSTAGRAM, STORE_INSTAGRAM].map((account) => (
+          <a
+            key={account.handle}
+            href={account.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.footerLink}
+            /* The visible label is the handle; the icon is decoration beside
+               it, so the accessible name says what following it will do. */
+            aria-label={`Instagram, ${account.handle} (opens in a new tab)`}
+          >
+            <span className={styles.footerIcon} aria-hidden>
+              <InstagramGlyph />
+            </span>
+            <span aria-hidden>{account.handle}</span>
+          </a>
+        ))}
+      </div>
     </footer>
   );
 }
@@ -925,10 +896,7 @@ function Ticker() {
     assistive tech instead, so each phrase is announced once.
   */
   const track = (duplicate: boolean) => (
-    <div
-      className={styles.tickerTrack}
-      aria-hidden={duplicate || undefined}
-    >
+    <div className={styles.tickerTrack} aria-hidden={duplicate || undefined}>
       {TICKER_WORDS.map((word) => (
         <Fragment key={word}>
           <span>{word}</span>

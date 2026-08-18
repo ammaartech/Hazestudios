@@ -2,7 +2,14 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidateWaitlist } from "@/lib/shop/cache";
-import { craftTicketLabel, isCraftId, CRAFTS } from "@/lib/shop/waitlist";
+import {
+  craftTicketLabel,
+  isCraftId,
+  CRAFTS,
+  CRAFT_NOTE_MAX,
+  NAME_MAX,
+  OTHER_CRAFT,
+} from "@/lib/shop/waitlist";
 
 /**
  * Summer Sands waitlist sign-up.
@@ -25,7 +32,7 @@ import { craftTicketLabel, isCraftId, CRAFTS } from "@/lib/shop/waitlist";
 export interface WaitlistState {
   ok: boolean;
   /** Field-level messages, keyed by input name. */
-  errors?: { email?: string; phone?: string };
+  errors?: { name?: string; email?: string; phone?: string };
   /** Only on success — everything the confirmation stub prints. */
   entry?: {
     position: number;
@@ -43,6 +50,23 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /** Longest address the RFC allows; also what the column is sized for in practice. */
 const EMAIL_MAX = 254;
+
+/**
+ * Collapses whitespace and strips the control characters a paste can carry.
+ *
+ * Not a charset filter: a name is the one field on this form where the range of
+ * legitimate input is the whole of Unicode, so rejecting anything outside a
+ * Latin alphabet would turn away real people. What is removed is only what
+ * cannot be part of a name in any script — newlines, tabs and control codes,
+ * which exist here to break the admin table and the CSV, not to spell anything.
+ */
+function normaliseName(raw: string): string {
+  return raw
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, NAME_MAX);
+}
 
 function field(formData: FormData, name: string): string {
   const raw = formData.get(name);
@@ -74,12 +98,18 @@ export async function joinWaitlist(
   _prev: WaitlistState | null,
   formData: FormData
 ): Promise<WaitlistState> {
+  const name = normaliseName(field(formData, "name"));
   const email = field(formData, "email").toLowerCase();
   const phone = field(formData, "phone");
   const instagram = normaliseHandle(field(formData, "instagram"));
   const craftRaw = field(formData, "craft");
 
   const errors: NonNullable<WaitlistState["errors"]> = {};
+
+  // One character is a name in plenty of places; nothing at all is not.
+  if (!name) {
+    errors.name = "We'd like to know who to expect.";
+  }
 
   if (!EMAIL.test(email) || email.length > EMAIL_MAX) {
     errors.email = "A real email, please — that's where the seat goes.";
@@ -100,6 +130,14 @@ export async function joinWaitlist(
   // insert anyway. Fall back to the default rather than failing the sign-up.
   const craft = isCraftId(craftRaw) ? craftRaw : CRAFTS[0].id;
 
+  // Only 'other' carries a note, and the check constraint in 0025 says the same
+  // thing — a note left over from a chip they changed their mind about would
+  // otherwise be stored beside a craft it does not describe.
+  const craftNote =
+    craft === OTHER_CRAFT
+      ? normaliseName(field(formData, "craftNote")).slice(0, CRAFT_NOTE_MAX)
+      : "";
+
   const supabase = createAdminClient();
   if (!supabase) {
     return { ok: false, message: "Sign-ups are unavailable right now." };
@@ -114,7 +152,15 @@ export async function joinWaitlist(
   const { data, error } = await supabase
     .from("waitlist_entries")
     .upsert(
-      { email, phone, instagram, craft, source: "waitlist-page" },
+      {
+        name,
+        email,
+        phone,
+        instagram,
+        craft,
+        craft_note: craftNote,
+        source: "waitlist-page",
+      },
       { onConflict: "email" }
     )
     .select("position")
@@ -131,9 +177,11 @@ export async function joinWaitlist(
     ok: true,
     entry: {
       position: data.position,
-      // Falls back to the local part of the address, which is what the design
-      // does — the stub always names *someone*.
-      handleLabel: instagram ? `@${instagram}` : email.split("@")[0] || "you",
+      // The handle if they gave one, then the name they typed, then the local
+      // part of the address — the stub always names *someone*.
+      handleLabel: instagram
+        ? `@${instagram}`
+        : name || email.split("@")[0] || "you",
       craftLabel: craftTicketLabel(craft),
     },
   };

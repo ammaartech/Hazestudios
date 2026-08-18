@@ -53,7 +53,7 @@ export function applyFilters<
     // Phone and handle are searchable because that is how someone arrives in
     // the DMs — "hi it's @sana, am I on the list?" rarely comes with an email.
     q = q.or(
-      `email.ilike.%${term}%,phone.ilike.%${term}%,instagram.ilike.%${term}%`
+      `name.ilike.%${term}%,email.ilike.%${term}%,phone.ilike.%${term}%,instagram.ilike.%${term}%`
     );
   }
   if (status) q = q.eq("status", status);
@@ -66,10 +66,12 @@ export function applyFilters<
 
 export const CSV_HEADERS = [
   "Position",
+  "Name",
   "Email",
   "Phone",
   "Instagram",
   "Craft",
+  "Other",
   "Status",
   "Source",
   "Signed up",
@@ -106,6 +108,7 @@ export function csvCell(value: string | number): string {
 export function csvRow(entry: WaitlistEntry): string[] {
   return [
     String(entry.position),
+    entry.name,
     entry.email,
     entry.phone,
     // The bare handle, without the '@' the table shows. Two reasons: it is what
@@ -114,6 +117,7 @@ export function csvRow(entry: WaitlistEntry): string[] {
     // so a clean export would come out as `'@aishamakes` on every single row.
     entry.instagram,
     craftTicketLabel(entry.craft),
+    entry.craft_note,
     entry.status,
     entry.source,
     entry.created_at,
