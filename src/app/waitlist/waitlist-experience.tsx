@@ -330,13 +330,13 @@ export function WaitlistExperience() {
               <div className={styles.notepad}>
                 <span className={styles.tapeLeft} aria-hidden />
                 <span className={styles.tapeRight} aria-hidden />
-                <p className={styles.notepadTitle}>what you&rsquo;ll make</p>
+                <p className={styles.notepadTitle}>every event includes</p>
                 <ul className={styles.notepadList}>
                   {[
-                    "a hand-painted paper fan",
-                    "a paper lantern, your florals",
-                    "a beaded keychain to gift",
-                    "a polaroid holder for the day",
+                    "2 activities",
+                    "great food",
+                    "bedazzling station <3",
+                    "a polaroid click to take home",
                   ].map((item) => (
                     <li key={item} className={styles.notepadItem}>
                       <span className={styles.tick} aria-hidden />
@@ -385,8 +385,7 @@ export function WaitlistExperience() {
                   <TypedTitle />
 
                   <p className={styles.formNote}>
-                    Seats go out in the order they&rsquo;re claimed. We&rsquo;ll
-                    text you the address the night before.
+                    Be the first to get ticket access when slots open up.
                   </p>
 
                   <label className={styles.field}>
@@ -877,10 +876,10 @@ function Stub({
 }
 
 const TICKER_WORDS = [
-  "art is free therapy",
   "make new friends",
-  "twenty seats only",
-  "tea & cake included",
+  "limited seats only",
+  "art is free therapy",
+  "reconnect with your inner child",
 ];
 
 /**
