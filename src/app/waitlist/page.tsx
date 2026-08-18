@@ -46,15 +46,62 @@ const body = Poppins({
   display: "swap",
 });
 
+/**
+ * The card people see when they paste the link into WhatsApp or Instagram.
+ *
+ * `metadataBase` matters more than it looks: without it a relative `og:image`
+ * has nothing to be resolved against, and Next falls back to localhost — which
+ * is a URL WhatsApp's crawler cannot fetch, so the card silently arrives with no
+ * picture at all. `NEXT_PUBLIC_SITE_URL` first (the same override the checkout
+ * uses for its return URLs), then Vercel's own hostname for preview and
+ * production deploys, then localhost so `next dev` does not throw.
+ *
+ * `title.absolute` opts out of the root layout's `%s · Fogstores` template. The
+ * campaign shares under its own name, and "hobbymaxx · waitlist · Fogstores"
+ * would be the third name on a card that only has room for one.
+ *
+ * The image is 1080 × 1440, not the 1200 × 630 the OG spec suggests. It is
+ * shared into WhatsApp and Instagram far more than into anything that renders a
+ * wide card, and both show a portrait image whole — where a 1.91:1 crop of this
+ * one would cut the headline off at the top and bottom. JPEG rather than the
+ * WebP everything else on this page uses, because the crawlers that build these
+ * previews are the last place WebP support can be assumed.
+ */
+const SITE_ORIGIN =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
+
+const SHARE_TITLE = "hobbymaxx · waitlist";
+
+const SHARE_DESCRIPTION =
+  "Two activities, great food, a bedazzling station and a polaroid to take home. Put your name down for the next one.";
+
 export const metadata: Metadata = {
-  title: `${EVENT.name} · Waitlist`,
-  description:
-    "Hand-paint a silk fan, letter a paper lantern, walk out with something that is only yours. Twenty seats, Sunday 27 September, Bandra.",
+  metadataBase: new URL(SITE_ORIGIN),
+  title: { absolute: SHARE_TITLE },
+  description: SHARE_DESCRIPTION,
   openGraph: {
-    title: `${EVENT.name} · Waitlist`,
-    description:
-      "A Sunday of hand-painted fans, paper lanterns and new friends. Twenty seats, one room, zero experience needed.",
+    title: SHARE_TITLE,
+    description: SHARE_DESCRIPTION,
     type: "website",
+    images: [
+      {
+        url: "/waitlist/share-card.jpg",
+        width: 1080,
+        height: 1440,
+        alt: `${EVENT.name} — things to do in Bangalore instead of doomscrolling`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SHARE_TITLE,
+    description: SHARE_DESCRIPTION,
+    images: ["/waitlist/share-card.jpg"],
   },
 };
 
