@@ -49,17 +49,27 @@ export function Topbar({
         </span>
       </Link>
 
-      {/* Search centered over the content column. */}
-      <div className="flex flex-1 justify-center px-4">
-        <div className="relative w-full max-w-xl">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      {/*
+        Centred on the *viewport*, not on the space left over beside the brand.
+        Flowing it as a flex child made it centre within the gap between the
+        240px brand block and the avatar, which puts it visibly right of the
+        page's own centre line. Taking it out of flow and pinning it to 50% of
+        the header centres it over the window, which is where the eye expects
+        it and where the content column below is centred too.
+
+        `max-w-2xl` with `w-[min(…)]` so it grows on wide screens but never
+        collides with the brand or the avatar on narrow ones.
+      */}
+      <div className="pointer-events-none absolute left-1/2 hidden w-[min(36rem,calc(100vw-30rem))] -translate-x-1/2 md:block">
+        <div className="pointer-events-auto relative">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search products, orders, customers…"
+            placeholder="Search"
             aria-label="Search the admin"
             // Light chrome, so this takes the same glass-control material as the
             // page's own controls rather than the dark glass-chrome variant.
-            className="glass-control h-8 w-full rounded-lg border-0 pl-9 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-sidebar-ring/30"
+            className="glass-control h-10 w-full rounded-lg border-0 pl-10 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-sidebar-ring/30"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 const q = (e.target as HTMLInputElement).value.trim();
@@ -71,6 +81,10 @@ export function Topbar({
           />
         </div>
       </div>
+
+      {/* Takes the slack the absolutely-positioned search no longer occupies,
+          keeping the avatar hard right. */}
+      <div className="flex-1" />
 
       <div className="flex shrink-0 items-center gap-1 px-3">
         <DropdownMenu>

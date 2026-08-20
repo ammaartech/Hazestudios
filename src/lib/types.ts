@@ -204,6 +204,8 @@ export interface Order {
   location_id: string | null;
   created_at: string;
   closed_at: string | null;
+  /** Set when the order is cancelled; the row is kept, never deleted. */
+  cancelled_at: string | null;
 
   /* Added in 0014_checkout.sql. Denormalised onto the order rather than read
      through customer_id, because an order is a contract: it has to keep saying

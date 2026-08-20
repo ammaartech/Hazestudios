@@ -271,3 +271,95 @@ export async function deleteOrder(orderId: string) {
   revalidatePath("/admin/orders");
   return { ok: true };
 }
+
+/**
+ * Cancels an order.
+ *
+ * Restocking is opt-in rather than automatic. A cancellation before anything is
+ * picked should return the goods to inventory; one raised after a parcel is
+ * already with the courier should not, or the stock count starts describing
+ * garments that are in a van. Only the operator knows which case this is, so
+ * the dialog asks.
+ *
+ * `payment_status` is moved to `voided` only when nothing has been captured.
+ * A paid order that is cancelled needs a refund, which is its own action with
+ * its own money movement — silently marking it voided here would make the books
+ * claim a refund happened that never did.
+ */
+export async function cancelOrder(orderId: string, restock: boolean) {
+  const supabase = await createClient();
+
+  const { data: order } = await supabase
+    .from("orders")
+    .select("payment_status, cancelled_at")
+    .eq("id", orderId)
+    .single();
+
+  if (!order) return { error: "Order not found." };
+  if (order.cancelled_at) return { error: "This order is already cancelled." };
+
+  if (restock) {
+    const { data: items } = await supabase
+      .from("order_items")
+      .select("product_id, variant_id, quantity")
+      .eq("order_id", orderId);
+
+    if (items?.length) {
+      await adjustStock(
+        supabase,
+        items as { product_id: string | null; variant_id: string | null; quantity: number }[],
+        1
+      );
+    }
+  }
+
+  const { error } = await supabase
+    .from("orders")
+    .update({
+      cancelled_at: new Date().toISOString(),
+      fulfillment_status: restock ? "restocked" : "unfulfilled",
+      ...(order.payment_status === "pending" ? { payment_status: "voided" } : {}),
+    })
+    .eq("id", orderId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/admin/orders");
+  return { ok: true };
+}
+
+/**
+ * Adds an internal note.
+ *
+ * The author's email is stamped at write time — see the column comment in
+ * 0029: `auth.users` is not readable by the session client, so resolving it per
+ * render would cost a privileged lookup for every note.
+ */
+export async function addOrderNote(orderId: string, body: string) {
+  const trimmed = body.trim();
+  if (!trimmed) return { error: "Write something first." };
+
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+
+  const { error } = await supabase.from("order_notes").insert({
+    order_id: orderId,
+    body: trimmed,
+    author_id: auth.user?.id ?? null,
+    author_email: auth.user?.email ?? null,
+  });
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/admin/orders/${orderId}`);
+  return { ok: true };
+}
+
+export async function deleteOrderNote(noteId: string, orderId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("order_notes").delete().eq("id", noteId);
+  if (error) return { error: error.message };
+  revalidatePath(`/admin/orders/${orderId}`);
+  return { ok: true };
+}

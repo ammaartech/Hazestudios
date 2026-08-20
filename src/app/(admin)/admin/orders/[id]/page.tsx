@@ -1,4 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
+import { Package } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -24,8 +26,10 @@ import {
   DeleteOrderButton,
   FulfillDialog,
   MarkPaidButton,
+  OrderActionsMenu,
   RefundDialog,
 } from "./order-actions";
+import { OrderNotes, type OrderNote } from "./order-notes";
 import { getQikinkStatus } from "@/lib/qikink/config";
 import { getFulfillment } from "@/lib/qikink/fulfillment";
 import { QikinkCard } from "./qikink-card";
@@ -44,6 +48,7 @@ export default async function OrderDetailPage({
     { data: itemsData },
     { data: fulfillmentsData },
     { data: refundsData },
+    { data: notesData },
   ] = await Promise.all([
     supabase.from("orders").select("*, customers(*)").eq("id", id).single(),
     supabase.from("order_items").select("*").eq("order_id", id),
@@ -55,6 +60,11 @@ export default async function OrderDetailPage({
     supabase
       .from("refunds")
       .select("*")
+      .eq("order_id", id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("order_notes")
+      .select("id, body, author_email, created_at")
       .eq("order_id", id)
       .order("created_at", { ascending: false }),
   ]);
@@ -70,8 +80,37 @@ export default async function OrderDetailPage({
 
   const order = orderData as Order & { customers: Customer | null };
   const items = (itemsData ?? []) as OrderItem[];
+
+  /**
+   * One thumbnail per line, keyed by product.
+   *
+   * Fetched in a single query after the items rather than embedded in the
+   * `order_items` select: the join would be per-line, and an order with the
+   * same product twice would pull the same image rows twice. Position 0 is the
+   * product's primary shot, which is the one the catalogue shows.
+   *
+   * Deliberately not variant-specific — `order_items` carries no image and the
+   * variant's own shot is not modelled, so the product image is the honest
+   * answer rather than a guess at which colourway shipped.
+   */
+  const productIds = [...new Set(items.map((i) => i.product_id).filter(Boolean))] as string[];
+  const { data: imageRows } = productIds.length
+    ? await supabase
+        .from("product_images")
+        .select("product_id, url, alt, position")
+        .in("product_id", productIds)
+        .order("position")
+    : { data: [] as { product_id: string; url: string; alt: string | null }[] };
+
+  const imageByProduct = new Map<string, { url: string; alt: string | null }>();
+  for (const row of (imageRows ?? []) as { product_id: string; url: string; alt: string | null }[]) {
+    if (!imageByProduct.has(row.product_id)) {
+      imageByProduct.set(row.product_id, { url: row.url, alt: row.alt });
+    }
+  }
   const fulfillments = (fulfillmentsData ?? []) as Fulfillment[];
   const refunds = (refundsData ?? []) as Refund[];
+  const notes = (notesData ?? []) as OrderNote[];
   const refunded = refunds.reduce((sum, r) => sum + Number(r.amount), 0);
   const customer = order.customers;
 
@@ -89,7 +128,7 @@ export default async function OrderDetailPage({
           </>
         ) : (
           <>
-            {order.payment_status === "pending" && (
+            {order.payment_status === "pending" && !order.cancelled_at && (
               <MarkPaidButton orderId={order.id} />
             )}
             {(order.payment_status === "paid" ||
@@ -102,9 +141,12 @@ export default async function OrderDetailPage({
               )}
             {order.fulfillment_status !== "fulfilled" &&
               order.fulfillment_status !== "restocked" &&
-              order.payment_status !== "voided" && (
-                <FulfillDialog orderId={order.id} />
-              )}
+              order.payment_status !== "voided" &&
+              !order.cancelled_at && <FulfillDialog orderId={order.id} />}
+            <OrderActionsMenu
+              orderId={order.id}
+              cancelled={Boolean(order.cancelled_at)}
+            />
           </>
         )}
       </PageHeader>
@@ -114,6 +156,9 @@ export default async function OrderDetailPage({
           <Badge variant="secondary">Draft</Badge>
         ) : (
           <>
+            {/* First, and destructive-coloured: once an order is cancelled that
+                fact outranks how it was paid or fulfilled. */}
+            {order.cancelled_at && <Badge variant="destructive">Cancelled</Badge>}
             <PaymentBadge status={order.payment_status} />
             <FulfillmentBadge status={order.fulfillment_status} />
             {/* How the shopper chose to pay, which is not the same question as
@@ -131,7 +176,12 @@ export default async function OrderDetailPage({
         </span>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+      {/* Narrower than the shell's max-w-6xl and centred within it.
+          An order is read top-to-bottom like a document — line items, money,
+          then the aside — and at full width the summary column drifts to the
+          far edge of a large monitor, far from the items it describes. Capping
+          the pair keeps them within one comfortable scan. */}
+      <div className="mx-auto grid max-w-5xl gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
         <div className="space-y-5">
           <Card>
             <CardHeader>
@@ -139,12 +189,34 @@ export default async function OrderDetailPage({
             </CardHeader>
             <CardContent>
               <div className="divide-y">
-                {items.map((item) => (
+                {items.map((item) => {
+                  const image = item.product_id ? imageByProduct.get(item.product_id) : null;
+                  return (
                   <div
                     key={item.id}
                     className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
                   >
-                    <div>
+                    <div className="flex min-w-0 items-center gap-3">
+                      {/* Fixed 48px box whether or not an image exists, so the
+                          titles stay on one vertical line down the list. A
+                          product with no shot gets a neutral placeholder rather
+                          than collapsing the column. */}
+                      <div className="relative size-12 shrink-0 overflow-hidden rounded-md border bg-muted">
+                        {image ? (
+                          <Image
+                            src={image.url}
+                            alt={image.alt ?? item.title_snapshot}
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex size-full items-center justify-center text-muted-foreground">
+                            <Package className="size-4" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
                       <p className="font-medium">
                         {item.product_id ? (
                           <Link
@@ -162,6 +234,7 @@ export default async function OrderDetailPage({
                           {item.variant_snapshot}
                         </p>
                       )}
+                      </div>
                     </div>
                     <div className="text-right text-sm tabular-nums">
                       <p>
@@ -172,7 +245,8 @@ export default async function OrderDetailPage({
                       </p>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="mt-4 space-y-1.5 border-t pt-4 text-sm">
@@ -304,9 +378,19 @@ export default async function OrderDetailPage({
               </CardContent>
             </Card>
           )}
+
+          {/* Last in the main column: notes are written after reading the order
+              above them, and they grow unbounded, so anything below would drift
+              further down the page with every note added. */}
+          <OrderNotes orderId={order.id} notes={notes} />
         </div>
 
-        <div className="space-y-5">
+        {/* `min-w-0` on the aside, and `break-words` on the values inside it.
+            A long email or a single unbroken address line is wider than the
+            300px track, and a grid item's default `min-width: auto` refuses to
+            shrink below its content — so the column silently grew past the
+            container and overflowed the page. */}
+        <div className="min-w-0 space-y-5">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Customer</CardTitle>
@@ -316,13 +400,13 @@ export default async function OrderDetailPage({
                 <div className="space-y-1">
                   <Link
                     href={`/admin/customers/${customer.id}`}
-                    className="font-medium text-primary hover:underline"
+                    className="break-words font-medium text-primary hover:underline"
                   >
                     {`${customer.first_name} ${customer.last_name}`.trim() ||
                       customer.email}
                   </Link>
                   {customer.email && (
-                    <p className="text-muted-foreground">{customer.email}</p>
+                    <p className="break-words text-muted-foreground">{customer.email}</p>
                   )}
                   {customer.phone && (
                     <p className="text-muted-foreground">{customer.phone}</p>
@@ -346,8 +430,8 @@ export default async function OrderDetailPage({
                 {order.email && (
                   <div>
                     <p className="text-xs text-muted-foreground">Contact</p>
-                    <p>{order.email}</p>
-                    {order.phone && <p>{order.phone}</p>}
+                    <p className="break-words">{order.email}</p>
+                    {order.phone && <p className="break-words">{order.phone}</p>}
                   </div>
                 )}
 
