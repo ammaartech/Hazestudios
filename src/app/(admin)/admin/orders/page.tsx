@@ -75,6 +75,9 @@ export default async function OrdersPage({
     <div>
       <PageHeader title="Orders">
         <Button variant="outline" asChild>
+          <Link href="/admin/orders/tracking">Delivery tracking</Link>
+        </Button>
+        <Button variant="outline" asChild>
           <Link href="/admin/orders/drafts">Drafts</Link>
         </Button>
         <Button asChild>

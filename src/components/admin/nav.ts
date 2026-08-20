@@ -32,6 +32,7 @@ export const mainNav: NavItem[] = [
     href: "/admin/orders",
     icon: ShoppingCart,
     children: [
+      { label: "Delivery tracking", href: "/admin/orders/tracking" },
       { label: "Drafts", href: "/admin/orders/drafts" },
       { label: "Abandoned checkouts", href: "/admin/orders/abandoned" },
     ],

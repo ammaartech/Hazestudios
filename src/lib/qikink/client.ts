@@ -121,17 +121,34 @@ interface CachedToken {
 
 /**
  * Keyed by environment + client id so switching sandbox→live, or rotating the
- * secret, cannot serve a token minted for the other one. Process-local by
- * design: on a serverless instance the worst case is one extra token call after
- * a cold start, which is far cheaper than the alternative of storing tokens.
+ * secret, cannot serve a token minted for the other one.
+ *
+ * **Qikink allows exactly one live token per client id.** Minting a second
+ * immediately invalidates the first — verified directly: mint A, A works; mint
+ * B, A now answers `{"error":"Invalid AccessToken or Client Id"}` while B
+ * works. So this cache is not merely an optimisation to save a round trip; it
+ * is what stops the integration from repeatedly shooting down its own
+ * credentials. Anything that mints outside it (a second process, a script run
+ * against the live account) will break requests already in flight here.
  */
 const tokens = new Map<string, CachedToken>();
 
 /** Re-mint a minute early; a token that expires mid-flight reads as auth failure. */
 const EXPIRY_MARGIN_MS = 60_000;
 
+/**
+ * In-flight mints, so concurrent callers share one request.
+ *
+ * Without this, two requests arriving on a cold cache both mint, and the second
+ * invalidates the first's token before it is ever used — the caller that "won"
+ * fails with an auth error it did nothing to deserve. Awaiting a shared promise
+ * means one mint per process per expiry, which is the most the API tolerates.
+ */
+const minting = new Map<string, Promise<string>>();
+
 export function clearTokenCache() {
   tokens.clear();
+  minting.clear();
 }
 
 async function getAccessToken(config: QikinkConfig): Promise<string> {
@@ -139,6 +156,17 @@ async function getAccessToken(config: QikinkConfig): Promise<string> {
   const cached = tokens.get(key);
   if (cached && cached.expiresAt > Date.now()) return cached.token;
 
+  // Someone is already minting for this client; join them rather than firing a
+  // second request that would invalidate theirs.
+  const inFlight = minting.get(key);
+  if (inFlight) return inFlight;
+
+  const pending = mintAccessToken(config, key).finally(() => minting.delete(key));
+  minting.set(key, pending);
+  return pending;
+}
+
+async function mintAccessToken(config: QikinkConfig, key: string): Promise<string> {
   const response = await fetch(`${HOSTS[config.environment]}/api/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -218,10 +246,25 @@ function describeError(body: unknown): string | null {
   return null;
 }
 
+/**
+ * Whether a response means "your token is no longer valid".
+ *
+ * Matched on the message, not the status. Qikink answers a dead token with 401
+ * here, but it signals other failures (rate limiting among them) inside a 200,
+ * and a bare 401 also covers genuinely wrong credentials — which must NOT be
+ * retried, since re-minting would fail identically. The sentence is the only
+ * thing that separates "this token went stale" from "these keys are wrong".
+ */
+function isTokenRejection(message: string | null): boolean {
+  return message != null && /invalid\s+accesstoken/i.test(message);
+}
+
 async function request<T>(
   config: QikinkConfig,
   path: string,
-  init: { method: "GET" | "POST"; body?: unknown } = { method: "GET" }
+  init: { method: "GET" | "POST"; body?: unknown } = { method: "GET" },
+  /** Internal: set once a token rejection has already been retried. */
+  isRetry = false
 ): Promise<T> {
   const token = await getAccessToken(config);
 
@@ -237,17 +280,30 @@ async function request<T>(
   });
 
   const body = await readBody(response);
+  const message = describeError(body);
+
+  // Our cached token was invalidated by something outside this process — most
+  // often another instance, or a script, minting against the same client id,
+  // since Qikink keeps only one live token per client. The cached value is
+  // simply stale, so drop it and try once more with a fresh one.
+  //
+  // Only for GET. A POST that failed this way may still have been processed —
+  // retrying `order/create` risks a duplicate print job, which is worse than
+  // surfacing the error.
+  if (isTokenRejection(message) && !isRetry && init.method === "GET") {
+    tokens.delete(`${config.environment}:${config.clientId}`);
+    return request<T>(config, path, init, true);
+  }
 
   if (!response.ok) {
     throw new QikinkError(
-      describeError(body) ?? `Qikink returned HTTP ${response.status}.`,
+      message ?? `Qikink returned HTTP ${response.status}.`,
       response.status,
       body
     );
   }
 
-  const problem = describeError(body);
-  if (problem) throw new QikinkError(problem, response.status, body);
+  if (message) throw new QikinkError(message, response.status, body);
 
   return body as T;
 }
@@ -305,7 +361,94 @@ export async function fetchOrder(
   return order && order.order_id !== undefined ? order : null;
 }
 
+/**
+ * How many pages `listOrders` will walk before giving up.
+ *
+ * At ten records a page this reaches 400 orders — comfortably past the whole
+ * account today (400 walked, 0 duplicates) while bounding the worst case, since
+ * an endpoint that keeps answering forever must not become an infinite loop.
+ * The 30-requests-a-minute limit is the real ceiling: a full walk costs 40 of
+ * them, which is why only the throttled/manual sync ever does one.
+ */
+const MAX_PAGES = 40;
+
+/** Qikink's page size. Not configurable — `limit`, `size` and `per_page` are all rejected. */
+const PAGE_SIZE = 10;
+
+/**
+ * Pages fetched at once.
+ *
+ * A single page takes about a second regardless of what else is in flight, so
+ * fetching them one at a time made the full walk cost 48 seconds — a second per
+ * page, forty times over, all of it latency rather than work. Six at a time
+ * brings the same 400 records back in about 13 seconds with no failures.
+ *
+ * Kept at six deliberately: forty pages in batches of six is seven rounds, well
+ * inside the thirty-requests-a-minute budget, whereas saturating the limit would
+ * leave nothing for a checkout pushing an order at the same moment.
+ */
+const PAGE_CONCURRENCY = 6;
+
+/**
+ * Every order Qikink holds for this account, walked page by page.
+ *
+ * **The pagination parameter is `page_no`.** This matters more than it looks:
+ * `page`, `offset`, `limit`, `per_page`, `size`, `start` and `skip` are each
+ * rejected outright with `{"error":true,"message":"Invalid parameter: …"}`, so
+ * the obvious names all fail loudly and it is easy to conclude the endpoint has
+ * no pagination at all. It does. Without it only the newest ten orders are ever
+ * visible, which silently caps the tracking page at ten rows regardless of how
+ * many orders exist — measured against the merchant's own dashboard, 10 of 28
+ * On Hold orders, and 10 of 400 overall.
+ *
+ * Paging stops on an empty page, a short page, or a page that adds nothing new.
+ * That last guard is what makes this safe: an endpoint that clamps out-of-range
+ * pages to the last one (or to page one) would otherwise loop until MAX_PAGES,
+ * so identity is tracked by `number` and repetition ends the walk.
+ *
+ * `status` is deliberately not used to filter server-side even though the API
+ * accepts it: `?status=On Hold` returns records whose status is plainly
+ * `Cancelled` once past the first few pages. The full list is fetched and
+ * classified locally instead, where the rules are ours and testable.
+ */
 export async function listOrders(config: QikinkConfig): Promise<QikinkRemoteOrder[]> {
-  const body = await request<QikinkRemoteOrder[]>(config, "/api/order");
-  return Array.isArray(body) ? body : [];
+  const byNumber = new Map<string, QikinkRemoteOrder>();
+  const ordered: QikinkRemoteOrder[] = [];
+
+  for (let start = 1; start <= MAX_PAGES; start += PAGE_CONCURRENCY) {
+    const batch = Array.from(
+      { length: Math.min(PAGE_CONCURRENCY, MAX_PAGES - start + 1) },
+      (_, i) => request<QikinkRemoteOrder[]>(config, `/api/order?page_no=${start + i}`)
+    );
+
+    const results = await Promise.all(batch);
+
+    let added = 0;
+    let ended = false;
+
+    for (const body of results) {
+      if (!Array.isArray(body) || body.length === 0) {
+        ended = true;
+        continue;
+      }
+
+      for (const order of body) {
+        // `number` is the stable identity across pages; `order_id` is too, but a
+        // record missing both should still not be silently dropped.
+        const key = String(order.number ?? order.order_id ?? "");
+        if (key && byNumber.has(key)) continue;
+        if (key) byNumber.set(key, order);
+        ordered.push(order);
+        added += 1;
+      }
+
+      // A short page is the last page — but the rest of this batch has already
+      // been fetched, so finish folding it in before stopping.
+      if (body.length < PAGE_SIZE) ended = true;
+    }
+
+    if (ended || added === 0) break;
+  }
+
+  return ordered;
 }

@@ -3,6 +3,7 @@ import type { Order, OrderItem } from "@/lib/types";
 import { QikinkError, createOrder, fetchOrder } from "./client";
 import { getQikinkConfig } from "./config";
 import { isMappingFailure, mapOrderToQikink, type ResolvedItem } from "./map";
+import { normalizeStage, type QikinkStage } from "./status";
 
 /**
  * Pushing an order to Qikink, and reading its progress back.
@@ -17,6 +18,8 @@ export interface QikinkFulfillment {
   qikink_order_id: string | null;
   status: "queued" | "sent" | "failed";
   qikink_status: string | null;
+  stage: QikinkStage;
+  stage_since: string | null;
   awb: string | null;
   tracking_url: string | null;
   error: string | null;
@@ -29,7 +32,7 @@ export type PushResult =
   | { ok: false; error: string; problems?: string[] };
 
 const FULFILLMENT_COLUMNS =
-  "order_id, qikink_order_id, status, qikink_status, awb, tracking_url, error, sent_at, synced_at";
+  "order_id, qikink_order_id, status, qikink_status, stage, stage_since, awb, tracking_url, error, sent_at, synced_at";
 
 export async function getFulfillment(orderId: string): Promise<QikinkFulfillment | null> {
   const supabase = createAdminClient();
@@ -134,7 +137,7 @@ export async function pushOrderToQikink(orderId: string): Promise<PushResult> {
 
   if (isMappingFailure(mapped)) {
     const error = mapped.problems.join(" ");
-    await record(orderId, { status: "failed", error, response: {} });
+    await record(orderId, { status: "failed", stage: "not_sent", error, response: {} });
     return { ok: false, error: "Order cannot be sent yet.", problems: mapped.problems };
   }
 
@@ -146,6 +149,7 @@ export async function pushOrderToQikink(orderId: string): Promise<PushResult> {
       const error = "Qikink accepted the request but returned no order id.";
       await record(orderId, {
         status: "failed",
+        stage: "not_sent",
         error,
         request: mapped.payload,
         response: result as Record<string, unknown>,
@@ -156,6 +160,11 @@ export async function pushOrderToQikink(orderId: string): Promise<PushResult> {
     await record(orderId, {
       status: "sent",
       qikink_order_id: qikinkOrderId,
+      // A successful push resets the clock: whatever the previous stage said,
+      // the order is now freshly in Qikink's hands and the stale-timer for
+      // "created" should start from here, not from a failed attempt yesterday.
+      stage: "created",
+      stage_since: new Date().toISOString(),
       error: null,
       request: mapped.payload,
       response: result as Record<string, unknown>,
@@ -170,6 +179,7 @@ export async function pushOrderToQikink(orderId: string): Promise<PushResult> {
         : "Could not reach Qikink. Check the connection and try again.";
     await record(orderId, {
       status: "failed",
+      stage: "not_sent",
       error,
       request: mapped.payload,
       response: (cause instanceof QikinkError ? cause.body : null) as Record<string, unknown>,
@@ -199,10 +209,18 @@ export async function syncQikinkOrder(orderId: string): Promise<PushResult> {
     const remote = await fetchOrder(config, fulfillment.qikink_order_id);
     if (!remote) return { ok: false, error: "Qikink no longer has this order." };
 
+    const awb = remote.shipping?.awb ?? null;
+    const stage = normalizeStage(remote.status, awb);
+
     await record(orderId, {
       qikink_status: remote.status ?? null,
-      awb: remote.shipping?.awb ?? null,
+      awb,
       tracking_url: remote.shipping?.tracking_link ?? null,
+      stage,
+      // Same rule as the bulk sync in tracking.ts: the clock only restarts when
+      // the stage genuinely moved, or "stuck for N days" would reset on every
+      // refresh and the tracking page could never raise an alert.
+      ...(stage !== fulfillment.stage ? { stage_since: new Date().toISOString() } : {}),
       synced_at: new Date().toISOString(),
     });
 

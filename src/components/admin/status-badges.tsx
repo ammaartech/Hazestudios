@@ -5,6 +5,7 @@ import type {
   PaymentStatus,
   ProductStatus,
 } from "@/lib/types";
+import type { QikinkStage } from "@/lib/qikink/status";
 
 function Dot({ className }: { className?: string }) {
   return <span className={cn("size-1.5 rounded-full", className)} />;
@@ -104,6 +105,38 @@ export function DiscountStatusBadge({ status }: { status: DiscountStatus }) {
     disabled: { label: "Disabled", pill: "bg-neutral-200 text-neutral-800", dot: "bg-neutral-500" },
   };
   const s = resolve(map, status);
+  return (
+    <Pill className={s.pill}>
+      <Dot className={s.dot} />
+      {s.label}
+    </Pill>
+  );
+}
+
+/**
+ * Delivery stage from Qikink. Follows the same `resolve` fallback as the rest:
+ * a stage this file has not learned yet renders neutral rather than throwing.
+ *
+ * The colour runs cool→warm along the journey and red at the ends that need
+ * action, so a column of these is scannable without reading a single label.
+ */
+export function StageBadge({ stage }: { stage: QikinkStage }) {
+  const map: Record<QikinkStage, Variant> = {
+    not_sent: { label: "Not sent", pill: "bg-red-100 text-red-900", dot: "bg-red-500" },
+    created: { label: "Created", pill: "bg-neutral-200 text-neutral-800", dot: "bg-neutral-500" },
+    // Amber, not neutral: Qikink has the order but is not printing it, and it
+    // stays that way until someone clears the hold in their dashboard.
+    on_hold: { label: "On hold", pill: "bg-amber-100 text-amber-900", dot: "bg-amber-500" },
+    in_production: { label: "In production", pill: "bg-violet-100 text-violet-900", dot: "bg-violet-500" },
+    picked_up: { label: "Picked up", pill: "bg-sky-100 text-sky-900", dot: "bg-sky-500" },
+    in_transit: { label: "In transit", pill: "bg-blue-100 text-blue-900", dot: "bg-blue-500" },
+    out_for_delivery: { label: "Out for delivery", pill: "bg-amber-100 text-amber-900", dot: "bg-amber-500" },
+    delivered: { label: "Delivered", pill: "bg-emerald-100 text-emerald-900", dot: "bg-emerald-500" },
+    rto: { label: "Returned (RTO)", pill: "bg-red-100 text-red-900", dot: "bg-red-500" },
+    cancelled: { label: "Cancelled", pill: "bg-red-100 text-red-900", dot: "bg-red-500" },
+    unknown: { label: "Unknown", pill: "bg-amber-100 text-amber-900", dot: "bg-amber-500" },
+  };
+  const s = resolve(map, stage);
   return (
     <Pill className={s.pill}>
       <Dot className={s.dot} />

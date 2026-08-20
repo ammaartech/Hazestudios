@@ -268,16 +268,62 @@ const client = new pg.Client(config);
 await client.connect();
 
 try {
-  /* -- Skip orders already imported ------------------------------------- */
+  /* -- Split into new orders and drifted ones ----------------------------- */
+  // An order already in the database is not necessarily still accurate: a
+  // later export can carry a refund, a cancellation or a fulfillment that
+  // happened at source after the previous import. So rows are not merely
+  // skipped — the order-level facts that can legitimately change afterwards
+  // are compared, and the differences replayed as updates.
+  //
+  // Only those fields are touched. Addresses, line items and money captured at
+  // purchase time are snapshots by design, and an import must not rewrite the
+  // customer's history to match a later export.
   const { rows: existing } = await client.query(
-    `select order_name from orders where order_name is not null`
+    `select id, order_name, payment_status, fulfillment_status,
+            cancelled_at, closed_at,
+            (select coalesce(sum(amount), 0) from refunds r where r.order_id = o.id) as refunded
+       from orders o where order_name is not null`
   );
-  const have = new Set(existing.map((r) => r.order_name));
+  const have = new Map(existing.map((r) => [r.order_name, r]));
   const pending = orders.filter((o) => !have.has(o.name));
-  if (pending.length !== orders.length) {
-    console.log(`${orders.length - pending.length} orders already present — skipping them`);
+
+  const same = (a, b) =>
+    (a ? new Date(a).getTime() : null) === (b ? new Date(b).getTime() : null);
+
+  const drifted = [];
+  for (const order of orders) {
+    const row = have.get(order.name);
+    if (!row) continue;
+    const fulfilledAt =
+      order.fulfillment_status === "fulfilled" ? (order.fulfilled_at ?? order.created_at) : null;
+    const changes = {};
+    if (row.payment_status !== order.payment_status) changes.payment_status = order.payment_status;
+    if (row.fulfillment_status !== order.fulfillment_status)
+      changes.fulfillment_status = order.fulfillment_status;
+    if (!same(row.cancelled_at, order.cancelled_at)) changes.cancelled_at = order.cancelled_at;
+    if (!same(row.closed_at, fulfilledAt)) changes.closed_at = fulfilledAt;
+    // Refunds are additive rows, not a column: only the shortfall is inserted,
+    // so re-running never double-books a refund already recorded.
+    const gap = Number((order.refunded - Number(row.refunded)).toFixed(2));
+    if (changes.payment_status || changes.fulfillment_status || changes.cancelled_at !== undefined
+        || changes.closed_at !== undefined || gap > 0) {
+      drifted.push({ id: row.id, name: order.name, changes, refundGap: gap > 0 ? gap : 0, order });
+    }
   }
-  if (!pending.length) {
+
+  const unchanged = orders.length - pending.length - drifted.length;
+  if (unchanged) console.log(`${unchanged} orders already present and unchanged — skipping them`);
+  if (drifted.length) {
+    console.log(`${drifted.length} orders changed at source:`);
+    for (const d of drifted) {
+      const parts = Object.entries(d.changes).map(
+        ([k, v]) => `${k}=${v instanceof Date ? v.toISOString() : v}`
+      );
+      if (d.refundGap) parts.push(`+refund ${d.refundGap}`);
+      console.log(`  ${d.name}: ${parts.join(", ")}`);
+    }
+  }
+  if (!pending.length && !drifted.length) {
     console.log("Nothing to import.");
     process.exit(0);
   }
@@ -452,6 +498,45 @@ try {
     ]);
   await insertMany(client, "fulfillments", ["order_id", "tracking_number", "carrier", "status", "created_at"], fulfillmentRows);
 
+  /* -- Replay changes onto orders imported earlier ------------------------- */
+  // Each drifted order gets one targeted UPDATE naming only the columns that
+  // actually moved, so a column the export cannot speak to is never clobbered.
+  let driftRefunds = 0;
+  for (const d of drifted) {
+    const sets = [];
+    const params = [];
+    for (const [column, value] of Object.entries(d.changes)) {
+      params.push(value);
+      sets.push(`${column} = $${params.length}`);
+    }
+    if (sets.length) {
+      params.push(d.id);
+      await client.query(`update orders set ${sets.join(", ")} where id = $${params.length}`, params);
+    }
+    if (d.refundGap > 0) {
+      await client.query(
+        `insert into refunds (order_id, amount, reason, restock, created_at)
+         values ($1, $2, $3, false, $4)`,
+        [d.id, d.refundGap, "Imported from Shopify export", d.order.cancelled_at ?? d.order.created_at]
+      );
+      driftRefunds++;
+    }
+    // A fulfillment that first appears in a later export needs its row too.
+    if (d.changes.fulfillment_status && d.order.fulfilled_at) {
+      const { rows: had } = await client.query(
+        `select 1 from fulfillments where order_id = $1 limit 1`,
+        [d.id]
+      );
+      if (!had.length) {
+        await client.query(
+          `insert into fulfillments (order_id, tracking_number, carrier, status, created_at)
+           values ($1, '', '', $2, $3)`,
+          [d.id, d.order.fulfillment_status === "partial" ? "partial" : "fulfilled", d.order.fulfilled_at]
+        );
+      }
+    }
+  }
+
   /* -- Customer rollups ---------------------------------------------------- */
   await client.query(
     `update customers cu
@@ -482,6 +567,9 @@ try {
       `(${matched} matched to catalogue) · ${newCustomers.length} customers · ` +
       `${refundRows.length} refunds · ${fulfillmentRows.length} fulfillments`
   );
+  if (drifted.length) {
+    console.log(`updated ${drifted.length} existing orders · ${driftRefunds} refunds added`);
+  }
 
   const { rows: check } = await client.query(
     `select count(*)::int as orders,
