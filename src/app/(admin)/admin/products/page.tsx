@@ -88,13 +88,17 @@ export default async function ProductsPage({
     // for `data-full-bleed`, so the page restates the gutter itself — same
     // convention the analytics dashboards use.
     <div data-full-bleed className="px-4 py-6 md:px-8 xl:px-12 lg:py-8">
-      <PageHeader title="Products">
+      <PageHeader
+        title="Products"
+        primary={
+          /* size="sm" to sit level with the ProductListActions buttons beside
+             it; the default h-8 made the primary CTA 4px taller than its row. */
+          <Button asChild size="sm">
+            <Link href="/admin/products/new">Add product</Link>
+          </Button>
+        }
+      >
         <ProductListActions currency={shop?.currency ?? "INR"} />
-        {/* size="sm" to sit level with the ProductListActions buttons beside it;
-            the default h-8 made the primary CTA 4px taller than its row. */}
-        <Button asChild size="sm">
-          <Link href="/admin/products/new">Add product</Link>
-        </Button>
       </PageHeader>
 
       <ProductInsights />
@@ -120,7 +124,11 @@ function ProductInsights() {
   return (
     <Card size="sm" className="mb-4">
       <CardContent>
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-0">
+        {/* Stacked, these three tiles plus the date chip were ~300px of a phone
+            screen spent on figures nobody opens Products to read — the list
+            itself started below the fold. A strip puts them in one row that
+            can be swiped, in the same idiom as the header above it. */}
+        <div className="strip items-stretch gap-4 [--strip-gutter:--spacing(3)] md:gap-4 lg:flex-row lg:flex-nowrap lg:items-stretch lg:gap-0">
           <div className="flex items-center lg:pr-4">
             <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
               <Calendar className="size-3.5" />
@@ -131,7 +139,9 @@ function ProductInsights() {
             <div
               key={t.label}
               className={
-                "flex-1 lg:px-6 lg:first:border-0 " +
+                // min-w-52 is for the strip only; above `lg` these are equal
+                // flex columns and the width is inert.
+                "min-w-52 flex-1 lg:min-w-0 lg:px-6 lg:first:border-0 " +
                 (i > 0 ? "lg:border-l" : "")
               }
             >

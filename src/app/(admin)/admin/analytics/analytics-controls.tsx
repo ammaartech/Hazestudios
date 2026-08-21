@@ -56,7 +56,11 @@ export function AnalyticsControls({
     RANGE_PRESETS.find((p) => p.value === range) ?? RANGE_PRESETS[2];
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    /* A strip, not a wrap. At 390px "Last 30 days" and "No comparison" are
+       about 300px together and broke onto two lines, which pushed the "All
+       reports" link beside them into a two-line block of its own hard against
+       the right edge. */
+    <div className="strip strip-flush-end min-w-0 flex-1 gap-2 [--strip-gutter:--spacing(4)] md:flex-none md:flex-wrap">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <ControlButton icon={<Calendar className="size-3.5" />}>

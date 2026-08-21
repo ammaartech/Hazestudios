@@ -146,16 +146,22 @@ export function OrderBuilder({ currency }: { currency: string }) {
 
   return (
     <div>
-      <PageHeader title="Create order" backHref="/admin/orders" backLabel="Orders">
+      <PageHeader
+        title="Create order"
+        backHref="/admin/orders"
+        backLabel="Orders"
+        primary={
+          <Button onClick={() => submit(false)} disabled={pending || !items.length}>
+            {pending ? "Creating…" : "Create order"}
+          </Button>
+        }
+      >
         <Button
           variant="outline"
           onClick={() => submit(true)}
           disabled={pending || !items.length}
         >
           Save as draft
-        </Button>
-        <Button onClick={() => submit(false)} disabled={pending || !items.length}>
-          {pending ? "Creating…" : "Create order"}
         </Button>
       </PageHeader>
 

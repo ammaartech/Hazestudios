@@ -856,6 +856,89 @@ body {
   }
 
   /* -------------------------------------------------------------------------
+     Admin strip — a row of controls that scrolls instead of wrapping
+     -------------------------------------------------------------------------
+     Every admin list page ends its header with a row of actions, and the
+     filter bar inside the card is a second such row. On a desktop they are a
+     line of three or four buttons and nothing about them is interesting; on a
+     phone they were the single worst thing on the screen.
+
+     Wrapping is what made them that. Products carries five actions — Export,
+     Import, Paste from Qikink, More actions, Add product — which is about
+     520px of buttons, so at 390px they broke onto two lines and ate 100px of
+     the fold before a single product appeared. Orders' three took two lines
+     and 70px. And because a wrapped line is laid out on its own, the last
+     button on each line landed hard against whichever edge the justification
+     put it against, which is the "everything is jammed into the border" this
+     was reported as.
+
+     A scroller keeps the row one line tall at every width and keeps every
+     action reachable — nothing is pushed off, it is scrolled to. It is the
+     same mechanism `.shop .rail` uses, and the notes there apply here too:
+
+       - `overscroll-behavior-x: contain` so a flick past the end is not handed
+         to the page. On iOS an over-flick near the start of a horizontal
+         scroller is taken as the back gesture, which would navigate out of the
+         admin from a mis-swipe at the header.
+       - the scrollbar is hidden because on a touch device there is nothing to
+         grab and the 15px gutter would sit under the buttons.
+
+     `--strip-gutter` is how the row bleeds. The strip is pulled out to the
+     page's own gutter with a negative margin and given the same value back as
+     padding, so the first button still starts on the page's left rule and the
+     last one still has a full gutter after it — the row simply runs to the
+     screen edge in between, which is the affordance that says it scrolls.
+
+     Phone-only. Above `md` the row is a plain wrapping flex line again: there
+     is a pointer, there is room, and a horizontal scroller under a mouse is a
+     worse control than the thing it replaced.
+  ------------------------------------------------------------------------- */
+  .admin .strip {
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    margin-inline: calc(var(--strip-gutter, 1rem) * -1);
+    padding-inline: var(--strip-gutter, 1rem);
+    /* A scroll container's items must not be allowed to shrink to fit it —
+       that is what a wrapping row does, and it would defeat the whole thing. */
+    flex-wrap: nowrap;
+  }
+  .admin .strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* For a strip that ends at a pinned control rather than at the screen edge.
+     Bleeding underneath that control would slide the scrolled buttons behind
+     it; the small trailing pad is so the last one stops just short of it
+     instead of touching. */
+  .admin .strip-flush-end {
+    margin-inline-end: 0;
+    padding-inline-end: 0.5rem;
+  }
+  .admin .strip > * {
+    flex: none;
+    /* Same containment guarantee as `.rail > *`: an absolutely positioned
+       child (a `.sr-only` label, a badge) whose nearest positioned ancestor
+       sits above the scroller is laid out against that outer box instead, so
+       the strip never clips it and its static position — far to the right
+       inside the scroll content — widens the document. */
+    position: relative;
+  }
+
+  @media (min-width: 768px) {
+    .admin .strip,
+    .admin .strip-flush-end {
+      display: flex;
+      flex-wrap: wrap;
+      overflow-x: visible;
+      margin-inline: 0;
+      padding-inline: 0;
+    }
+  }
+
+  /* -------------------------------------------------------------------------
      Rail — the horizontal product carousel
      -------------------------------------------------------------------------
      A scroll container, not a transform slider. Scroll-snap gives the arrows
@@ -1430,23 +1513,21 @@ body {
     }
   }
 
-  /* The admin's mobile "More" sheet. Rises from the bottom edge, because that
-     is where the island that opened it lives — a sheet that faded in place
-     would break the connection between the tap and the panel. */
+  /* The admin's mobile navigation menu. Rises from the bottom edge, because
+     that is where the island that opened it lives — a panel that faded in
+     place would break the connection between the tap and what it produced.
+
+     The fade is what covers the slide. The menu is opaque and full-screen, so
+     without it the first frames are a solid slab travelling up over the page;
+     bringing the opacity with it reads as the page handing over rather than
+     something being thrown across it. */
   @keyframes admin-sheet-in {
     from {
-      transform: translateY(100%);
-    }
-    to {
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes admin-sheet-scrim {
-    from {
+      transform: translateY(6%);
       opacity: 0;
     }
     to {
+      transform: translateY(0);
       opacity: 1;
     }
   }

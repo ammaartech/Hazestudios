@@ -74,15 +74,19 @@ export default async function OrdersPage({
 
   return (
     <div>
-      <PageHeader title="Orders">
+      <PageHeader
+        title="Orders"
+        primary={
+          <Button asChild>
+            <Link href="/admin/orders/new">Create order</Link>
+          </Button>
+        }
+      >
         <Button variant="outline" asChild>
           <Link href="/admin/orders/tracking">Delivery tracking</Link>
         </Button>
         <Button variant="outline" asChild>
           <Link href="/admin/orders/drafts">Drafts</Link>
-        </Button>
-        <Button asChild>
-          <Link href="/admin/orders/new">Create order</Link>
         </Button>
       </PageHeader>
 

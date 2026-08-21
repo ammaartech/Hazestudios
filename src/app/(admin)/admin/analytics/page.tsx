@@ -185,21 +185,25 @@ export default async function AnalyticsPage({
 
   return (
     <div data-full-bleed>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-4 md:px-8 xl:px-12">
+      {/* Same two shapes as the Home band and `PageHeader`: the title owns its
+          line on a phone and shares one above `md`. */}
+      <div className="border-b px-4 py-4 md:flex md:flex-wrap md:items-center md:justify-between md:gap-3 md:px-8 xl:px-12">
         <div className="flex items-center gap-2.5">
           <BarChart3 className="size-5 text-muted-foreground" />
           <h1 className="text-xl font-semibold tracking-tight">Analytics</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="mt-3 flex items-center gap-2 md:mt-0">
           {/* AnalyticsControls reads useSearchParams, which needs a boundary. */}
           <Suspense
-            fallback={<div className="h-8 w-64 rounded-lg bg-muted" />}
+            fallback={
+              <div className="h-8 w-full max-w-64 rounded-lg bg-muted" />
+            }
           >
             <AnalyticsControls range={rangeValue} compare={comparing} />
           </Suspense>
           <Link
             href="/admin/analytics/reports"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-[13px] font-medium text-background transition-opacity duration-150 hover:opacity-90"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-[13px] font-medium whitespace-nowrap text-background transition-opacity duration-150 hover:opacity-90"
           >
             All reports
             <ArrowRight className="size-3.5" />

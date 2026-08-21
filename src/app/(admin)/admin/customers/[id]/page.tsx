@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/admin/page-header";
+import { DesktopTable, RecordList } from "@/components/admin/record-list";
 import { PaymentBadge, FulfillmentBadge } from "@/components/admin/status-badges";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatMoney } from "@/lib/format";
@@ -83,6 +84,27 @@ export default async function CustomerDetailPage({
               This customer hasn&apos;t placed any orders yet.
             </p>
           ) : (
+            <>
+              {/* Every row here is a link to an order, which is exactly what
+                  `RecordList` is for — the same shape the Orders list uses on
+                  a phone, so the two read as one thing. */}
+              <RecordList
+                items={orders.map((o) => ({
+                  id: o.id,
+                  href: `/admin/orders/${o.id}`,
+                  title: `#${o.order_number}`,
+                  subtitle: formatDate(o.created_at),
+                  amount: formatMoney(o.total, o.currency),
+                  badges: (
+                    <>
+                      <PaymentBadge status={o.payment_status} />
+                      <FulfillmentBadge status={o.fulfillment_status} />
+                    </>
+                  ),
+                }))}
+              />
+
+              <DesktopTable>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -118,6 +140,8 @@ export default async function CustomerDetailPage({
                 ))}
               </TableBody>
             </Table>
+              </DesktopTable>
+            </>
           )}
         </CardContent>
       </Card>

@@ -103,7 +103,11 @@ export default async function WaitlistPage({
         </Button>
       </PageHeader>
 
-      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      {/* Five stat cards at `grid-cols-2` is three rows and about 400px of a
+          phone screen spent before the list it describes begins. As a strip
+          they are one row, and the two that matter — signed up, seats left —
+          are the two that are on screen. */}
+      <div className="strip mb-4 gap-3 [--strip-gutter:--spacing(4)] md:grid md:grid-cols-3 lg:grid-cols-5">
         <Stat label="Signed up" value={signups} />
         <Stat
           label="Seats left"
@@ -165,10 +169,76 @@ export default async function WaitlistPage({
             </div>
           ) : (
             <>
+              {/*
+                Eight columns of contact details do not survive a 390px screen.
+                The table scrolls, so nothing was strictly lost, but everything
+                past "Email" — the phone number, the handle, the craft and the
+                status control that is the only thing you can actually *do*
+                here — sat off the right edge unannounced.
+
+                Stacked instead, in the order the entry is read: who they are,
+                how to reach them, what they asked for. The status select keeps
+                the top-right corner because it is the row's one action.
+              */}
+              <ul className="-mx-2 divide-y md:hidden">
+                {entries.map((e) => (
+                  <li key={e.id} className="px-2 py-3.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="flex items-baseline gap-2">
+                          <span className="shrink-0 text-[13px] font-medium tabular-nums text-muted-foreground">
+                            {e.position}
+                          </span>
+                          <span className="truncate text-[15px] font-medium text-foreground">
+                            {e.name || "—"}
+                          </span>
+                        </p>
+                        <a
+                          href={`mailto:${e.email}`}
+                          className="mt-0.5 block truncate text-[13px] text-muted-foreground"
+                        >
+                          {e.email}
+                        </a>
+                        <p className="mt-0.5 truncate text-[13px] text-muted-foreground">
+                          <a href={`tel:${e.phone.replace(/[^\d+]/g, "")}`} className="tabular-nums">
+                            {e.phone}
+                          </a>
+                          {e.instagram && (
+                            <>
+                              {" · "}
+                              <a
+                                href={`https://instagram.com/${e.instagram}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                @{e.instagram}
+                              </a>
+                            </>
+                          )}
+                        </p>
+                        <p className="mt-0.5 text-[13px] text-muted-foreground">
+                          {craftTicketLabel(e.craft)}
+                          {" · "}
+                          {formatDateTime(e.created_at)}
+                          {e.craft_note ? (
+                            <span className="block italic text-muted-foreground/80">
+                              {e.craft_note}
+                            </span>
+                          ) : null}
+                        </p>
+                      </div>
+                      <div className="shrink-0">
+                        <StatusSelect id={e.id} status={e.status} />
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
               {/* The table is wider than a laptop sidebar leaves room for once
                   phone numbers and timestamps are in it, so it scrolls in its
                   own box rather than pushing the admin shell sideways. */}
-              <div className="overflow-x-auto">
+              <div className="hidden overflow-x-auto md:block">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -270,7 +340,9 @@ function Stat({
   hint?: string;
 }) {
   return (
-    <Card>
+    // `min-w-36` applies only inside the strip — a grid cell is sized by its
+    // track, so above `md` this is inert.
+    <Card className="min-w-36">
       <CardContent className="px-4 py-3">
         <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
           {label}

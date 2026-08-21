@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ChevronDown,
   Home,
-  LayoutGrid,
+  Menu,
   Search,
   Settings,
   ShoppingCart,
@@ -14,7 +15,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { mainNav, salesChannelNav } from "./nav";
+import { mainNav, salesChannelNav, type NavItem } from "./nav";
 import { openAdminSearch } from "@/lib/search/open-search";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +37,7 @@ import { cn } from "@/lib/utils";
  * a long scrolling table.
  *
  * Five slots is the ceiling. Below ~64px per target the labels stop fitting and
- * the taps start missing, so the fifth is "More": everything else, in a sheet.
+ * the taps start missing, so the fifth is the menu: everything else, in full.
  */
 
 interface Tab {
@@ -63,6 +64,14 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/** True when the path is inside the section at all — the item or any child. */
+function inSection(pathname: string, item: NavItem) {
+  return (
+    isActive(pathname, item.href) ||
+    (item.children ?? []).some((c) => isActive(pathname, c.href))
+  );
+}
+
 /**
  * The island itself, as a pure function of the current path.
  *
@@ -76,33 +85,33 @@ function isActive(pathname: string, href: string) {
  */
 export function MobileNavBar({ pathname }: { pathname: string }) {
   /**
-   * The route the sheet was opened on, or null when it is closed.
+   * The route the menu was opened on, or null when it is closed.
    *
    * Storing the path rather than a boolean makes "close on navigate" fall out
-   * of the data: the moment `pathname` changes the sheet is no longer open for
+   * of the data: the moment `pathname` changes the menu is no longer open for
    * the current route, so it closes with no effect to fire and no frame in
    * which it lingers over the new page. That covers the back gesture too, which
    * changes the path without unmounting this component.
    */
   const [openedAt, setOpenedAt] = useState<string | null>(null);
-  const moreOpen = openedAt === pathname;
-  const setMoreOpen = (next: boolean) => setOpenedAt(next ? pathname : null);
+  const menuOpen = openedAt === pathname;
+  const setMenuOpen = (next: boolean) => setOpenedAt(next ? pathname : null);
 
-  // The sheet is a layer over the page, so the page behind it must not scroll.
+  // The menu is a layer over the page, so the page behind it must not scroll.
   useEffect(() => {
-    if (!moreOpen) return;
+    if (!menuOpen) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previous;
     };
-  }, [moreOpen]);
+  }, [menuOpen]);
 
-  const inMore = !TABS.some((t) => isActive(pathname, t.href));
+  const inMenu = !TABS.some((t) => isActive(pathname, t.href));
 
   return (
     <>
-      {moreOpen && <MoreSheet pathname={pathname} onClose={() => setMoreOpen(false)} />}
+      {menuOpen && <NavMenu pathname={pathname} onClose={() => setMenuOpen(false)} />}
 
       <nav
         aria-label="Primary"
@@ -129,11 +138,22 @@ export function MobileNavBar({ pathname }: { pathname: string }) {
               active={isActive(pathname, tab.href)}
             />
           ))}
+          {/*
+            Three lines, not a grid of squares.
+
+            The grid icon read as "apps" and the label said "More", which
+            together promised a handful of extra shortcuts. What is behind it
+            is the entire sidebar — every section and every one of its
+            sub-pages — and a hamburger is the one icon that says that without
+            a label, which is also what buys the slot back for a wider tap
+            target.
+          */}
           <TabButton
-            icon={LayoutGrid}
-            label="More"
-            active={inMore}
-            onClick={() => setMoreOpen(true)}
+            icon={Menu}
+            label="Menu"
+            active={inMenu}
+            expanded={menuOpen}
+            onClick={() => setMenuOpen(true)}
           />
         </div>
       </nav>
@@ -155,12 +175,14 @@ function TabButton({
   label,
   href,
   active,
+  expanded,
   onClick,
 }: {
   icon: LucideIcon;
   label: string;
   href?: string;
   active: boolean;
+  expanded?: boolean;
   onClick?: () => void;
 }) {
   const content = (
@@ -199,20 +221,38 @@ function TabButton({
   }
 
   return (
-    <button type="button" onClick={onClick} className={className} aria-label={label}>
+    <button
+      type="button"
+      onClick={onClick}
+      className={className}
+      aria-label={label}
+      aria-haspopup="dialog"
+      aria-expanded={expanded}
+    >
       {content}
     </button>
   );
 }
 
 /**
- * Everything the island has no room for.
+ * The whole navigation, as a full-screen sheet.
  *
- * A bottom sheet rather than a full-screen page, because it is a menu and not a
- * destination — the page behind stays visible, so dismissing it returns you
- * exactly where you were rather than feeling like a back-navigation.
+ * It replaces a bottom sheet that listed every section *and* every child at
+ * once — 30-odd rows, flat, with the sub-pages indented under parents that
+ * looked identical to them. That is a scroll, not a menu: finding Metaobjects
+ * meant reading past Collections, Inventory, Gift cards, Purchase orders,
+ * Transfers and Price lists, none of which you were looking for.
+ *
+ * Collapsed instead, one disclosure per section. Eight rows fit on a phone
+ * without scrolling, so the shape of the admin is legible at a glance and the
+ * six sub-pages of Products are one tap away rather than six rows of noise.
+ *
+ * Full-screen rather than a partial sheet, because at this size a sheet that
+ * covers four-fifths of the screen is only pretending the page behind it is
+ * still in play. Committing to the whole viewport gives every row a full-width
+ * target and the expanded section somewhere to go.
  */
-function MoreSheet({
+function NavMenu({
   pathname,
   onClose,
 }: {
@@ -221,94 +261,167 @@ function MoreSheet({
 }) {
   const items = [...mainNav, ...salesChannelNav];
 
+  /**
+   * Which section is expanded, or null for none.
+   *
+   * Seeded from the current route so the menu opens showing where you already
+   * are — on `/admin/products/inventory` the Products group is open with
+   * Inventory marked, which is the same orientation the desktop sidebar gives.
+   *
+   * One at a time. An accordion that allows several open sections turns back
+   * into the flat list this replaced the first time someone taps three of them.
+   */
+  const [open, setOpen] = useState<string | null>(
+    () => items.find((i) => i.children?.length && inSection(pathname, i))?.href ?? null
+  );
+
   return (
-    <div className="fixed inset-0 z-50 md:hidden">
-      <button
-        type="button"
-        aria-label="Close menu"
-        onClick={onClose}
-        className="absolute inset-0 cursor-default bg-black/35 backdrop-blur-[2px]"
-        style={{ animation: "admin-sheet-scrim 200ms ease-out" }}
-      />
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Navigation"
+      className="fixed inset-0 z-50 flex flex-col bg-popover md:hidden"
+      style={{ animation: "admin-sheet-in 240ms cubic-bezier(0.16, 1, 0.3, 1)" }}
+    >
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b px-4 py-3">
+        <h2 className="text-[15px] font-semibold">Menu</h2>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close menu"
+          className="-mr-2 flex size-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground active:bg-muted"
+        >
+          <X className="size-5" />
+        </button>
+      </div>
 
+      {/* `pb-32` clears the island, which stays on screen underneath. */}
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 pb-32">
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            openAdminSearch();
+          }}
+          className="flex min-h-12 w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-left text-[15px] active:bg-muted"
+        >
+          <Search className="size-[18px] text-muted-foreground" aria-hidden />
+          Search the admin
+        </button>
+
+        {items.map((item) => (
+          <NavRow
+            key={item.href}
+            item={item}
+            pathname={pathname}
+            open={open === item.href}
+            onToggle={() => setOpen((o) => (o === item.href ? null : item.href))}
+          />
+        ))}
+
+        <NavRow
+          item={{ label: "Settings", href: "/admin/settings", icon: Settings }}
+          pathname={pathname}
+          open={false}
+          onToggle={() => {}}
+        />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * One section: a link to the section itself, plus a disclosure for its pages.
+ *
+ * The two are separate targets on purpose. Tapping "Orders" goes to Orders —
+ * making the whole row a toggle would mean the section you most want is the
+ * one row you cannot reach — and tapping the chevron beside it opens the six
+ * pages underneath without leaving the menu.
+ */
+function NavRow({
+  item,
+  pathname,
+  open,
+  onToggle,
+}: {
+  item: NavItem;
+  pathname: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const Icon = item.icon;
+  const active = isActive(pathname, item.href);
+  const children = item.children ?? [];
+  const panelId = `nav-${item.href.replace(/\W+/g, "-")}`;
+
+  return (
+    <div>
       <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="All sections"
-        className="absolute inset-x-0 bottom-0 max-h-[82dvh] overflow-y-auto overscroll-contain rounded-t-2xl border-t bg-popover pb-[max(1rem,env(safe-area-inset-bottom))]"
-        style={{ animation: "admin-sheet-in 260ms cubic-bezier(0.16, 1, 0.3, 1)" }}
+        className={cn(
+          "flex items-center rounded-xl",
+          active && !open && "bg-sidebar-selected"
+        )}
       >
-        {/* Grab handle — the affordance that says this panel is dismissible. */}
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-popover px-4 pb-3 pt-3">
-          <span className="mx-auto absolute inset-x-0 top-1.5 h-1 w-9 rounded-full bg-border" />
-          <h2 className="mt-2 text-[15px] font-semibold">All sections</h2>
+        <Link
+          href={item.href}
+          className={cn(
+            "flex min-h-12 flex-1 items-center gap-3 rounded-xl px-3 text-[15px] active:bg-muted",
+            active && "font-medium"
+          )}
+          aria-current={active ? "page" : undefined}
+        >
+          <Icon
+            className={cn(
+              "size-[18px] shrink-0",
+              active ? "text-foreground" : "text-muted-foreground"
+            )}
+            aria-hidden
+          />
+          {item.label}
+        </Link>
+
+        {children.length > 0 && (
           <button
             type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="mt-2 flex size-9 cursor-pointer items-center justify-center rounded-full text-muted-foreground active:bg-muted"
+            onClick={onToggle}
+            aria-expanded={open}
+            aria-controls={panelId}
+            aria-label={`${open ? "Hide" : "Show"} ${item.label} pages`}
+            className="flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-xl text-muted-foreground active:bg-muted"
           >
-            <X className="size-5" />
+            <ChevronDown
+              className={cn(
+                "size-[18px] transition-transform duration-200",
+                open && "rotate-180"
+              )}
+            />
           </button>
-        </div>
+        )}
+      </div>
 
-        <div className="p-2">
-          <button
-            type="button"
-            onClick={() => {
-              onClose();
-              openAdminSearch();
-            }}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-left text-[15px] active:bg-muted"
-          >
-            <Search className="size-[18px] text-muted-foreground" aria-hidden />
-            Search the admin
-          </button>
-
-          {items.map((item) => {
-            const Icon = item.icon;
-            const on = isActive(pathname, item.href);
+      {open && children.length > 0 && (
+        <div id={panelId} className="mb-1 pb-1">
+          {children.map((child) => {
+            const on = isActive(pathname, child.href);
             return (
-              <div key={item.href}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-xl px-3 py-3 text-[15px] active:bg-muted",
-                    on && "bg-sidebar-selected font-medium"
-                  )}
-                  aria-current={on ? "page" : undefined}
-                >
-                  <Icon className="size-[18px] text-muted-foreground" aria-hidden />
-                  {item.label}
-                </Link>
-                {item.children?.map((child) => (
-                  <Link
-                    key={child.href}
-                    href={child.href}
-                    className={cn(
-                      "flex items-center rounded-xl py-2.5 pl-12 pr-3 text-[14px] text-muted-foreground active:bg-muted",
-                      isActive(pathname, child.href) && "font-medium text-foreground"
-                    )}
-                  >
-                    {child.label}
-                  </Link>
-                ))}
-              </div>
+              <Link
+                key={child.href}
+                href={child.href}
+                className={cn(
+                  // The 12px rule under the parent's icon is what ties the
+                  // children to it — indentation alone reads as a smaller row
+                  // rather than a nested one.
+                  "ml-[1.4rem] flex min-h-11 items-center border-l pl-4 pr-3 text-[14px] text-muted-foreground active:bg-muted",
+                  on && "border-foreground font-medium text-foreground"
+                )}
+                aria-current={on ? "page" : undefined}
+              >
+                {child.label}
+              </Link>
             );
           })}
-
-          <Link
-            href="/admin/settings"
-            className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-3 text-[15px] active:bg-muted",
-              pathname.startsWith("/admin/settings") && "bg-sidebar-selected font-medium"
-            )}
-          >
-            <Settings className="size-[18px] text-muted-foreground" aria-hidden />
-            Settings
-          </Link>
         </div>
-      </div>
+      )}
     </div>
   );
 }

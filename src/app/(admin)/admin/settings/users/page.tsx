@@ -18,6 +18,7 @@ import { UserPlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import type { StaffMember } from "@/lib/types";
+import { DesktopTable } from "@/components/admin/record-list";
 import { RoleSelect } from "./role-select";
 
 export const metadata = { title: "Users and permissions" };
@@ -50,6 +51,40 @@ export default async function UsersSettingsPage() {
           <CardTitle className="text-base">Staff accounts</CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Three columns, but one of them is a role <select> and another is
+              a UUID-length name, so the row still ran ~100px past a phone.
+              Stacked, the role control gets the width it needs. */}
+          <ul className="-mx-2 divide-y md:hidden">
+            {staff.map((s) => (
+              <li
+                key={s.user_id}
+                className="flex items-center justify-between gap-3 px-2 py-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[15px] font-medium text-foreground">
+                    {s.display_name ?? s.user_id.slice(0, 8)}
+                    {s.user_id === currentUserId && (
+                      <Badge variant="secondary" className="ml-2">
+                        You
+                      </Badge>
+                    )}
+                  </p>
+                  <p className="mt-0.5 text-[13px] text-muted-foreground">
+                    Joined {formatDate(s.created_at)}
+                  </p>
+                </div>
+                <div className="shrink-0">
+                  <RoleSelect
+                    userId={s.user_id}
+                    role={s.role}
+                    disabled={!canManage || s.user_id === currentUserId}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <DesktopTable>
           <Table>
             <TableHeader>
               <TableRow>
@@ -85,6 +120,7 @@ export default async function UsersSettingsPage() {
               ))}
             </TableBody>
           </Table>
+          </DesktopTable>
         </CardContent>
       </Card>
     </div>

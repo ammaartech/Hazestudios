@@ -170,7 +170,11 @@ export default async function HomePage() {
           <WorldMap variant="hero" className="h-auto w-full" />
         </div>
 
-        <div className="relative px-4 py-12 md:px-8 xl:px-12 lg:py-16">
+        {/* py-8 under `md`. The hero is the right idea and the wrong budget on
+            a phone: 48px of padding, a 30px greeting and a 56px gap below it
+            pushed the prompt bar and every card under it off the first
+            screen. */}
+        <div className="relative px-4 py-8 md:px-8 md:py-12 xl:px-12 lg:py-16">
           {!sales.configured && (
             <Alert className="mx-auto mb-10 max-w-2xl">
               <AlertCircle className="size-4" />
@@ -184,7 +188,7 @@ export default async function HomePage() {
           )}
 
           <div className="flex flex-col items-center text-center">
-            <h1 className="text-3xl font-semibold tracking-tight text-balance md:text-4xl">
+            <h1 className="text-[1.75rem] font-semibold tracking-tight text-balance md:text-4xl">
               {greeting()}
               <br />
               <span className="text-muted-foreground">
@@ -192,12 +196,12 @@ export default async function HomePage() {
               </span>
             </h1>
 
-            <div className="mt-8 flex w-full justify-center">
+            <div className="mt-6 flex w-full justify-center md:mt-8">
               <AskBar suggestions={suggestions} />
             </div>
           </div>
 
-          <div className="mx-auto mt-14 grid max-w-5xl gap-4 md:grid-cols-3">
+          <div className="mx-auto mt-10 grid max-w-5xl gap-4 md:mt-14 md:grid-cols-3">
             {cards.map((card) => (
               <div
                 key={card.title}

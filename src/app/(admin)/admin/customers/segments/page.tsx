@@ -14,6 +14,7 @@ import {
   type MatchableCustomer,
 } from "@/lib/segments";
 import type { Segment } from "@/lib/types";
+import { DesktopTable } from "@/components/admin/record-list";
 import { SegmentBuilder } from "./segment-builder";
 import { SegmentDelete } from "./segment-delete";
 
@@ -45,6 +46,49 @@ export default async function SegmentsPage() {
               or tags.
             </p>
           ) : (
+            <>
+              {/* The filter description is the widest thing on the row and the
+                  two controls are the most important, so on a phone the
+                  description gets its own line and the controls keep the top
+                  right corner. */}
+              <ul className="-mx-2 divide-y md:hidden">
+                {segments.map((s) => (
+                  <li
+                    key={s.id}
+                    className="flex items-start justify-between gap-3 px-2 py-3.5"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-medium text-foreground">
+                        {s.name}
+                      </p>
+                      <p className="mt-0.5 text-[13px] tabular-nums text-muted-foreground">
+                        {
+                          customers.filter((c) =>
+                            customerMatchesFilters(c, s.filters)
+                          ).length
+                        }{" "}
+                        customers
+                      </p>
+                      <p className="mt-0.5 text-[13px] text-muted-foreground">
+                        {s.filters.length
+                          ? s.filters
+                              .map(
+                                (f) =>
+                                  `${f.field.replace(/_/g, " ")} ${f.operator.replace(/_/g, " ")} ${f.value}`
+                              )
+                              .join(" · ")
+                          : "—"}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <SegmentBuilder segment={s} />
+                      <SegmentDelete id={s.id} />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              <DesktopTable>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -81,6 +125,8 @@ export default async function SegmentsPage() {
                 ))}
               </TableBody>
             </Table>
+              </DesktopTable>
+            </>
           )}
         </CardContent>
       </Card>

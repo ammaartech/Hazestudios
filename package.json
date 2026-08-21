@@ -22,6 +22,7 @@
     "verify:search": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/verify-search.mjs",
     "check:overflow": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-overflow.mjs",
     "check:mobile": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-mobile.mjs",
+    "check:admin:mobile": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-admin-mobile.mjs",
     "audit:admin": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/audit-admin.mjs",
     "check:admin": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-admin.mjs",
     "check:console": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-console.mjs",

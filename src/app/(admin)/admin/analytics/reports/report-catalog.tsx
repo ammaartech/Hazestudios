@@ -307,7 +307,12 @@ export function ReportCatalog({
           <TableBody>
             {visible.map((report) => (
               <TableRow key={report.slug} className="group">
-                <TableCell>
+                {/* `whitespace-normal` because `TableCell` sets `nowrap` for
+                    every other column in the admin, and here that held the
+                    report's description on one 313px line — which at 320px is
+                    wider than the table is allowed to be, so the only column
+                    still showing at that width overflowed the screen. */}
+                <TableCell className="whitespace-normal">
                   <Link
                     href={`/admin/analytics/reports/${report.slug}`}
                     className="flex items-start gap-2.5"
