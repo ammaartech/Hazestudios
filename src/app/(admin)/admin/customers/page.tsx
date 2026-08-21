@@ -13,6 +13,7 @@ import {
 import { PageHeader } from "@/components/admin/page-header";
 import { Pagination } from "@/components/admin/pagination";
 import { SearchInput } from "@/components/admin/search-input";
+import { DesktopTable, RecordList } from "@/components/admin/record-list";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/format";
 import type { Customer } from "@/lib/types";
@@ -124,6 +125,31 @@ export default async function CustomersPage({
             </div>
           ) : (
             <>
+              <RecordList
+                items={customers.map((c) => {
+                  const name = `${c.first_name} ${c.last_name}`.trim();
+                  return {
+                    id: c.id,
+                    href: `/admin/customers/${c.id}`,
+                    title: name || c.email || c.phone || "Unnamed customer",
+                    // Falls back through the contact details, because an
+                    // imported customer frequently has no name at all and a
+                    // blank row is unusable.
+                    subtitle:
+                      (name && (c.email || c.phone)) ||
+                      formatLocation(c.default_address) ||
+                      null,
+                    amount: formatMoney(c.total_spent),
+                    badges: (
+                      <span className="text-[12px] text-muted-foreground">
+                        {c.orders_count} order{c.orders_count === 1 ? "" : "s"}
+                      </span>
+                    ),
+                  };
+                })}
+              />
+
+              <DesktopTable>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -198,6 +224,7 @@ export default async function CustomersPage({
                   })}
                 </TableBody>
               </Table>
+              </DesktopTable>
 
               <Pagination page={page} pageSize={PAGE_SIZE} total={total} />
             </>

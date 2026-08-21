@@ -55,7 +55,7 @@ export default async function ReportPage({
     <div data-full-bleed>
       <RecordView slug={slug} />
 
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b px-4 py-4 md:px-8">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b px-4 py-4 md:px-8 xl:px-12">
         <div className="min-w-0">
           <Link
             href="/admin/analytics/reports"
@@ -89,7 +89,7 @@ export default async function ReportPage({
         </div>
       </div>
 
-      <div className="space-y-4 px-4 py-5 md:px-8">
+      <div className="space-y-4 px-4 py-5 md:px-8 xl:px-12">
         {result.rows.length === 0 ? (
           <div className="rounded-xl border bg-card py-20 text-center">
             <p className="text-sm font-medium">No data for this date range</p>

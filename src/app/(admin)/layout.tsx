@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Sidebar, SidebarNav } from "@/components/admin/sidebar";
+import { MobileNav, MobileNavBar } from "@/components/admin/mobile-nav";
 import { Topbar } from "@/components/admin/topbar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { createClient } from "@/lib/supabase/server";
@@ -67,14 +68,36 @@ export default function AdminLayout({
         <Suspense fallback={<SidebarNav pathname="" />}>
           <Sidebar />
         </Suspense>
-        <main className="pt-14 md:pl-60">
+        {/* The phone's navigation. The sidebar is `hidden md:flex`, so without
+            this the admin had no way to move between sections on a phone at
+            all. Rendered outside <main> because it floats over it. */}
+        <Suspense fallback={<MobileNavBar pathname="" />}>
+          <MobileNav />
+        </Suspense>
+
+        {/* `pb-28` clears the floating island so the last row of a table, or a
+            form's Save button, is never parked underneath it. */}
+        <main className="pt-14 pb-28 md:pb-0 md:pl-60">
           {/*
             Most admin pages want the centred reading column. Home, Analytics and
             Live View are dashboards that need the full width, so they render a
             `data-full-bleed` root and this container stands down for them —
             cheaper than a parallel layout or threading a prop through every page.
           */}
-          <div className="mx-auto max-w-6xl px-4 py-6 md:px-8 lg:py-8 has-data-full-bleed:max-w-none has-data-full-bleed:p-0">
+          {/*
+            The page gutter — `px-4 md:px-8 xl:px-12` — is the admin's shared
+            horizontal rhythm, restated by every `data-full-bleed` page and by
+            the analytics section bands. Changing it here means changing it
+            there too, or the dashboard headers stop aligning with their bodies.
+
+            The `xl` step exists because the gutter used to stop at 32px. On a
+            full-bleed page that put the title and the primary action hard
+            against both walls at *every* width above 1280px, and the capped
+            pages collapsed to the same 32px as soon as the viewport dropped
+            near 1424px — which is where a 1440px laptop sits, so the most
+            common admin screen was also the one that looked most cramped.
+          */}
+          <div className="mx-auto max-w-6xl px-4 py-6 md:px-8 xl:px-12 lg:py-8 has-data-full-bleed:max-w-none has-data-full-bleed:p-0">
             {/*
               One boundary for the whole admin, and deliberately so.
 

@@ -117,7 +117,7 @@ export function LiveView({ initial }: { initial: LiveSnapshot }) {
 
   return (
     <div data-full-bleed>
-      <div className="flex items-center gap-2.5 px-4 py-4 md:px-8">
+      <div className="flex items-center gap-2.5 px-4 py-4 md:px-8 xl:px-12">
         <Globe className="size-5 text-muted-foreground" />
         <h1 className="text-xl font-semibold tracking-tight">Live View</h1>
         <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -129,7 +129,7 @@ export function LiveView({ initial }: { initial: LiveSnapshot }) {
         </span>
       </div>
 
-      <div className="grid gap-4 px-4 pb-8 md:px-8 xl:grid-cols-[minmax(0,480px)_1fr]">
+      <div className="grid gap-4 px-4 pb-8 md:px-8 xl:px-12 xl:grid-cols-[minmax(0,480px)_1fr]">
         {/* Left rail — the numbers. */}
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">

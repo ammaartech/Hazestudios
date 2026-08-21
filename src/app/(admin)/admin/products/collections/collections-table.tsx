@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { DesktopTable, RecordList } from "@/components/admin/record-list";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -273,6 +274,38 @@ export function CollectionsTable({
         </div>
       ) : (
         <>
+          <>
+          <RecordList
+            items={collections.map((c) => ({
+              id: c.id,
+              href: `/admin/products/collections/${c.id}`,
+              title: c.title,
+              subtitle: `${c.productCount} product${c.productCount === 1 ? "" : "s"}`,
+              badges: (
+                <Badge variant={c.type === "smart" ? "default" : "secondary"}>
+                  {c.type === "smart" ? "Smart" : "Manual"}
+                </Badge>
+              ),
+              media: (
+                <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
+                  {c.image_url ? (
+                    <Image
+                      src={c.image_url}
+                      alt=""
+                      width={44}
+                      height={44}
+                      sizes="44px"
+                      quality={60}
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <ImageIcon className="size-4 text-muted-foreground" aria-hidden />
+                  )}
+                </span>
+              ),
+            }))}
+          />
+          <DesktopTable>
           <Table>
             <TableHeader>
               <TableRow>
@@ -380,6 +413,8 @@ export function CollectionsTable({
               })}
             </TableBody>
           </Table>
+          </DesktopTable>
+          </>
 
           <div className="flex items-center justify-center gap-2 border-t pt-3">
             <Button

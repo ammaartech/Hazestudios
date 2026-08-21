@@ -87,7 +87,7 @@ export default async function ProductsPage({
     // max-w-6xl was what forced the columns apart. The layout zeroes its padding
     // for `data-full-bleed`, so the page restates the gutter itself — same
     // convention the analytics dashboards use.
-    <div data-full-bleed className="px-4 py-6 md:px-8 lg:py-8">
+    <div data-full-bleed className="px-4 py-6 md:px-8 xl:px-12 lg:py-8">
       <PageHeader title="Products">
         <ProductListActions currency={shop?.currency ?? "INR"} />
         {/* size="sm" to sit level with the ProductListActions buttons beside it;

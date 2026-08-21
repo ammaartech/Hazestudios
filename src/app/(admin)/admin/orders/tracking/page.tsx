@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/admin/page-header";
+import { DesktopTable, RecordList } from "@/components/admin/record-list";
 import { FilterTabs } from "@/components/admin/filter-tabs";
 import { StageBadge } from "@/components/admin/status-badges";
 import { createClient } from "@/lib/supabase/server";
@@ -176,6 +177,36 @@ export default async function TrackingPage({
                 : `No orders at “${labelFor(tab)}”.`}
             </p>
           ) : (
+            <>
+              <RecordList
+                items={visible.map((o) => ({
+                  id: o.orderId,
+                  href: `/admin/orders/${o.orderId}`,
+                  title: `#${o.orderNumber}`,
+                  // The AWB is the reason to open this page at all, so it goes
+                  // on the subtitle line rather than into a column a phone
+                  // would have to scroll to.
+                  subtitle: `${o.customerName}${o.awb ? ` · ${o.awb}` : ""}`,
+                  amount: formatMoney(o.total, o.currency),
+                  badges: (
+                    <>
+                      <StageBadge stage={o.stage} />
+                      {o.alert && (
+                        <span
+                          className={
+                            o.alert.level === "critical"
+                              ? "text-[12px] text-red-700"
+                              : "text-[12px] text-amber-700"
+                          }
+                        >
+                          {o.alert.reason}
+                        </span>
+                      )}
+                    </>
+                  ),
+                }))}
+              />
+              <DesktopTable>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -251,6 +282,8 @@ export default async function TrackingPage({
                 ))}
               </TableBody>
             </Table>
+              </DesktopTable>
+            </>
           )}
 
           <Pagination page={page} pageSize={PAGE_SIZE} total={result.total} />

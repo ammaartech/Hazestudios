@@ -30,7 +30,14 @@ export function PageHeader({
         <h1 className="text-[1.25rem] font-semibold leading-tight tracking-[-0.012em] text-balance text-foreground">
           {title}
         </h1>
-        {children && <div className="flex items-center gap-2">{children}</div>}
+        {/* `flex-wrap` matters on a phone and nowhere else. Products carries
+            four actions — Export, Import, Paste from Qikink, More actions —
+            and on a 390px screen that row is about 520px wide, so without
+            wrapping the last button ran off the right edge and was simply
+            unreachable. */}
+        {children && (
+          <div className="flex flex-wrap items-center gap-2">{children}</div>
+        )}
       </div>
     </div>
   );

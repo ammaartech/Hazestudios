@@ -24,7 +24,7 @@ export default async function ReportsPage() {
 
   return (
     <div data-full-bleed>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-4 md:px-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-4 md:px-8 xl:px-12">
         <div className="flex items-center gap-2.5">
           <FileText className="size-5 text-muted-foreground" />
           <h1 className="text-xl font-semibold tracking-tight">Reports</h1>
@@ -37,7 +37,7 @@ export default async function ReportsPage() {
         </Link>
       </div>
 
-      <div className="px-4 py-5 md:px-8">
+      <div className="px-4 py-5 md:px-8 xl:px-12">
         <AskAi />
         <ReportCatalog reports={REPORTS} createdBy={storeName} />
       </div>

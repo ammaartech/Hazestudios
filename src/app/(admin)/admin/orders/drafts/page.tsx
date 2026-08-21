@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/admin/page-header";
+import { DesktopTable, RecordList } from "@/components/admin/record-list";
 import { Pagination } from "@/components/admin/pagination";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime, formatMoney } from "@/lib/format";
@@ -66,6 +67,22 @@ export default async function DraftsPage({
               Draft orders let you build custom orders and send invoices later.
             </p>
           ) : (
+            <>
+              <RecordList
+                items={drafts.map((d) => ({
+                  id: d.id,
+                  href: `/admin/orders/${d.id}`,
+                  title: `#${d.order_number}`,
+                  subtitle: `${
+                    d.customers
+                      ? `${d.customers.first_name} ${d.customers.last_name}`.trim() ||
+                        d.customers.email
+                      : "No customer"
+                  } · ${formatDateTime(d.created_at)}`,
+                  amount: formatMoney(d.total, d.currency),
+                }))}
+              />
+              <DesktopTable>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -100,6 +117,8 @@ export default async function DraftsPage({
                 ))}
               </TableBody>
             </Table>
+              </DesktopTable>
+            </>
           )}
 
           <Pagination page={page} pageSize={PAGE_SIZE} total={total} />

@@ -55,8 +55,8 @@ function KpiCard({
                 rounded === 0
                   ? "text-muted-foreground"
                   : rounded > 0
-                    ? "text-emerald-600 dark:text-emerald-500"
-                    : "text-rose-600 dark:text-rose-500"
+                    ? "text-emerald-700 dark:text-emerald-400"
+                    : "text-rose-700 dark:text-rose-400"
               )}
             >
               {rounded > 0 ? "+" : ""}
@@ -185,7 +185,7 @@ export default async function AnalyticsPage({
 
   return (
     <div data-full-bleed>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-4 md:px-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-4 md:px-8 xl:px-12">
         <div className="flex items-center gap-2.5">
           <BarChart3 className="size-5 text-muted-foreground" />
           <h1 className="text-xl font-semibold tracking-tight">Analytics</h1>
@@ -207,7 +207,7 @@ export default async function AnalyticsPage({
         </div>
       </div>
 
-      <div className="space-y-4 px-4 py-5 md:px-8">
+      <div className="space-y-4 px-4 py-5 md:px-8 xl:px-12">
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {kpis.map((kpi) => (
             <KpiCard key={kpi.label} {...kpi} />

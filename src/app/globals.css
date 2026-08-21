@@ -75,7 +75,12 @@
   --secondary: #f1f1f2;
   --secondary-foreground: #202223;
   --muted: #f1f1f2;
-  --muted-foreground: #6d7175;
+  /* Was #6d7175, which lands at 4.34:1 on the page background — just under the
+     4.5:1 AA floor, and this token carries a lot of load-bearing text: filter
+     tabs, table sublabels, counts, timestamps. Darkened one notch to 4.8:1 on
+     `--background` and 5.3:1 on a white card, which reads the same but is
+     legible on a laptop screen in daylight. */
+  --muted-foreground: #676b6f;
   --accent: #f1f1f2;
   --accent-foreground: #202223;
   --destructive: #d72c0d;
@@ -1424,4 +1429,39 @@ body {
       opacity: 0;
     }
   }
+
+  /* The admin's mobile "More" sheet. Rises from the bottom edge, because that
+     is where the island that opened it lives — a sheet that faded in place
+     would break the connection between the tap and the panel. */
+  @keyframes admin-sheet-in {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes admin-sheet-scrim {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+/**
+ * While the full-screen mobile search is open, the bottom nav island steps
+ * aside. See the note in `global-search.tsx` for why this is a display rule and
+ * not a z-index one.
+ *
+ * Deliberately outside every `@layer`. Cascade layers outrank specificity, so
+ * this rule sat in `components` and lost to Tailwind's `.flex` in `utilities`
+ * — the selector is (0,2,2) against (0,1,0) and still never applied. Unlayered
+ * styles beat all layered ones, which is exactly the escape hatch this needs.
+ */
+body[data-admin-search="open"] nav[aria-label="Primary"] {
+  display: none;
 }

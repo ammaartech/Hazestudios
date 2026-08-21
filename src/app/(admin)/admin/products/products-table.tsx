@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SearchInput } from "@/components/admin/search-input";
 import { ProductStatusBadge } from "@/components/admin/status-badges";
+import { DesktopTable, RecordList } from "@/components/admin/record-list";
 import { formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { ProductStatus } from "@/lib/types";
@@ -251,6 +252,39 @@ export function ProductsTable({
           </Link>
         </p>
       ) : (
+        <>
+          {/* Phones: a tappable card per product, with the thumbnail that makes
+              a catalogue scannable. The column chooser above only governs the
+              desktop table — on a 390px screen there is no room to choose. */}
+          <RecordList
+            items={products.map((p) => ({
+              id: p.id,
+              href: `/admin/products/${p.id}`,
+              title: p.title,
+              subtitle: p.vendor || p.product_type || null,
+              amount: formatMoney(p.price),
+              badges: <ProductStatusBadge status={p.status} />,
+              media: (
+                <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
+                  {p.cover ? (
+                    <Image
+                      src={p.cover}
+                      alt=""
+                      width={44}
+                      height={44}
+                      sizes="44px"
+                      quality={60}
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <ImageIcon className="size-4 text-muted-foreground" aria-hidden />
+                  )}
+                </span>
+              ),
+            }))}
+          />
+
+          <DesktopTable>
         <Table>
           <TableHeader>
             <TableRow>
@@ -356,6 +390,8 @@ export function ProductsTable({
             })}
           </TableBody>
         </Table>
+          </DesktopTable>
+        </>
       )}
     </div>
   );

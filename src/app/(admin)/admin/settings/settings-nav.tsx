@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-const SECTIONS: { label: string; href: string; placeholder?: boolean }[] = [
+export const SECTIONS: { label: string; href: string; placeholder?: boolean }[] = [
   { label: "Store details", href: "/admin/settings/general" },
   { label: "Users and permissions", href: "/admin/settings/users" },
   { label: "Locations", href: "/admin/settings/locations" },

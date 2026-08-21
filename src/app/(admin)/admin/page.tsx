@@ -170,7 +170,7 @@ export default async function HomePage() {
           <WorldMap variant="hero" className="h-auto w-full" />
         </div>
 
-        <div className="relative px-4 py-12 md:px-8 lg:py-16">
+        <div className="relative px-4 py-12 md:px-8 xl:px-12 lg:py-16">
           {!sales.configured && (
             <Alert className="mx-auto mb-10 max-w-2xl">
               <AlertCircle className="size-4" />

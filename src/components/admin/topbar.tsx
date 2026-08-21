@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, ShoppingBag, LogOut, ExternalLink } from "lucide-react";
+import { ShoppingBag, LogOut, ExternalLink, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { GlobalSearch } from "@/components/admin/global-search";
+import { openAdminSearch } from "@/lib/search/open-search";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -39,7 +41,7 @@ export function Topbar({
       {/* Brand sits exactly over the sidebar column so the chrome reads as one L. */}
       <Link
         href="/admin"
-        className="flex h-full w-60 shrink-0 items-center gap-2.5 border-r border-sidebar-border px-4 transition-colors duration-150 hover:bg-sidebar-hover"
+        className="flex h-full shrink-0 items-center gap-2.5 px-4 transition-colors duration-150 hover:bg-sidebar-hover md:w-60 md:border-r md:border-sidebar-border"
       >
         <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm ring-1 ring-black/5">
           <ShoppingBag className="size-4" strokeWidth={2.25} />
@@ -60,26 +62,33 @@ export function Topbar({
         `max-w-2xl` with `w-[min(…)]` so it grows on wide screens but never
         collides with the brand or the avatar on narrow ones.
       */}
-      <div className="pointer-events-none absolute left-1/2 hidden w-[min(36rem,calc(100vw-30rem))] -translate-x-1/2 md:block">
-        <div className="pointer-events-auto relative">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search"
-            aria-label="Search the admin"
-            // Light chrome, so this takes the same glass-control material as the
-            // page's own controls rather than the dark glass-chrome variant.
-            className="glass-control h-10 w-full rounded-lg border-0 pl-10 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-sidebar-ring/30"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                const q = (e.target as HTMLInputElement).value.trim();
-                // `/products` is the storefront; admin search belongs on the
-                // admin route, which is where this was landing wrong before.
-                if (q) router.push(`/admin/products?q=${encodeURIComponent(q)}`);
-              }
-            }}
-          />
-        </div>
+      <div className="pointer-events-none absolute left-1/2 w-[min(36rem,calc(100vw-30rem))] -translate-x-1/2 max-md:contents">
+        {/*
+          `max-md:contents` — the wrapper generates no box at all on a phone.
+
+          It centres the field on desktop by way of `-translate-x-1/2`, and a
+          transformed element becomes the containing block for any `fixed`
+          descendant. So the full-screen mobile search panel was resolving
+          `inset-0` against this 0px-wide wrapper instead of the viewport and
+          collapsing into a sliver in the corner. Zeroing the translate does not
+          help: `translate(0)` is still a transform. `display: contents` removes
+          the box, and with it the containing block, the width clamp — which
+          computes negative below 480px — and the absolute positioning, all of
+          which are desktop-only concerns.
+
+          The whole search experience lives in GlobalSearch — this used to be a
+          bare input whose only behaviour was to push `?q=` at the products list
+          on Enter, which meant every lookup cost a page load and could only
+          ever find products. It now ranks the catalogue in the browser as you
+          type and merges orders and customers in from Postgres behind it. See
+          `src/lib/search/fuzzy.ts` for how the ranking works.
+
+          The panel it opens is a child of this header, which is `fixed` with a
+          z-index and therefore its own stacking context — so the dropdown
+          paints above the page without a portal, and stays anchored to the
+          input with no positioning maths.
+        */}
+        <GlobalSearch />
       </div>
 
       {/* Takes the slack the absolutely-positioned search no longer occupies,
@@ -87,6 +96,17 @@ export function Topbar({
       <div className="flex-1" />
 
       <div className="flex shrink-0 items-center gap-1 px-3">
+        {/* On a phone the field itself is collapsed — this is how you reach it.
+            44px so it is a real touch target, not a 24px icon. */}
+        <button
+          type="button"
+          onClick={openAdminSearch}
+          aria-label="Search the admin"
+          className="flex size-11 cursor-pointer items-center justify-center rounded-full text-sidebar-foreground active:bg-sidebar-hover md:hidden"
+        >
+          <Search className="size-5" />
+        </button>
+
         <DropdownMenu>
           <DropdownMenuTrigger className="cursor-pointer rounded-full outline-none ring-offset-2 ring-offset-sidebar transition-opacity duration-150 hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring">
             <Avatar className="size-8 ring-1 ring-black/10">

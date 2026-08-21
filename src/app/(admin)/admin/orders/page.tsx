@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/admin/page-header";
 import { FilterTabs } from "@/components/admin/filter-tabs";
 import { Pagination } from "@/components/admin/pagination";
 import { SearchInput } from "@/components/admin/search-input";
+import { DesktopTable, RecordList } from "@/components/admin/record-list";
 import { PaymentBadge, FulfillmentBadge } from "@/components/admin/status-badges";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime, formatMoney } from "@/lib/format";
@@ -111,6 +112,31 @@ export default async function OrdersPage({
               </Link>
             </p>
           ) : (
+            <>
+              {/* Phones get one tappable card per order; the table below is for
+                  pointer-sized screens. Same `orders`, two presentations. */}
+              <RecordList
+                items={orders.map((o) => ({
+                  id: o.id,
+                  href: `/admin/orders/${o.id}`,
+                  title: `#${o.order_number}`,
+                  subtitle: `${
+                    o.customers
+                      ? `${o.customers.first_name} ${o.customers.last_name}`.trim() ||
+                        o.customers.email
+                      : "No customer"
+                  } · ${formatDateTime(o.created_at)}`,
+                  amount: formatMoney(o.total, o.currency),
+                  badges: (
+                    <>
+                      <PaymentBadge status={o.payment_status} />
+                      <FulfillmentBadge status={o.fulfillment_status} />
+                    </>
+                  ),
+                }))}
+              />
+
+              <DesktopTable>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -162,6 +188,8 @@ export default async function OrdersPage({
                 })}
               </TableBody>
             </Table>
+              </DesktopTable>
+            </>
           )}
 
           <Pagination page={page} pageSize={PAGE_SIZE} total={total} />

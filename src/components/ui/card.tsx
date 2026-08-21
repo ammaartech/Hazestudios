@@ -33,9 +33,26 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+/**
+ * Renders an `<h3>`, not a `<div>`.
+ *
+ * shadcn ships this as a div, which means a card's title is styled like a
+ * heading and announced like body text. The admin leans on cards for nearly
+ * every section — Locations, Staff accounts, Cashfree, every settings pane — so
+ * with a div here whole pages had no heading structure at all: an audit of the
+ * settings section found zero headings on any of them. `h3` sits correctly
+ * under the `h1` that `PageHeader` renders.
+ *
+ * `as` is available for the rare card whose title is the page's own subject and
+ * wants a different level.
+ */
+function CardTitle({
+  className,
+  as: Tag = "h3",
+  ...props
+}: React.ComponentProps<"div"> & { as?: "h2" | "h3" | "h4" | "div" }) {
   return (
-    <div
+    <Tag
       data-slot="card-title"
       className={cn(
         "font-heading text-base leading-snug font-medium group-data-[size=sm]/card:text-sm",

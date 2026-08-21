@@ -28,8 +28,8 @@ function DeltaBadge({ delta }: { delta: number | null }) {
         flat && "text-muted-foreground",
         !flat &&
           (rounded > 0
-            ? "text-emerald-600 dark:text-emerald-500"
-            : "text-rose-600 dark:text-rose-500")
+            ? "text-emerald-700 dark:text-emerald-400"
+            : "text-rose-700 dark:text-rose-400")
       )}
     >
       {rounded > 0 ? "+" : ""}
@@ -56,7 +56,7 @@ export function HomeMetrics({
   const live = snapshot.visitorsRightNow;
 
   return (
-    <div className="flex flex-wrap items-center gap-x-8 gap-y-4 border-b px-4 py-3.5 md:px-8">
+    <div className="flex flex-wrap items-center gap-x-8 gap-y-4 border-b px-4 py-3.5 md:px-8 xl:px-12">
       <div className="min-w-36">
         <p className="text-[13px] font-medium">All channels</p>
         <p className="text-[13px] text-muted-foreground">{rangeLabel}</p>
