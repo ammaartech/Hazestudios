@@ -50,6 +50,59 @@ function rank<T>(
 
 const EMPTY: ReportResult = { headers: [], rows: [] };
 
+const PAGE_SIZE = 1000;
+
+/** Bucket for orders carrying no shipping city — kept out of city rankings. */
+const NO_CITY = "No shipping address";
+
+/**
+ * Tidy a hand-typed city for display: "pune" becomes "Pune".
+ *
+ * Only all-lowercase words are touched, so an acronym a customer typed in caps
+ * ("NCR") survives instead of being flattened to "Ncr". Cosmetic — the grouping
+ * key is lowercased separately, so this cannot split or merge a row.
+ */
+function titleCase(value: string) {
+  return value.replace(/\S+/g, (word) =>
+    word === word.toLowerCase()
+      ? word.charAt(0).toUpperCase() + word.slice(1)
+      : word
+  );
+}
+
+/**
+ * Every non-draft order in the window, read a page at a time.
+ *
+ * PostgREST caps a single response at 1000 rows, so one flat `.select()` over a
+ * wide range answers with the first thousand and no error. For a report whose
+ * whole job is to count orders that is not a slow answer, it is a wrong one —
+ * so page until a short page proves the end.
+ */
+async function fetchOrders<T>(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  columns: string,
+  fromIso: string,
+  toIso: string
+): Promise<T[]> {
+  const all: T[] = [];
+  for (let offset = 0; ; offset += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("orders")
+      .select(columns)
+      .eq("is_draft", false)
+      .gte("created_at", fromIso)
+      .lte("created_at", toIso)
+      // Without a stable sort the pages are free to overlap or skip rows.
+      .order("created_at", { ascending: true })
+      .range(offset, offset + PAGE_SIZE - 1);
+
+    if (error) throw error;
+    const page = (data ?? []) as unknown as T[];
+    all.push(...page);
+    if (page.length < PAGE_SIZE) return all;
+  }
+}
+
 export async function runReport(
   slug: string,
   from: Date,
@@ -64,6 +117,132 @@ export async function runReport(
     const toIso = to.toISOString();
 
     switch (slug) {
+      /* ----------------------------------------------------- Orders ------ */
+      case "total-orders": {
+        const orders = await fetchOrders<
+          Pick<Order, "created_at" | "total" | "payment_status" | "cancelled_at">
+        >(
+          supabase,
+          "created_at, total, payment_status, cancelled_at",
+          fromIso,
+          toIso
+        );
+
+        const stats = new Map<
+          string,
+          { orders: number; paid: number; sales: number }
+        >();
+        let paidOrders = 0;
+        let cancelled = 0;
+        let sales = 0;
+
+        for (const o of orders) {
+          const key = new Date(o.created_at).toDateString();
+          const cur = stats.get(key) ?? { orders: 0, paid: 0, sales: 0 };
+          cur.orders += 1;
+          if (o.cancelled_at) cancelled += 1;
+          if (isPaid(o.payment_status)) {
+            cur.paid += 1;
+            cur.sales += Number(o.total);
+            paidOrders += 1;
+            sales += Number(o.total);
+          }
+          stats.set(key, cur);
+        }
+
+        const buckets = dayBuckets(from, to);
+        return {
+          headers: ["Date", "Orders", "Paid orders", "Gross sales"],
+          rows: buckets.map((b) => {
+            const s = stats.get(b.key) ?? { orders: 0, paid: 0, sales: 0 };
+            return [b.label, s.orders, s.paid, formatMoney(s.sales)];
+          }),
+          chart: buckets.map((b) => ({
+            label: b.label,
+            value: stats.get(b.key)?.orders ?? 0,
+          })),
+          chartKind: "line",
+          // The plotted series is a count of orders, not a sum of money.
+          money: false,
+          summary: [
+            { label: "Total orders", value: String(orders.length) },
+            { label: "Paid orders", value: String(paidOrders) },
+            { label: "Cancelled", value: String(cancelled) },
+            { label: "Gross sales", value: formatMoney(sales) },
+          ],
+        };
+      }
+
+      case "orders-by-city": {
+        const orders = await fetchOrders<
+          Pick<Order, "total" | "payment_status" | "shipping_address">
+        >(supabase, "total, payment_status, shipping_address", fromIso, toIso);
+
+        const stats = new Map<
+          string,
+          { label: string; orders: number; paid: number; sales: number }
+        >();
+
+        for (const o of orders) {
+          const address = o.shipping_address ?? {};
+          const city = titleCase((address.city ?? "").trim());
+          const province = (address.province ?? "").trim();
+          // Imported and hand-keyed orders disagree on case ("Mumbai" vs
+          // "mumbai"), which would otherwise split one city across two rows.
+          // The first spelling seen becomes the label for the merged group.
+          // Named rather than "Unknown": these are overwhelmingly orders keyed
+          // in through the admin, which carry no shipping address at all — a
+          // fact about how the order was taken, not a gap in the data.
+          const label = city
+            ? province
+              ? `${city}, ${province}`
+              : city
+            : NO_CITY;
+          const key = label.toLowerCase();
+
+          const cur = stats.get(key) ?? {
+            label,
+            orders: 0,
+            paid: 0,
+            sales: 0,
+          };
+          cur.orders += 1;
+          if (isPaid(o.payment_status)) {
+            cur.paid += 1;
+            cur.sales += Number(o.total);
+          }
+          stats.set(key, cur);
+        }
+
+        const ranked = rank(stats, (v) => v.orders);
+        const named = ranked.filter(([, v]) => v.label !== NO_CITY);
+
+        return {
+          headers: ["City", "Orders", "Paid orders", "Gross sales"],
+          rows: ranked.map(([, v]) => [
+            v.label,
+            v.orders,
+            v.paid,
+            formatMoney(v.sales),
+          ]),
+          chart: named
+            .slice(0, 10)
+            .map(([, v]) => ({ label: v.label, value: v.orders })),
+          chartKind: "bar",
+          money: false,
+          summary: [
+            { label: "Total orders", value: String(orders.length) },
+            { label: "Cities", value: String(named.length) },
+            {
+              label: "Top city",
+              value: named.length
+                ? `${named[0][1].label} · ${named[0][1].orders}`
+                : "—",
+            },
+          ],
+        };
+      }
+
       /* ------------------------------------------------ Acquisition ------ */
       case "sessions-over-time": {
         const { data } = await supabase

@@ -188,6 +188,17 @@ export function ReportCatalog({
   const [ascending, setAscending] = useState(true);
   const views = useSyncExternalStore(subscribeToViews, readViews, serverViews);
 
+  /**
+   * Position in the catalog file, for the within-category tiebreak. That file
+   * is authored deliberately — "Total orders" is written above "Orders by
+   * city" because it is the one you reach for first — and sorting by name
+   * inside a category would silently reverse the pair.
+   */
+  const declared = useMemo(
+    () => new Map(reports.map((r, i) => [r.slug, i])),
+    [reports]
+  );
+
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
 
@@ -215,13 +226,25 @@ export function ReportCatalog({
         if (!bv) return -1;
         return (new Date(bv).getTime() - new Date(av).getTime()) * direction;
       }
-      // Category, then name within it.
+      // Category, then the catalog's own order within it.
       const byCategory =
         REPORT_CATEGORIES.indexOf(a.category) -
         REPORT_CATEGORIES.indexOf(b.category);
-      return (byCategory || a.name.localeCompare(b.name)) * direction;
+      const byPosition =
+        (declared.get(a.slug) ?? 0) - (declared.get(b.slug) ?? 0);
+      return (byCategory || byPosition) * direction;
     });
-  }, [reports, query, category, author, sort, ascending, views, createdBy]);
+  }, [
+    reports,
+    query,
+    category,
+    author,
+    sort,
+    ascending,
+    views,
+    createdBy,
+    declared,
+  ]);
 
   function toggleSort(key: SortKey) {
     if (sort === key) setAscending((prev) => !prev);

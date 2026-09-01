@@ -1,16 +1,16 @@
-# Graph Report - Hazestudios  (2026-08-21)
+# Graph Report - Hazestudios  (2026-09-01)
 
 ## Corpus Check
-- 600 files · ~1,866,419 words
+- 600 files · ~1,868,143 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 6730 nodes · 10812 edges · 375 communities (288 shown, 87 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 60 edges (avg confidence: 0.8)
+- 6737 nodes · 10831 edges · 366 communities (278 shown, 88 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 62 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1764e845`
+- Built from commit: `30699fb9`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -369,22 +369,13 @@
 - [[_COMMUNITY_Community 362|Community 362]]
 - [[_COMMUNITY_Community 363|Community 363]]
 - [[_COMMUNITY_Community 364|Community 364]]
-- [[_COMMUNITY_Community 365|Community 365]]
 - [[_COMMUNITY_Community 366|Community 366]]
-- [[_COMMUNITY_Community 367|Community 367]]
-- [[_COMMUNITY_Community 368|Community 368]]
-- [[_COMMUNITY_Community 369|Community 369]]
-- [[_COMMUNITY_Community 370|Community 370]]
-- [[_COMMUNITY_Community 371|Community 371]]
-- [[_COMMUNITY_Community 372|Community 372]]
-- [[_COMMUNITY_Community 373|Community 373]]
-- [[_COMMUNITY_Community 374|Community 374]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `cn()` - 242 edges
+1. `cn()` - 243 edges
 2. `createClient()` - 69 edges
 3. `files` - 63 edges
-4. `formatMoney()` - 60 edges
+4. `formatMoney()` - 61 edges
 5. `Button()` - 58 edges
 6. `Card()` - 51 edges
 7. `CardContent()` - 51 edges
@@ -407,19 +398,19 @@
 ## Import Cycles
 - None detected.
 
-## Communities (375 total, 87 thin omitted)
+## Communities (366 total, 88 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.09
 Nodes (21): AnimatePresence, AnimatePresence Props, Basic Usage, Common Props, Drag, Drag Info Object, Framer Motion Reference, Gestures (+13 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.16
-Nodes (26): ACCEPTED, isUploading(), MediaStatus, MediaUploader(), SortableThumb(), RichTextEditor(), useField(), useFields() (+18 more)
+Cohesion: 0.17
+Nodes (26): isUploading(), MediaUploader(), RichTextEditor(), TagsInput(), useField(), useFields(), useIsDirty(), ProductFacets (+18 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.23
-Nodes (9): deleteFile(), recordFile(), FileCard(), formatBytes(), FileUploader(), metadata, formatDate(), FileRecord (+1 more)
+Cohesion: 0.08
+Nodes (31): ALIASES, isColorOption(), OPTION_NAME_SUGGESTIONS, OptionPreset, presetFor(), PRESETS, SWATCHES, swatchFor() (+23 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.06
@@ -438,24 +429,24 @@ Cohesion: 0.09
 Nodes (11): metadata, ComingSoon(), metadata, metadata, metadata, metadata, metadata, PLACEHOLDERS (+3 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.07
-Nodes (27): Art, BLOOMS, BURST_PETALS, BurstPetal, DRIFTING_BLOOMS, DriftingBloom, FOG_MARK, WAX_SEAL (+19 more)
+Cohesion: 0.09
+Nodes (15): CraftId, UPCOMING_DATES, Art, BLOOMS, BURST_PETALS, BurstPetal, DRIFTING_BLOOMS, DriftingBloom (+7 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.09
 Nodes (21): aliases, components, hooks, lib, ui, utils, iconLibrary, menuAccent (+13 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.04
-Nodes (54): files, updatedAt, editCount, findings, editCount, findings, editCount, findings (+46 more)
+Cohesion: 0.03
+Nodes (69): files, updatedAt, files, updatedAt, editCount, findings, editCount, findings (+61 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.10
 Nodes (19): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+11 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.50
-Nodes (4): getCashfreeStatus(), CashfreeForm(), metadata, PaymentsSettingsPage()
+Cohesion: 0.14
+Nodes (16): testConnection(), CashfreeConfig, CashfreeEnvironment, CashfreeStatus, EMPTY, getCashfreeStatus(), HOSTS, SDK_MODE (+8 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.17
@@ -491,7 +482,7 @@ Nodes (43): **`agent-console-card`**, **`announcement-bar`**, **`blog-filter-chi
 
 ### Community 20 - "Community 20"
 Cohesion: 0.03
-Nodes (64): files, files, updatedAt, editCount, findings, editCount, findings, editCount (+56 more)
+Nodes (66): files, updatedAt, editCount, findings, editCount, findings, editCount, findings (+58 more)
 
 ### Community 21 - "Community 21"
 Cohesion: 0.05
@@ -778,20 +769,20 @@ Cohesion: 0.06
 Nodes (31): Border Radius Scale, Brand & Accent, Breakpoints, Buttons, Cards & Containers, Colors, Components, Do (+23 more)
 
 ### Community 98 - "Community 98"
-Cohesion: 0.04
-Nodes (50): updatedAt, files, updatedAt, files, updatedAt, updatedAt, files, updatedAt (+42 more)
+Cohesion: 0.05
+Nodes (41): updatedAt, files, updatedAt, files, updatedAt, updatedAt, files, updatedAt (+33 more)
 
 ### Community 99 - "Community 99"
-Cohesion: 0.06
-Nodes (33): files, updatedAt, editCount, findings, editCount, findings, editCount, findings (+25 more)
+Cohesion: 0.07
+Nodes (30): files, updatedAt, editCount, findings, editCount, findings, editCount, findings (+22 more)
 
 ### Community 100 - "Community 100"
 Cohesion: 0.07
 Nodes (30): files, updatedAt, files, updatedAt, editCount, findings, editCount, findings (+22 more)
 
 ### Community 101 - "Community 101"
-Cohesion: 0.04
-Nodes (60): files, updatedAt, files, updatedAt, editCount, findings, editCount, findings (+52 more)
+Cohesion: 0.06
+Nodes (39): files, updatedAt, editCount, findings, editCount, findings, editCount, findings (+31 more)
 
 ### Community 102 - "Community 102"
 Cohesion: 0.08
@@ -802,12 +793,12 @@ Cohesion: 0.11
 Nodes (17): 1. Hover Lift Effect, 2. Button Press, 3. Fade In on Mount (Framer Motion), 4. Modal with Exit Animation, 5. Tab Indicator (Shared Layout), 6. Staggered List Animation, Common Animation Patterns, CSS Custom Properties (Recommended) (+9 more)
 
 ### Community 104 - "Community 104"
-Cohesion: 0.08
-Nodes (48): FilterTabs(), PageHeader(), Pagination(), DesktopTable(), RecordList(), RecordListItem, SearchInput(), ProductStatusBadge() (+40 more)
+Cohesion: 0.07
+Nodes (52): FilterTabs(), PageHeader(), Pagination(), DesktopTable(), RecordList(), RecordListItem, SearchInput(), FulfillmentBadge() (+44 more)
 
 ### Community 105 - "Community 105"
-Cohesion: 0.07
-Nodes (27): files, updatedAt, editCount, findings, editCount, findings, editCount, findings (+19 more)
+Cohesion: 0.05
+Nodes (45): files, updatedAt, files, updatedAt, files, updatedAt, editCount, findings (+37 more)
 
 ### Community 106 - "Community 106"
 Cohesion: 0.04
@@ -818,16 +809,16 @@ Cohesion: 0.15
 Nodes (9): AccountShell(), Bar(), HelpSkeleton(), OrderDetailSkeleton(), OrdersSkeleton(), OverviewSkeleton(), Panel(), ProfileSkeleton() (+1 more)
 
 ### Community 109 - "Community 109"
-Cohesion: 0.07
-Nodes (27): files, updatedAt, editCount, findings, editCount, findings, editCount, findings (+19 more)
+Cohesion: 0.08
+Nodes (24): files, updatedAt, editCount, findings, editCount, findings, editCount, findings (+16 more)
 
 ### Community 110 - "Community 110"
 Cohesion: 0.15
 Nodes (12): 1. Inventory, 2. Fulfillment — setup, 3. Fulfillment — managing orders, 4. Fulfillment — fulfilling orders, 5. Marketing, 6. SEO, 7. Online sales channels, 8. Reports and analytics (+4 more)
 
 ### Community 111 - "Community 111"
-Cohesion: 0.03
-Nodes (75): files, updatedAt, files, updatedAt, files, updatedAt, editCount, findings (+67 more)
+Cohesion: 0.04
+Nodes (57): files, updatedAt, files, updatedAt, editCount, findings, editCount, findings (+49 more)
 
 ### Community 112 - "Community 112"
 Cohesion: 0.12
@@ -866,8 +857,8 @@ Cohesion: 0.11
 Nodes (17): 3D Transforms, Animation Properties, Basic Syntax, Clip-Path Animation Example (Image Comparison Slider), Clip-Path Animations, Common Shapes, Common Transition Patterns, CSS Animations Reference (+9 more)
 
 ### Community 122 - "Community 122"
-Cohesion: 0.22
-Nodes (12): AskBar(), Suggestion, delta(), greeting(), HomePage(), metadata, getSalesBreakdown(), Alert() (+4 more)
+Cohesion: 0.16
+Nodes (15): AskBar(), Suggestion, delta(), greeting(), HomePage(), metadata, getSalesBreakdown(), StaffMember (+7 more)
 
 ### Community 123 - "Community 123"
 Cohesion: 0.06
@@ -882,48 +873,48 @@ Cohesion: 0.05
 Nodes (39): files, updatedAt, editCount, findings, editCount, findings, editCount, findings (+31 more)
 
 ### Community 126 - "Community 126"
-Cohesion: 0.06
-Nodes (52): CashfreeCustomerDetails, CashfreeError, CashfreeOrder, CashfreeOrderPayload, CashfreeOrderStatus, CashfreePayment, createCashfreeOrder(), describeError() (+44 more)
+Cohesion: 0.12
+Nodes (26): CashfreeCustomerDetails, CashfreeError, CashfreeOrder, CashfreeOrderPayload, CashfreeOrderStatus, CashfreePayment, createCashfreeOrder(), describeError() (+18 more)
 
 ### Community 127 - "Community 127"
 Cohesion: 0.14
 Nodes (22): clientIpFrom(), COUNTRY_CENTROIDS, COUNTRY_NAMES, countryName(), decode(), EMPTY, fromIpLookup(), fromPlatformHeaders() (+14 more)
 
 ### Community 128 - "Community 128"
-Cohesion: 0.24
-Nodes (9): getLanding(), getSessionKey(), isReturning(), Landing, track(), TrackEventType, TrackOptions, ProductViewTracker() (+1 more)
+Cohesion: 0.10
+Nodes (22): getLanding(), getSessionKey(), isReturning(), Landing, track(), TrackEventType, TrackOptions, DiscountQuote (+14 more)
 
 ### Community 129 - "Community 129"
-Cohesion: 0.05
-Nodes (70): DraftImage, TagsInput(), fromNumber(), toAmount(), toNumber(), parseSizeChart(), populatedMeasurements(), populatedRows() (+62 more)
+Cohesion: 0.07
+Nodes (51): DraftImage, toAmount(), toNumber(), findColumn(), parseQikinkPaste(), QikinkPasteOption, QikinkPasteResult, QikinkPasteVariant (+43 more)
 
 ### Community 130 - "Community 130"
-Cohesion: 0.14
-Nodes (33): GET(), addToCart(), claimCart(), clearCart(), fail(), isUuid(), readQuantity(), refreshCart() (+25 more)
+Cohesion: 0.19
+Nodes (26): GET(), addToCart(), claimCart(), clearCart(), fail(), isUuid(), readQuantity(), refreshCart() (+18 more)
 
 ### Community 131 - "Community 131"
-Cohesion: 0.13
-Nodes (14): CheckoutLayout(), AnalyticsTracker(), AnnouncementBar(), ICONS, CartProvider(), ShopFooter(), Announcement, AnnouncementIcon (+6 more)
+Cohesion: 0.07
+Nodes (33): files, updatedAt, editCount, findings, editCount, findings, editCount, findings (+25 more)
 
 ### Community 132 - "Community 132"
-Cohesion: 0.27
-Nodes (13): CachedToken, describeError(), getAccessToken(), isRecord(), isTokenRejection(), mintAccessToken(), minting, QikinkCreateResult (+5 more)
+Cohesion: 0.23
+Nodes (14): CachedToken, describeError(), getAccessToken(), isRecord(), isTokenRejection(), mintAccessToken(), minting, QikinkCreateResult (+6 more)
 
 ### Community 133 - "Community 133"
-Cohesion: 0.14
-Nodes (21): metadata, ResolvedBlock, ArrivalFrame, HAZE_ARRIVALS, HAZE_FEATURED, HAZE_HERO, HAZE_LOOKBOOK, HAZE_TABS (+13 more)
+Cohesion: 0.09
+Nodes (30): metadata, ResolvedBlock, ArrivalFrame, HAZE_ARRIVALS, HAZE_FEATURED, HAZE_HERO, HAZE_LOOKBOOK, HAZE_TABS (+22 more)
 
 ### Community 134 - "Community 134"
-Cohesion: 0.13
-Nodes (18): listOrders(), QikinkError, QikinkFulfillment, Alert, QikinkStage, FulfillmentRow, IN_FLIGHT_STAGES, isCancelledRecord() (+10 more)
+Cohesion: 0.14
+Nodes (19): listOrders(), QikinkFulfillment, Alert, QikinkStage, FulfillmentRow, getTrackedOrders(), IN_FLIGHT_STAGES, isCancelledRecord() (+11 more)
 
 ### Community 135 - "Community 135"
 Cohesion: 0.12
 Nodes (19): chunkProducts(), CsvImage, CsvOption, CsvVariant, GRAMS_PER, imageId(), ImportIssue, MAPPED_COLUMNS (+11 more)
 
 ### Community 136 - "Community 136"
-Cohesion: 0.13
-Nodes (15): editCount, findings, editCount, findings, editCount, findings, editCount, findings (+7 more)
+Cohesion: 0.04
+Nodes (45): editCount, findings, editCount, findings, editCount, findings, editCount, findings (+37 more)
 
 ### Community 137 - "Community 137"
 Cohesion: 0.22
@@ -934,12 +925,12 @@ Cohesion: 0.09
 Nodes (18): args, bump(), client, col, config, csvPath, dry, FULFILLMENT_MAP (+10 more)
 
 ### Community 139 - "Community 139"
-Cohesion: 0.13
-Nodes (19): axisTick, CATEGORICAL, ChannelDonut(), compactMoney(), OrdersBarChart(), RankedBarChart(), SalesAreaChart(), TooltipEntry (+11 more)
+Cohesion: 0.20
+Nodes (17): FeaturedCollection(), REEL, BrandMarquee(), EditorialBanner(), Eyebrow(), Hero(), SectionIntro(), ShopTheLook() (+9 more)
 
 ### Community 140 - "Community 140"
-Cohesion: 0.07
-Nodes (38): findPreset(), resolveRange(), findReport(), REPORT_CATEGORIES, ReportCategory, ReportDefinition, REPORTS, dayBuckets() (+30 more)
+Cohesion: 0.06
+Nodes (49): axisTick, CATEGORICAL, ChannelDonut(), compactMoney(), OrdersBarChart(), RankedBarChart(), SalesAreaChart(), TooltipEntry (+41 more)
 
 ### Community 141 - "Community 141"
 Cohesion: 0.02
@@ -950,12 +941,12 @@ Cohesion: 0.09
 Nodes (20): args, c, client, dryRun, file, header, iHandle, iLocation (+12 more)
 
 ### Community 143 - "Community 143"
-Cohesion: 0.05
-Nodes (42): files, updatedAt, files, updatedAt, editCount, findings, editCount, findings (+34 more)
+Cohesion: 0.06
+Nodes (37): files, updatedAt, files, editCount, findings, editCount, findings, editCount (+29 more)
 
 ### Community 144 - "Community 144"
-Cohesion: 0.07
-Nodes (37): DiscountStatusBadge(), Dot(), FulfillmentBadge(), PaymentBadge(), Pill(), resolve(), StageBadge(), Variant (+29 more)
+Cohesion: 0.11
+Nodes (21): ConvertDraftButton(), DeleteOrderButton(), FulfillDialog(), MarkPaidButton(), OrderActionsMenu(), RefundDialog(), OrderNote, OrderNotes() (+13 more)
 
 ### Community 145 - "Community 145"
 Cohesion: 0.13
@@ -963,31 +954,31 @@ Nodes (19): Step(), args, between(), c, CITIES, client, config, daysAgo() (+11 m
 
 ### Community 146 - "Community 146"
 Cohesion: 0.11
-Nodes (29): getPaymentAttempts(), CheckoutForm(), CheckoutPage(), metadata, getCheckoutPrefill(), getCheckoutSettings(), getOfferedPaymentMethods(), getOrderByToken() (+21 more)
+Nodes (30): getPaymentAttempts(), CheckoutForm(), CheckoutPage(), metadata, getCheckoutPrefill(), getCheckoutSettings(), getOfferedPaymentMethods(), getOrderByToken() (+22 more)
 
 ### Community 147 - "Community 147"
-Cohesion: 0.07
-Nodes (50): currencySymbol(), StaffRole, CustomItemDialog(), LineItem, ProductWithVariants, PickedItem, ProductPicker(), ProductRow() (+42 more)
+Cohesion: 0.11
+Nodes (31): KEYS, ShopSettings, StaffRole, ProductRow(), selectionKey(), unitsOf(), POLICY_FIELDS, Phase (+23 more)
 
 ### Community 148 - "Community 148"
-Cohesion: 0.06
-Nodes (48): BUSINESS_RULES, generate(), GeneratedQuery, questionToSql(), RESPONSE_SCHEMA, SQL_RULES, SqlContext, systemPrompt() (+40 more)
+Cohesion: 0.07
+Nodes (43): BUSINESS_RULES, generate(), GeneratedQuery, questionToSql(), RESPONSE_SCHEMA, SQL_RULES, SqlContext, systemPrompt() (+35 more)
 
 ### Community 149 - "Community 149"
-Cohesion: 0.10
-Nodes (33): FeaturedCollection(), PAYMENTS, SOCIALS, BRAND_INSTAGRAMS, BRAND_MARQUEE, EDITORIAL_BANNER, FEATURED_BOTTOM, FEATURED_TOP (+25 more)
+Cohesion: 0.07
+Nodes (28): AnnouncementBar(), ICONS, PAYMENTS, SOCIALS, Announcement, AnnouncementIcon, ANNOUNCEMENTS, BRAND_INSTAGRAMS (+20 more)
 
 ### Community 150 - "Community 150"
 Cohesion: 0.13
 Nodes (14): Core Principles, Cubic Bezier Explained, Custom Easing Variables, Duration-Based Springs (Framer Motion), Duration Sweet Spots, Easing and Timing Reference, Easing Functions, Framer Motion Spring Config (+6 more)
 
 ### Community 151 - "Community 151"
-Cohesion: 0.12
-Nodes (15): metadata, inSection(), isActive(), MobileNav(), MobileNavBar(), MoreSheet(), NavRow(), Tab (+7 more)
+Cohesion: 0.11
+Nodes (21): metadata, inSection(), isActive(), MobileNav(), MobileNavBar(), MoreSheet(), NavRow(), Tab (+13 more)
 
 ### Community 225 - "Community 225"
-Cohesion: 0.08
-Nodes (38): CollectionPayload, CollectionDraft, CollectionFormInitial, CollectionFormInner(), CollectionFormProps, PRICE_OPERATORS, RULE_FIELDS, TEXT_OPERATORS (+30 more)
+Cohesion: 0.09
+Nodes (42): SaveBar(), CollectionPayload, deleteCollection(), deleteCollectionBulk(), revalidateStorefront(), saveCollection(), setCollectionPublishedBulk(), SORTS (+34 more)
 
 ### Community 226 - "Community 226"
 Cohesion: 0.05
@@ -998,8 +989,8 @@ Cohesion: 0.15
 Nodes (11): args, c, client, data, draft, dryRun, entries, prune (+3 more)
 
 ### Community 228 - "Community 228"
-Cohesion: 0.17
-Nodes (12): files, updatedAt, editCount, findings, editCount, findings, editCount, findings (+4 more)
+Cohesion: 0.08
+Nodes (24): files, updatedAt, editCount, findings, editCount, findings, editCount, findings (+16 more)
 
 ### Community 229 - "Community 229"
 Cohesion: 0.12
@@ -1023,11 +1014,11 @@ Nodes (10): AuthResult, Action, SignInForm(), SignUpForm(), metadata, NOTICES, m
 
 ### Community 234 - "Community 234"
 Cohesion: 0.16
-Nodes (8): AccountNav(), LINKS, AuthShell(), LINKS, signOut(), ResetForm(), metadata, metadata
+Nodes (9): AccountNav(), LINKS, AuthShell(), LINKS, signOut(), NewPasswordForm(), metadata, metadata (+1 more)
 
 ### Community 235 - "Community 235"
-Cohesion: 0.21
-Nodes (12): describeTarget(), appliedSet(), c, ensureLedger(), main(), migrationFiles(), MIGRATIONS_DIR, ROOT (+4 more)
+Cohesion: 0.17
+Nodes (17): CashfreeMode, CheckoutState, confirmPayment(), orderIdForToken(), PaymentHandoff, paymentReturnUrl(), placeOrder(), quoteDiscount() (+9 more)
 
 ### Community 236 - "Community 236"
 Cohesion: 0.40
@@ -1174,12 +1165,12 @@ Cohesion: 0.22
 Nodes (4): CHROME, failures, SEED_ROUTES, WIDTHS
 
 ### Community 272 - "Community 272"
-Cohesion: 0.20
-Nodes (14): ToolbarButton(), CharCount(), Field(), KEYS, plainText(), InputGroup(), InputGroupAddon(), inputGroupAddonVariants (+6 more)
+Cohesion: 0.22
+Nodes (13): ToolbarButton(), CharCount(), KEYS, plainText(), InputGroup(), InputGroupAddon(), inputGroupAddonVariants, InputGroupButton() (+5 more)
 
 ### Community 273 - "Community 273"
-Cohesion: 0.17
-Nodes (19): boundedDistance(), field, FieldMatch, fold(), foldChar(), isAlnum(), lengthPenalty(), Match (+11 more)
+Cohesion: 0.18
+Nodes (17): boundedDistance(), FieldMatch, fold(), foldChar(), isAlnum(), lengthPenalty(), Match, matchField() (+9 more)
 
 ### Community 274 - "Community 274"
 Cohesion: 0.25
@@ -1190,36 +1181,36 @@ Cohesion: 0.29
 Nodes (6): Animate Skill for Claude Code, Dependencies, Examples Included, Installation, Usage, What's Included
 
 ### Community 279 - "Community 279"
-Cohesion: 0.07
-Nodes (31): BrandForm(), metadata, deleteCollection(), deleteCollectionBulk(), revalidateStorefront(), saveCollection(), setCollectionPublishedBulk(), SORTS (+23 more)
+Cohesion: 0.08
+Nodes (23): BrandForm(), metadata, getPickerProducts(), ProductRow, draftFromCollection(), CollectionForm(), deleteFile(), recordFile() (+15 more)
 
 ### Community 280 - "Community 280"
-Cohesion: 0.27
-Nodes (9): QikinkAddress, QikinkOrderPayload, buildAddress(), mapOrderToQikink(), MappedOrder, MappingFailure, MappingResult, money() (+1 more)
+Cohesion: 0.25
+Nodes (10): QikinkAddress, QikinkOrderPayload, buildAddress(), mapOrderToQikink(), MappedOrder, MappingFailure, MappingResult, money() (+2 more)
 
 ### Community 286 - "Community 286"
-Cohesion: 0.22
-Nodes (18): productTag(), activeProducts(), attachStock(), byPosition(), readCatalogHandles(), readCollectionByHandle(), readCollections(), readLatestProducts() (+10 more)
+Cohesion: 0.16
+Nodes (23): CheckoutLayout(), productTag(), ShopLayout(), HomePage(), activeProducts(), attachStock(), byPosition(), getCollections (+15 more)
 
 ### Community 287 - "Community 287"
 Cohesion: 0.14
-Nodes (25): ConfirmEmailNotice(), EmptyOrders(), OrderCard(), OrderSections(), orderStatusLabel(), StatusPill(), AccountPage(), metadata (+17 more)
+Nodes (26): ConfirmEmailNotice(), EmptyOrders(), OrderCard(), OrderSections(), orderStatusLabel(), StatusPill(), AccountPage(), metadata (+18 more)
 
 ### Community 288 - "Community 288"
 Cohesion: 0.27
-Nodes (10): readableAuthError(), requestPasswordReset(), safeNext(), signIn(), signUp(), siteOrigin(), updatePassword(), NewPasswordForm() (+2 more)
+Nodes (9): readableAuthError(), requestPasswordReset(), safeNext(), signIn(), signUp(), siteOrigin(), updatePassword(), ResetForm() (+1 more)
 
 ### Community 289 - "Community 289"
 Cohesion: 0.17
 Nodes (16): PageProse(), PageShell(), getPolicyPage(), getStorePage(), PageBlock, POLICY_PAGES, POLICY_SETTING_KEY, PolicySlug (+8 more)
 
 ### Community 290 - "Community 290"
-Cohesion: 0.09
-Nodes (41): CartResult, CashfreeMode, CheckoutState, confirmPayment(), orderIdForToken(), PaymentHandoff, paymentReturnUrl(), placeOrder() (+33 more)
+Cohesion: 0.16
+Nodes (23): CartResult, AddressBook(), AddressLabelField(), CheckboxField(), Field(), PhoneField(), RadioField(), Section() (+15 more)
 
 ### Community 291 - "Community 291"
-Cohesion: 0.16
-Nodes (12): Listener, indexCollections(), IndexedItem, indexProducts(), IndexState, loadIndex(), NO_RECENTS, NO_RESULTS (+4 more)
+Cohesion: 0.13
+Nodes (16): Listener, INDEXABLE_STATUSES, CollectionTuple, indexCollections(), indexProducts(), ProductTuple, Result, SearchIndexPayload (+8 more)
 
 ### Community 292 - "Community 292"
 Cohesion: 0.13
@@ -1238,24 +1229,24 @@ Cohesion: 0.18
 Nodes (10): 🔗 Connect with me, Included SFX (12 sounds), Install, License, 🛠️ My products, Output, Requirements, 🔊 /soundeffects — Claude Code Plugin (+2 more)
 
 ### Community 296 - "Community 296"
-Cohesion: 0.15
-Nodes (25): CustomerPayload, deleteCustomer(), deleteSegment(), saveCustomer(), saveSegment(), POLICY_FIELDS, ProductFacets, INITIAL (+17 more)
+Cohesion: 0.13
+Nodes (31): CustomerPayload, deleteCustomer(), deleteSegment(), saveCustomer(), saveSegment(), currencySymbol(), CustomItemDialog(), LineItem (+23 more)
 
 ### Community 298 - "Community 298"
 Cohesion: 0.31
 Nodes (5): metadata, ContactChannels(), HELP_ARTICLES, HELP_TOPICS, HelpArticle
 
 ### Community 302 - "Community 302"
-Cohesion: 0.15
-Nodes (16): ProductPage(), metadata, Results(), SearchPage(), SearchField(), QUICK_LINKS, ProductCard(), ProductGallery() (+8 more)
+Cohesion: 0.27
+Nodes (7): metadata, Results(), SearchPage(), SearchField(), QUICK_LINKS, ProductCard(), searchProducts
 
 ### Community 303 - "Community 303"
-Cohesion: 0.06
-Nodes (33): files, updatedAt, editCount, findings, editCount, findings, editCount, findings (+25 more)
+Cohesion: 0.23
+Nodes (13): getCashfreeConfig(), findAttemptByProviderOrderId(), Outcome, settleFromWebhook(), ok(), POST(), HANDLED, idempotencyKey() (+5 more)
 
 ### Community 304 - "Community 304"
 Cohesion: 0.13
-Nodes (21): APPAREL_SIZES, BY_KEY, chartMeasurement(), customMeasurementKey(), EMPTY_SIZE_CHART, GARMENT_PRESETS, GarmentPreset, hasSizeChartData() (+13 more)
+Nodes (20): APPAREL_SIZES, BY_KEY, chartMeasurement(), customMeasurementKey(), EMPTY_SIZE_CHART, GARMENT_PRESETS, GarmentPreset, inchesToCm() (+12 more)
 
 ### Community 305 - "Community 305"
 Cohesion: 0.22
@@ -1266,16 +1257,16 @@ Cohesion: 0.32
 Nodes (7): AudioSegment, build_track(), load_sfx(), Load an SFX file, normalize to correct gain, trim to max 1 second., Build a single SFX track from a list of events.      events: [{"sfx": "whoosh", int, str
 
 ### Community 307 - "Community 307"
-Cohesion: 0.18
-Nodes (14): unit(), INDEXABLE_STATUSES, buildGroups(), CAPS, Group, score(), CollectionTuple, GROUP_LABEL (+6 more)
+Cohesion: 0.29
+Nodes (9): prepareQuery(), unit(), buildGroups(), CAPS, Group, score(), GROUP_LABEL, GROUP_ORDER (+1 more)
 
 ### Community 308 - "Community 308"
 Cohesion: 0.40
 Nodes (4): updateProfile(), ProfileForm(), metadata, ProfilePage()
 
 ### Community 309 - "Community 309"
-Cohesion: 0.22
-Nodes (17): WeightUnit, adjustInventory(), deleteProduct(), deleteProductBulk(), duplicateProduct(), ImagePayload, InventoryPayload, OptionPayload (+9 more)
+Cohesion: 0.28
+Nodes (14): adjustInventory(), deleteProduct(), deleteProductBulk(), duplicateProduct(), ImagePayload, InventoryPayload, OptionPayload, readableError() (+6 more)
 
 ### Community 310 - "Community 310"
 Cohesion: 0.33
@@ -1286,52 +1277,52 @@ Cohesion: 0.18
 Nodes (9): DeltaBadge(), HomeMetrics(), StripMetric, MapPin, LiveSnapshot, useLiveSnapshot(), useRelativeTime(), LiveView() (+1 more)
 
 ### Community 312 - "Community 312"
-Cohesion: 0.24
-Nodes (12): GET(), WaitlistEntry, metadata, WaitlistPage(), applyFilters(), CSV_HEADERS, csvCell(), deFormula() (+4 more)
+Cohesion: 0.21
+Nodes (14): GET(), WaitlistEntry, isWaitlistStatus(), WaitlistPage(), updateWaitlistStatus(), applyFilters(), CSV_HEADERS, csvCell() (+6 more)
 
 ### Community 313 - "Community 313"
-Cohesion: 0.13
-Nodes (18): metadata, DiscountQuote, OrderSummary(), QuantityPopover(), RemoveButton(), Row(), SummaryLine(), VariantPopover() (+10 more)
+Cohesion: 0.10
+Nodes (23): metadata, RemoveButton(), SummaryLine(), VariantPopover(), shortVariantTitle(), sortOptionValues(), CartDrawer(), CartLineRow() (+15 more)
 
 ### Community 314 - "Community 314"
 Cohesion: 0.40
 Nodes (4): Cashfree, CashfreeCheckoutOptions, CashfreeCheckoutResult, CashfreeLoadOptions
 
 ### Community 316 - "Community 316"
-Cohesion: 0.07
-Nodes (40): classifyProductImages(), geminiConfigured(), generate(), ProductClassification, RESPONSE_SCHEMA, EditProductPage(), InventoryGrid(), InventoryRow (+32 more)
+Cohesion: 0.09
+Nodes (29): classifyProductImages(), geminiConfigured(), generate(), ProductClassification, RESPONSE_SCHEMA, EditProductPage(), fromNumber(), parseSizeChart() (+21 more)
 
 ### Community 317 - "Community 317"
-Cohesion: 0.10
-Nodes (30): WaitlistStatus, revalidateWaitlist(), CRAFT_IDS, CraftId, CRAFTS, craftTicketLabel(), EVENT, isCraftId() (+22 more)
+Cohesion: 0.28
+Nodes (12): revalidateWaitlist(), CRAFT_IDS, CRAFTS, craftTicketLabel(), isCraftId(), STATUS_IDS, WAITLIST_STATUSES, field() (+4 more)
 
 ### Community 318 - "Community 318"
 Cohesion: 0.18
 Nodes (11): alertFor(), AlertLevel, LABELS, normalizeStage(), RULES, STAGE_ORDER, stageLabel(), stageRank() (+3 more)
 
 ### Community 319 - "Community 319"
-Cohesion: 0.08
-Nodes (17): CHROME, failures, CHROME, failures, ROUTES, WIDTHS, dbConfig(), loadEnv() (+9 more)
+Cohesion: 0.07
+Nodes (28): CHROME, failures, ROUTES, WIDTHS, dbConfig(), describeTarget(), loadEnv(), parseConnectionString() (+20 more)
 
 ### Community 320 - "Community 320"
 Cohesion: 0.11
 Nodes (15): CsvProduct, ParseResult, ActionResult, beginImport(), ChunkResult, EMPTY_TOTALS, finishImport(), importChunk() (+7 more)
 
 ### Community 321 - "Community 321"
-Cohesion: 0.05
-Nodes (56): CategorySuggest(), SuggestionChip(), CharCount(), SaveBar(), Sparkline(), AnalyticsControls(), RANGE_PRESETS, cn() (+48 more)
+Cohesion: 0.06
+Nodes (45): CategorySuggest(), SuggestionChip(), CharCount(), Sparkline(), SortableRow(), cn(), Availability(), PickerBody() (+37 more)
 
 ### Community 322 - "Community 322"
-Cohesion: 0.19
-Nodes (13): mainNav, NavChild, NavItem, salesChannelNav, isActive(), NavEntry(), sectionActive(), ACTIONS (+5 more)
+Cohesion: 0.24
+Nodes (9): ACTIONS, COMMAND_INDEX, CommandSpec, REPORTS, SETTINGS, toItem(), field, IndexedItem (+1 more)
 
 ### Community 323 - "Community 323"
 Cohesion: 0.18
 Nodes (10): args, c, chunks, client, dryRun, file, parsed, seconds (+2 more)
 
 ### Community 324 - "Community 324"
-Cohesion: 0.23
-Nodes (9): ShopVariant, colorSwatches(), CSS_NAMED, NAMED, optionSlot(), productBadge(), specLabels(), Swatch (+1 more)
+Cohesion: 0.24
+Nodes (11): EVENT, metadata, WaitlistPage(), body, display, metadata, mono, WaitlistPage() (+3 more)
 
 ### Community 325 - "Community 325"
 Cohesion: 0.23
@@ -1339,15 +1330,15 @@ Nodes (8): GlobalSearch(), Highlighted(), ICON, Row(), segments(), useRecentSear
 
 ### Community 326 - "Community 326"
 Cohesion: 0.21
-Nodes (9): findColumn(), parseQikinkPaste(), QikinkPasteOption, QikinkPasteResult, QikinkPasteVariant, splitRows(), Callout(), Phase (+1 more)
+Nodes (8): generateGiftCardCode(), issueGiftCard(), toggleGiftCard(), GiftCardDialog(), GiftCardToggle(), GiftCardRow, metadata, GiftCard
 
 ### Community 327 - "Community 327"
-Cohesion: 0.13
-Nodes (14): IconLink(), MenuItem(), MenuPanel(), ShopHeader(), ShopHeaderView(), NAV, NavGroup, ResolvedGroup (+6 more)
+Cohesion: 0.19
+Nodes (7): IconLink(), MenuItem(), MenuPanel(), scrambleDuration(), ScrambleText(), usePrefersReducedMotion(), SearchSpotlight()
 
 ### Community 328 - "Community 328"
-Cohesion: 0.20
-Nodes (7): CollectionListRow, CollectionsTable(), FIELD_LABELS, metadata, OPERATOR_LABELS, MatchableProduct, productMatchesRules()
+Cohesion: 0.08
+Nodes (22): REPORT_CATEGORIES, ReportDefinition, CollectionListRow, CollectionsTable(), ColumnKey, COLUMNS, VIEWS, FIELD_LABELS (+14 more)
 
 ### Community 329 - "Community 329"
 Cohesion: 0.20
@@ -1378,8 +1369,8 @@ Cohesion: 0.67
 Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\waitlist\\status-select.tsx
 
 ### Community 337 - "Community 337"
-Cohesion: 0.17
-Nodes (11): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(checkout)\\checkout\\page.tsx, files, updatedAt, editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(checkout)\\checkout\\fields.tsx (+3 more)
+Cohesion: 0.06
+Nodes (41): files, updatedAt, editCount, findings, editCount, findings, editCount, findings (+33 more)
 
 ### Community 338 - "Community 338"
 Cohesion: 0.20
@@ -1390,12 +1381,12 @@ Cohesion: 0.67
 Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\account\\orders\\[id]\\loading.tsx
 
 ### Community 340 - "Community 340"
-Cohesion: 0.36
-Nodes (6): deleteDiscount(), DiscountPayload, saveDiscount(), toggleDiscount(), DiscountRowActions(), DiscountType
+Cohesion: 0.10
+Nodes (25): DiscountStatusBadge(), Dot(), Pill(), ProductStatusBadge(), resolve(), StageBadge(), Variant, deleteDiscount() (+17 more)
 
 ### Community 341 - "Community 341"
-Cohesion: 0.31
-Nodes (10): CollectionPage(), generateMetadata(), generateStaticParams(), loadBlock(), loadTab(), generateStaticParams(), loadBlock(), getCatalogHandles (+2 more)
+Cohesion: 0.16
+Nodes (19): CollectionPage(), generateMetadata(), generateStaticParams(), loadBlock(), loadTab(), generateStaticParams(), ProductPage(), hasSizeChartData() (+11 more)
 
 ### Community 342 - "Community 342"
 Cohesion: 0.67
@@ -1438,8 +1429,8 @@ Cohesion: 0.67
 Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\shop\\cache.ts
 
 ### Community 353 - "Community 353"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\customers\\[id]\\page.tsx
+Cohesion: 0.23
+Nodes (11): addOrderNote(), adjustStock(), cancelOrder(), convertDraftToOrder(), createOrder(), deleteOrder(), deleteOrderNote(), fulfillOrder() (+3 more)
 
 ### Community 354 - "Community 354"
 Cohesion: 0.38
@@ -1454,88 +1445,48 @@ Cohesion: 0.47
 Nodes (4): WorldMap(), WorldMapProps, landMask(), project()
 
 ### Community 357 - "Community 357"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\customers\\page.tsx
+Cohesion: 0.24
+Nodes (8): ACCEPTED, MediaStatus, SortableThumb(), canvasFor(), encode(), PASS_THROUGH, PreparedUpload, prepareImageUpload()
 
 ### Community 360 - "Community 360"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\customers\\segments\\segment-builder.tsx
+Cohesion: 0.31
+Nodes (10): downloadTicket(), drawBarcode(), drawFitted(), Faces, loadImage(), render(), resolveFaces(), roundedRect() (+2 more)
 
 ### Community 361 - "Community 361"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\new\\customer-picker.tsx
+Cohesion: 0.29
+Nodes (4): AskAi(), EXAMPLES, slugify(), SuccessResult()
 
 ### Community 362 - "Community 362"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\new\\order-builder.tsx
-
-### Community 363 - "Community 363"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\new\\page.tsx
+Cohesion: 0.33
+Nodes (6): formatTimestamp(), pad(), serialize(), DiscountDialog(), toLocalInput(), todayValue()
 
 ### Community 364 - "Community 364"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\new\\product-picker.tsx
-
-### Community 365 - "Community 365"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\products\\collections\\collection-items.tsx
+Cohesion: 0.50
+Nodes (4): Ctor, getContext(), NOTES, playClaimChime()
 
 ### Community 366 - "Community 366"
 Cohesion: 0.67
 Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\account\\account-nav.tsx
 
-### Community 367 - "Community 367"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\admin\\pagination.tsx
-
-### Community 368 - "Community 368"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\admin\\status-badges.tsx
-
-### Community 369 - "Community 369"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\[id]\\page.tsx
-
-### Community 370 - "Community 370"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(checkout)\\checkout\\actions.ts
-
-### Community 371 - "Community 371"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(checkout)\\checkout\\checkout-form.tsx
-
-### Community 372 - "Community 372"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(checkout)\\checkout\\page.tsx
-
-### Community 373 - "Community 373"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(shop)\\orders\\[token]\\page.tsx
-
-### Community 374 - "Community 374"
-Cohesion: 0.67
-Nodes (3): editCount, findings, c:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\shop\\payment-methods.ts
-
 ## Knowledge Gaps
-- **3786 isolated node(s):** `Card`, `CARDS`, `variants`, `reducedMotionVariants`, `PostToolUse` (+3781 more)
+- **3788 isolated node(s):** `Card`, `CARDS`, `variants`, `reducedMotionVariants`, `PostToolUse` (+3783 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **87 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **88 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `Community 321` to `Community 1`, `Community 129`, `Community 133`, `Community 139`, `Community 140`, `Community 272`, `Community 144`, `Community 146`, `Community 147`, `Community 149`, `Community 151`, `Community 287`, `Community 290`, `Community 296`, `Community 302`, `Community 304`, `Community 308`, `Community 311`, `Community 313`, `Community 320`, `Community 322`, `Community 325`, `Community 326`, `Community 327`, `Community 225`, `Community 355`, `Community 104`, `Community 233`, `Community 108`, `Community 122`?**
-  _High betweenness centrality (0.016) - this node is a cross-community bridge._
-- **Why does `createClient()` connect `Community 279` to `Community 130`, `Community 2`, `Community 134`, `Community 139`, `Community 140`, `Community 144`, `Community 146`, `Community 147`, `Community 148`, `Community 151`, `Community 286`, `Community 287`, `Community 288`, `Community 289`, `Community 290`, `Community 293`, `Community 296`, `Community 298`, `Community 302`, `Community 307`, `Community 309`, `Community 312`, `Community 316`, `Community 317`, `Community 320`, `Community 328`, `Community 332`, `Community 340`, `Community 347`, `Community 230`, `Community 104`, `Community 122`, `Community 126`?**
-  _High betweenness centrality (0.013) - this node is a cross-community bridge._
-- **Why does `files` connect `Community 141` to `Community 226`, `Community 99`, `Community 4`, `Community 357`, `Community 101`, `Community 98`, `Community 136`, `Community 9`, `Community 106`, `Community 105`, `Community 12`, `Community 109`, `Community 303`, `Community 111`, `Community 20`, `Community 124`, `Community 125`?**
-  _High betweenness centrality (0.008) - this node is a cross-community bridge._
+- **Why does `cn()` connect `Community 321` to `Community 128`, `Community 1`, `Community 2`, `Community 129`, `Community 133`, `Community 139`, `Community 140`, `Community 272`, `Community 146`, `Community 147`, `Community 149`, `Community 151`, `Community 287`, `Community 290`, `Community 296`, `Community 302`, `Community 304`, `Community 308`, `Community 311`, `Community 313`, `Community 316`, `Community 320`, `Community 325`, `Community 327`, `Community 328`, `Community 340`, `Community 225`, `Community 355`, `Community 357`, `Community 104`, `Community 233`, `Community 361`, `Community 108`, `Community 122`?**
+  _High betweenness centrality (0.025) - this node is a cross-community bridge._
+- **Why does `createClient()` connect `Community 279` to `Community 130`, `Community 2`, `Community 134`, `Community 11`, `Community 140`, `Community 144`, `Community 146`, `Community 147`, `Community 148`, `Community 151`, `Community 286`, `Community 287`, `Community 288`, `Community 289`, `Community 291`, `Community 293`, `Community 296`, `Community 298`, `Community 309`, `Community 312`, `Community 316`, `Community 320`, `Community 326`, `Community 328`, `Community 332`, `Community 340`, `Community 341`, `Community 347`, `Community 225`, `Community 353`, `Community 230`, `Community 104`, `Community 235`, `Community 122`?**
+  _High betweenness centrality (0.011) - this node is a cross-community bridge._
+- **Why does `files` connect `Community 141` to `Community 226`, `Community 99`, `Community 4`, `Community 101`, `Community 131`, `Community 136`, `Community 9`, `Community 105`, `Community 106`, `Community 12`, `Community 109`, `Community 143`, `Community 111`, `Community 20`, `Community 124`, `Community 125`?**
+  _High betweenness centrality (0.007) - this node is a cross-community bridge._
 - **Are the 4 inferred relationships involving `formatMoney()` (e.g. with `CustomerDetailPage()` and `OrderDetailPage()`) actually correct?**
   _`formatMoney()` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `Card`, `CARDS`, `variants` to the rest of the system?**
-  _3788 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _3790 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected._
-- **Should `Community 3` be split into smaller, more focused modules?**
-  _Cohesion score 0.06060606060606061 - nodes in this community are weakly interconnected._
+- **Should `Community 2` be split into smaller, more focused modules?**
+  _Cohesion score 0.07948717948717948 - nodes in this community are weakly interconnected._

@@ -64,6 +64,8 @@ const ACTIONS: CommandSpec[] = [
 /** Kept in sync with `report-definitions.ts` by slug, not by import: that module
  *  pulls in the analytics query layer, and this one ships to the browser. */
 const REPORTS: { title: string; slug: string }[] = [
+  { title: "Total orders", slug: "total-orders" },
+  { title: "Orders by city", slug: "orders-by-city" },
   { title: "Sales over time", slug: "sales-over-time" },
   { title: "Sales by product", slug: "sales-by-product" },
   { title: "Sales by customer", slug: "sales-by-customer" },

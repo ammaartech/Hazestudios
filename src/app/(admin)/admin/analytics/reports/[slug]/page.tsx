@@ -14,7 +14,11 @@ import { Badge } from "@/components/ui/badge";
 import { RankedBarChart, TrendLineChart } from "@/components/admin/charts";
 import { findReport, REPORTS } from "@/lib/analytics/report-definitions";
 import { runReport } from "@/lib/analytics/reports";
-import { resolveRange, DEFAULT_RANGE } from "@/lib/analytics/ranges";
+import {
+  resolveRange,
+  rangeCaption,
+  DEFAULT_RANGE,
+} from "@/lib/analytics/ranges";
 import { CsvExportButton } from "../report-controls";
 import { RecordView, ReportRangeControls } from "./report-view";
 
@@ -37,16 +41,17 @@ export default async function ReportPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ range?: string }>;
+  searchParams: Promise<{ range?: string; from?: string; to?: string }>;
 }) {
   const { slug } = await params;
-  const { range } = await searchParams;
+  const { range, from: fromParam, to: toParam } = await searchParams;
 
   const report = findReport(slug);
   if (!report) notFound();
 
-  const { from, to, preset } = resolveRange(range);
+  const { from, to, preset } = resolveRange(range, fromParam, toParam);
   const result = await runReport(slug, from, to);
+  const caption = rangeCaption(preset);
 
   const hasChart = Boolean(result.chart?.length);
   const chartData = result.chart ?? [];
@@ -79,7 +84,12 @@ export default async function ReportPage({
 
         <div className="flex items-center gap-2">
           <Suspense fallback={<div className="h-8 w-36 rounded-lg bg-muted" />}>
-            <ReportRangeControls range={range ?? DEFAULT_RANGE} />
+            <ReportRangeControls
+              range={range ?? DEFAULT_RANGE}
+              label={preset.label}
+              from={fromParam ?? ""}
+              to={toParam ?? ""}
+            />
           </Suspense>
           <CsvExportButton
             headers={result.headers}
@@ -94,11 +104,32 @@ export default async function ReportPage({
           <div className="rounded-xl border bg-card py-20 text-center">
             <p className="text-sm font-medium">No data for this date range</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Try a wider range — currently showing {preset.label.toLowerCase()}.
+              Try a wider range — currently showing {caption}.
             </p>
           </div>
         ) : (
           <>
+            {result.summary?.length ? (
+              <section
+                /* Column count follows the stat count — a fixed four left a
+                   dead grey cell on any report with three. */
+                className={`grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border ${
+                  result.summary.length === 3
+                    ? "sm:grid-cols-3"
+                    : "sm:grid-cols-4"
+                }`}
+              >
+                {result.summary.map((stat) => (
+                  <div key={stat.label} className="bg-card px-4 py-3">
+                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                    <p className="mt-0.5 text-xl font-semibold tabular-nums tracking-tight">
+                      {stat.value}
+                    </p>
+                  </div>
+                ))}
+              </section>
+            ) : null}
+
             {hasChart && (
               <section className="rounded-xl border bg-card p-4">
                 <h2 className="text-[13px] font-semibold tracking-tight">
@@ -120,6 +151,7 @@ export default async function ReportPage({
                         name: d.label,
                         value: d.value,
                       }))}
+                      money={result.money ?? false}
                     />
                   )}
                 </div>
@@ -163,7 +195,7 @@ export default async function ReportPage({
               </div>
               <p className="border-t px-4 py-2.5 text-xs text-muted-foreground">
                 {result.rows.length} row{result.rows.length === 1 ? "" : "s"} ·{" "}
-                {preset.label.toLowerCase()}
+                {caption}
               </p>
             </section>
           </>

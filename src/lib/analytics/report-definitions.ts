@@ -12,6 +12,9 @@
  */
 
 export const REPORT_CATEGORIES = [
+  // "Orders" leads deliberately: the catalog's default sort is by category
+  // index, so this is the pair that greets you on opening Reports.
+  "Orders",
   "Acquisition",
   "Behavior",
   "Sales",
@@ -30,6 +33,22 @@ export interface ReportDefinition {
 }
 
 export const REPORTS: ReportDefinition[] = [
+  // Orders — the plain count questions, answered over any window you pick.
+  {
+    slug: "total-orders",
+    name: "Total orders",
+    category: "Orders",
+    description:
+      "How many orders were placed between two dates, broken down by day.",
+  },
+  {
+    slug: "orders-by-city",
+    name: "Orders by city",
+    category: "Orders",
+    description:
+      "Which cities those orders shipped to, ranked by order count.",
+  },
+
   // Acquisition — storefront traffic, from the analytics tables.
   {
     slug: "sessions-over-time",

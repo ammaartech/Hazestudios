@@ -289,9 +289,12 @@ export function OrdersBarChart({
 /** Horizontal ranked bars — the right form for "which product sold most". */
 export function RankedBarChart({
   data,
+  money = true,
   currency = "INR",
 }: {
   data: { name: string; value: number }[];
+  /** False when the bars count things (orders, sessions) rather than sum money. */
+  money?: boolean;
   currency?: string;
 }) {
   return (
@@ -307,7 +310,10 @@ export function RankedBarChart({
           tick={axisTick}
           tickLine={false}
           axisLine={{ stroke: AXIS }}
-          tickFormatter={(v: number) => compactMoney(v, currency)}
+          allowDecimals={money}
+          tickFormatter={(v: number) =>
+            money ? compactMoney(v, currency) : v.toLocaleString()
+          }
         />
         <YAxis
           type="category"
@@ -318,12 +324,12 @@ export function RankedBarChart({
           width={150}
         />
         <Tooltip
-          content={<ChartTooltip money currency={currency} />}
+          content={<ChartTooltip money={money} currency={currency} />}
           cursor={{ fill: "rgba(0,0,0,0.04)" }}
         />
         <Bar
           dataKey="value"
-          name="Sales"
+          name={money ? "Sales" : "Count"}
           fill={SERIES_1}
           radius={[0, 4, 4, 0]}
           maxBarSize={18}
