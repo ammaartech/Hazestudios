@@ -30,37 +30,6 @@ export const FOG_MARK = art("fog-mark", 420, 286);
 export const WORDMARK = art("summer-sands", 852, 175);
 export const WAX_SEAL = art("wax-seal", 311, 320);
 
-/**
- * "hobby maxxing", cut from paper.
- *
- * `rot` is the angle each letter settles at, and `w`/`h` its intrinsic size.
- * The `gap` entry is the word break — a spacer, not an image. Rendering these
- * as pictures is what makes the lockup look hand-made, but it also means the
- * phrase is invisible to a screen reader, so the component marks every letter
- * `aria-hidden` and supplies the words once as real text.
- */
-export const WORDMARK_LETTERS: (
-  | { kind: "letter"; art: Art; rot: string }
-  | { kind: "gap" }
-)[] = [
-  { kind: "letter", art: art("letter-h", 104, 129), rot: "rotate(-7deg)" },
-  { kind: "letter", art: art("letter-o", 104, 134), rot: "rotate(4deg)" },
-  { kind: "letter", art: art("letter-b1", 104, 131), rot: "rotate(-3deg)" },
-  { kind: "letter", art: art("letter-b2", 104, 126), rot: "rotate(6deg)" },
-  { kind: "letter", art: art("letter-y", 100, 137), rot: "rotate(-5deg)" },
-  { kind: "gap" },
-  { kind: "letter", art: art("letter-m", 130, 134), rot: "rotate(5deg)" },
-  { kind: "letter", art: art("letter-a", 94, 127), rot: "rotate(-6deg)" },
-  { kind: "letter", art: art("letter-x1", 110, 131), rot: "rotate(3deg)" },
-  { kind: "letter", art: art("letter-x2", 114, 120), rot: "rotate(-4deg)" },
-  { kind: "letter", art: art("letter-i", 98, 124), rot: "rotate(6deg)" },
-  { kind: "letter", art: art("letter-n", 104, 130), rot: "rotate(-3deg)" },
-  { kind: "letter", art: art("letter-g", 95, 120), rot: "rotate(5deg)" },
-];
-
-/** The phrase the letterforms spell, for anyone who cannot see them. */
-export const WORDMARK_TEXT = "hobby maxxing";
-
 const BLOOMS: Art[] = [
   art("bloom-01", 188, 178),
   art("bloom-02", 149, 171),
@@ -78,8 +47,6 @@ const BLOOMS: Art[] = [
   art("bloom-14", 154, 188),
 ];
 
-/** The bloom that sits beside the fog mark in the masthead. */
-export const MASTHEAD_BLOOM = BLOOMS[0];
 
 export interface DriftingBloom extends Art {
   /** Lane across the viewport. */

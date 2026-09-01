@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { fetchAllPages } from "@/lib/analytics/paginate";
 import type { Order, OrderItem } from "@/lib/types";
 
 /**
@@ -326,8 +327,31 @@ function bucketLabel(date: Date, bucket: ReturnType<typeof bucketFor>) {
   }).format(date);
 }
 
-interface OrderRow extends Order {
+/**
+ * The only order columns these aggregates read. `select("*")` also drags three
+ * jsonb blobs (both addresses and utm) plus the note and referrer text across
+ * the wire for every order in the window, none of which is ever looked at.
+ */
+const SALES_ORDER_COLUMNS =
+  "created_at, total, subtotal, discount_total, payment_status, fulfillment_status, currency, order_items(title_snapshot, price_snapshot, quantity)";
+
+interface OrderRow
+  extends Pick<
+    Order,
+    | "created_at"
+    | "total"
+    | "subtotal"
+    | "discount_total"
+    | "payment_status"
+    | "fulfillment_status"
+    | "currency"
+  > {
   order_items?: Pick<OrderItem, "title_snapshot" | "price_snapshot" | "quantity">[];
+}
+
+interface SessionRollupRow {
+  started_at: string;
+  is_returning: boolean;
 }
 
 async function totalsFor(
@@ -336,29 +360,33 @@ async function totalsFor(
 ): Promise<{ totals: SalesTotals; series: SalesSeriesPoint[]; orders: OrderRow[] }> {
   const supabase = await createClient();
 
-  const [ordersRes, sessionsRes] = await Promise.all([
-    supabase
-      .from("orders")
-      .select(
-        "*, order_items(title_snapshot, price_snapshot, quantity)"
-      )
-      .eq("is_draft", false)
-      .gte("created_at", from.toISOString())
-      .lte("created_at", to.toISOString())
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("analytics_sessions")
-      .select("id, started_at, is_returning")
-      .gte("started_at", from.toISOString())
-      .lte("started_at", to.toISOString()),
+  const [orders, sessions] = await Promise.all([
+    // Paged, and ordered by id after created_at: two orders can share a
+    // timestamp, and a non-unique sort lets them swap across a page boundary.
+    fetchAllPages<OrderRow>((start, end) =>
+      supabase
+        .from("orders")
+        .select(SALES_ORDER_COLUMNS)
+        .eq("is_draft", false)
+        .gte("created_at", from.toISOString())
+        .lte("created_at", to.toISOString())
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(start, end)
+    ),
+    // Missing table (migration not applied) must not blank out the sales
+    // numbers, so sessions degrade to zero instead of failing the whole read.
+    fetchAllPages<SessionRollupRow>((start, end) =>
+      supabase
+        .from("analytics_sessions")
+        .select("started_at, is_returning")
+        .gte("started_at", from.toISOString())
+        .lte("started_at", to.toISOString())
+        .order("started_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(start, end)
+    ).catch(() => [] as SessionRollupRow[]),
   ]);
-
-  const orders = (ordersRes.data ?? []) as OrderRow[];
-  // Missing table (migration not applied) must not blank out the sales numbers.
-  const sessions = (sessionsRes.data ?? []) as {
-    started_at: string;
-    is_returning: boolean;
-  }[];
 
   const paidOrders = orders.filter((o) => isPaid(o.payment_status));
   const grossSales = paidOrders.reduce((s, o) => s + Number(o.subtotal), 0);

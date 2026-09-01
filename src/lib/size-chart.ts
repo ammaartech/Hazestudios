@@ -46,13 +46,6 @@ export const MEASUREMENTS: Measurement[] = [
 
 const BY_KEY = new Map(MEASUREMENTS.map((m) => [m.key, m]));
 
-export function measurement(key: string): Measurement | undefined {
-  return BY_KEY.get(key);
-}
-
-export function measurementLabel(key: string): string {
-  return BY_KEY.get(key)?.label ?? key;
-}
 
 export interface GarmentPreset {
   id: string;
@@ -178,8 +171,8 @@ export function customMeasurementKey(label: string, taken: Iterable<string>): st
 
 /**
  * Resolve a measurement definition by key: built-in vocabulary first, then the
- * chart's own custom set. Use this instead of `measurement()` anywhere a chart
- * might carry custom columns.
+ * chart's own custom set — the only way to look one up, since a chart may carry
+ * custom columns that the built-in vocabulary knows nothing about.
  */
 export function chartMeasurement(chart: SizeChart, key: string): Measurement | undefined {
   return BY_KEY.get(key) ?? chart.custom.find((m) => m.key === key);

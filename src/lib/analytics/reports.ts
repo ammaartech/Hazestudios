@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatDate, formatMoney } from "@/lib/format";
 import { findReport } from "@/lib/analytics/report-definitions";
+import { fetchAllPages } from "@/lib/analytics/paginate";
 import type { Customer, Order, OrderItem, Product } from "@/lib/types";
 
 /**
@@ -50,8 +51,6 @@ function rank<T>(
 
 const EMPTY: ReportResult = { headers: [], rows: [] };
 
-const PAGE_SIZE = 1000;
-
 /** Bucket for orders carrying no shipping city — kept out of city rankings. */
 const NO_CITY = "No shipping address";
 
@@ -70,23 +69,15 @@ function titleCase(value: string) {
   );
 }
 
-/**
- * Every non-draft order in the window, read a page at a time.
- *
- * PostgREST caps a single response at 1000 rows, so one flat `.select()` over a
- * wide range answers with the first thousand and no error. For a report whose
- * whole job is to count orders that is not a slow answer, it is a wrong one —
- * so page until a short page proves the end.
- */
-async function fetchOrders<T>(
+/** Every non-draft order in the window, drained a page at a time. */
+function fetchOrders<T>(
   supabase: Awaited<ReturnType<typeof createClient>>,
   columns: string,
   fromIso: string,
   toIso: string
 ): Promise<T[]> {
-  const all: T[] = [];
-  for (let offset = 0; ; offset += PAGE_SIZE) {
-    const { data, error } = await supabase
+  return fetchAllPages<T>((start, end) =>
+    supabase
       .from("orders")
       .select(columns)
       .eq("is_draft", false)
@@ -94,13 +85,8 @@ async function fetchOrders<T>(
       .lte("created_at", toIso)
       // Without a stable sort the pages are free to overlap or skip rows.
       .order("created_at", { ascending: true })
-      .range(offset, offset + PAGE_SIZE - 1);
-
-    if (error) throw error;
-    const page = (data ?? []) as unknown as T[];
-    all.push(...page);
-    if (page.length < PAGE_SIZE) return all;
-  }
+      .range(start, end)
+  );
 }
 
 export async function runReport(

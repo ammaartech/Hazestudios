@@ -47,10 +47,6 @@ export function isUploading(images: DraftImage[]): boolean {
   return images.some((i) => i.status === "uploading");
 }
 
-/** Errored uploads never reach the database. */
-export function uploadableImages(images: DraftImage[]): DraftImage[] {
-  return images.filter((i) => i.status !== "error" && i.status !== "uploading");
-}
 
 /* -------------------------------------------------------------------------- */
 

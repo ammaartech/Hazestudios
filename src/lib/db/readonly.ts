@@ -230,8 +230,6 @@ function serialize(
 /* Execution                                                                   */
 /* -------------------------------------------------------------------------- */
 
-export class ReadOnlyQueryError extends Error {}
-
 async function withClient<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
   const client = await getPool().connect();
   try {

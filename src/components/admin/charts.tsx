@@ -247,45 +247,6 @@ export function TrendLineChart({
   );
 }
 
-export function OrdersBarChart({
-  data,
-  height = 260,
-}: {
-  data: { label: string; value: number }[];
-  height?: number;
-}) {
-  return (
-    <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-        <CartesianGrid stroke={GRID} strokeDasharray="3 3" vertical={false} />
-        <XAxis
-          dataKey="label"
-          tick={axisTick}
-          tickLine={false}
-          axisLine={{ stroke: AXIS }}
-          minTickGap={28}
-        />
-        <YAxis
-          tick={axisTick}
-          tickLine={false}
-          axisLine={false}
-          allowDecimals={false}
-          width={36}
-        />
-        <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
-        {/* 4px rounded data-end, square against the baseline. */}
-        <Bar
-          dataKey="value"
-          name="Orders"
-          fill={SERIES_1}
-          radius={[4, 4, 0, 0]}
-          maxBarSize={28}
-        />
-      </BarChart>
-    </ResponsiveContainer>
-  );
-}
-
 /** Horizontal ranked bars — the right form for "which product sold most". */
 export function RankedBarChart({
   data,

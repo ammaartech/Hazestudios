@@ -38,23 +38,50 @@ async function adjustStock(
     .single();
   if (!defaultLocation) return;
 
+  // Sum the lines per stock-keeping row first. The read-then-write this
+  // replaced ran one item at a time, so a second line for the same variant read
+  // back the first line's write and accumulated; one batched read hands both
+  // lines the same starting quantity, and the second write would clobber the
+  // first unless the deltas are added up here instead.
+  const deltas = new Map<
+    string,
+    { product_id: string; variant_id: string | null; quantity: number }
+  >();
   for (const item of items) {
     if (!item.product_id) continue;
-    let query = supabase
+    const key = `${item.product_id}:${item.variant_id ?? ""}`;
+    const entry = deltas.get(key) ?? {
+      product_id: item.product_id,
+      variant_id: item.variant_id,
+      quantity: 0,
+    };
+    entry.quantity += item.quantity;
+    deltas.set(key, entry);
+  }
+
+  if (deltas.size) {
+    const { data: levels } = await supabase
       .from("inventory_levels")
-      .select("id, quantity")
-      .eq("product_id", item.product_id)
-      .eq("location_id", defaultLocation.id);
-    query = item.variant_id
-      ? query.eq("variant_id", item.variant_id)
-      : query.is("variant_id", null);
-    const { data: level } = await query.limit(1).maybeSingle();
-    if (level) {
-      await supabase
-        .from("inventory_levels")
-        .update({ quantity: level.quantity + direction * item.quantity })
-        .eq("id", level.id);
-    }
+      .select("id, product_id, variant_id, quantity")
+      .eq("location_id", defaultLocation.id)
+      .in("product_id", [...new Set([...deltas.values()].map((d) => d.product_id))]);
+
+    const rows = (levels ?? []).flatMap((level) => {
+      const delta = deltas.get(`${level.product_id}:${level.variant_id ?? ""}`);
+      if (!delta) return [];
+      return [
+        {
+          ...level,
+          location_id: defaultLocation.id,
+          quantity: level.quantity + direction * delta.quantity,
+        },
+      ];
+    });
+
+    // Every row here came back from the select above, so upserting on the
+    // primary key only ever updates. A product with no level at this location
+    // stays untracked rather than being handed one at negative stock.
+    if (rows.length) await supabase.from("inventory_levels").upsert(rows);
   }
 
   // Every path that moves stock runs through here — placing an order, refunding

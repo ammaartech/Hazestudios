@@ -172,25 +172,6 @@ export async function deleteProduct(id: string) {
   return { ok: true as const };
 }
 
-export async function setProductStatus(id: string, status: ProductStatus) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("products")
-    .update({
-      status,
-      // Publishing stamps the date; unpublishing clears it, so "published on"
-      // never shows a date for a product that is not live.
-      published_at: status === "active" ? new Date().toISOString() : null,
-    })
-    .eq("id", id)
-    .select("handle")
-    .single();
-
-  if (error) return { ok: false as const, error: readableError(error.message) };
-  revalidateProduct(id, data.handle as string);
-  return { ok: true as const };
-}
-
 /** Bulk status change from the products list selection. */
 export async function setProductStatusBulk(ids: string[], status: ProductStatus) {
   if (!ids.length) return { ok: true as const, count: 0 };
