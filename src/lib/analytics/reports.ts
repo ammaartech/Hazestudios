@@ -14,7 +14,7 @@ export interface ReportResult {
   headers: string[];
   rows: (string | number)[][];
   /** Charted when present — label/value pairs in row order. */
-  chart?: { label: string; value: number }[];
+  chart?: { label: string; value: number; date?: string }[];
   chartKind?: "line" | "bar";
   money?: boolean;
   summary?: { label: string; value: string }[];
@@ -29,12 +29,13 @@ const isPaid = (status: string) =>
 
 /** Ordered day buckets so a gap renders as zero instead of vanishing. */
 function dayBuckets(from: Date, to: Date) {
-  const days: { key: string; label: string }[] = [];
+  const days: { key: string; label: string; date: string }[] = [];
   const cursor = new Date(from);
   cursor.setHours(0, 0, 0, 0);
   while (cursor <= to) {
     days.push({
       key: cursor.toDateString(),
+      date: cursor.toISOString(),
       label: formatDate(cursor),
     });
     cursor.setDate(cursor.getDate() + 1);
@@ -143,7 +144,7 @@ export async function runReport(
             const s = stats.get(b.key) ?? { orders: 0, paid: 0, sales: 0 };
             return [b.label, s.orders, s.paid, formatMoney(s.sales)];
           }),
-          chart: buckets.map((b) => ({
+          chart: buckets.map((b) => ({ date: b.date,
             label: b.label,
             value: stats.get(b.key)?.orders ?? 0,
           })),
@@ -247,7 +248,7 @@ export async function runReport(
         return {
           headers: ["Date", "Sessions"],
           rows: buckets.map((b) => [b.label, counts.get(b.key) ?? 0]),
-          chart: buckets.map((b) => ({
+          chart: buckets.map((b) => ({ date: b.date,
             label: b.label,
             value: counts.get(b.key) ?? 0,
           })),
@@ -399,7 +400,7 @@ export async function runReport(
             orders.get(b.key) ?? 0,
             `${rate(b.key).toFixed(2)}%`,
           ]),
-          chart: buckets.map((b) => ({ label: b.label, value: rate(b.key) })),
+          chart: buckets.map((b) => ({ date: b.date, label: b.label, value: rate(b.key) })),
           chartKind: "line",
         };
       }
@@ -478,7 +479,7 @@ export async function runReport(
             const s = stats.get(b.key) ?? { orders: 0, sales: 0 };
             return [b.label, s.orders, formatMoney(s.sales)];
           }),
-          chart: buckets.map((b) => ({
+          chart: buckets.map((b) => ({ date: b.date,
             label: b.label,
             value: stats.get(b.key)?.sales ?? 0,
           })),
@@ -600,7 +601,7 @@ export async function runReport(
             stats.get(b.key)?.orders ?? 0,
             formatMoney(aov(b.key)),
           ]),
-          chart: buckets.map((b) => ({ label: b.label, value: aov(b.key) })),
+          chart: buckets.map((b) => ({ date: b.date, label: b.label, value: aov(b.key) })),
           chartKind: "line",
           money: true,
         };
@@ -624,7 +625,7 @@ export async function runReport(
         return {
           headers: ["Date", "New customers"],
           rows: buckets.map((b) => [b.label, counts.get(b.key) ?? 0]),
-          chart: buckets.map((b) => ({
+          chart: buckets.map((b) => ({ date: b.date,
             label: b.label,
             value: counts.get(b.key) ?? 0,
           })),

@@ -43,25 +43,21 @@ export default async function HomePage() {
     getSalesBreakdown(from, to, true),
     getLiveSnapshot(),
     (async () => {
-      if (!configured) return { products: 0, unfulfilled: 0, customers: 0 };
+      const zero = { products: 0, unfulfilled: 0, customers: 0 };
+      if (!configured) return zero;
       try {
+        // Three counts, one round trip (0032). Under RLS the same three `count`
+        // requests used to average 220–350 ms *each*.
         const supabase = await createClient();
-        const [products, unfulfilled, customers] = await Promise.all([
-          supabase.from("products").select("id", { count: "exact", head: true }),
-          supabase
-            .from("orders")
-            .select("id", { count: "exact", head: true })
-            .eq("is_draft", false)
-            .eq("fulfillment_status", "unfulfilled"),
-          supabase.from("customers").select("id", { count: "exact", head: true }),
-        ]);
+        const { data } = await supabase.rpc("admin_home_counts");
+        const counts = (data ?? {}) as Partial<typeof zero>;
         return {
-          products: products.count ?? 0,
-          unfulfilled: unfulfilled.count ?? 0,
-          customers: customers.count ?? 0,
+          products: Number(counts.products ?? 0),
+          unfulfilled: Number(counts.unfulfilled ?? 0),
+          customers: Number(counts.customers ?? 0),
         };
       } catch {
-        return { products: 0, unfulfilled: 0, customers: 0 };
+        return zero;
       }
     })(),
   ]);

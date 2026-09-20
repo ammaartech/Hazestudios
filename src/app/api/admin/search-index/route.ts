@@ -16,7 +16,7 @@ import type {
  * ranks the entire catalogue in about three milliseconds with no network at all.
  *
  * The alternative is a request per keystroke. Even debounced, that is a round
- * trip to ap-south-1 before anything appears, which is the difference between a
+ * trip to Tokyo (the project is in ap-northeast-1) before anything appears, which is the difference between a
  * search that feels like a local index and one that feels like a website. And
  * the debounce is not free either: it is the delay you feel most, because it
  * lands exactly when you have stopped typing and are waiting.
@@ -45,10 +45,9 @@ export async function GET() {
   // would come back empty rather than forbidden. Checking explicitly means the
   // client can tell "logged out" from "no products", which are very different
   // things to show in a dropdown.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
+  // Verified locally against the JWKS — no Auth round trip per keystroke.
+  const { data: claims } = await supabase.auth.getClaims();
+  if (!claims) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

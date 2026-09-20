@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Package } from "lucide-react";
+import { Package, ChevronLeft, ChevronUp, ChevronDown, Truck, Tag, MapPin, ReceiptText, Globe, MousePointerClick } from "lucide-react";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,16 +10,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PageHeader } from "@/components/admin/page-header";
+import { Button } from "@/components/ui/button";
+import { DetailEditor, CustomerMenu, RequestFulfillment, Metafields } from "./detail-controls";
+import "./order-detail.css";
 import { PaymentBadge, FulfillmentBadge } from "@/components/admin/status-badges";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateTime, formatMoney } from "@/lib/format";
-import { paymentMethodLabel } from "@/lib/shop/payment-methods";
+import { isCodMethod, paymentMethodLabel } from "@/lib/shop/payment-methods";
+import { getCodSettings } from "@/lib/shop/cod";
 import type {
   Customer,
   Fulfillment,
   Order,
   OrderItem,
+  PaymentRequest,
   Refund,
 } from "@/lib/types";
 import {
@@ -33,8 +38,23 @@ import { OrderNotes, type OrderNote } from "./order-notes";
 import { getQikinkStatus } from "@/lib/qikink/config";
 import { getFulfillment } from "@/lib/qikink/fulfillment";
 import { QikinkCard } from "./qikink-card";
+import { CodAdvanceCard } from "./cod-advance-card";
 
 export const metadata = { title: "Order" };
+
+/** What `admin_order_detail` returns — the order page in one JSON document. */
+interface OrderDetailPayload {
+  order: Order & { customers: Customer | null; metafields?: Record<string, string> };
+  items: (OrderItem & { image: { url: string; alt: string | null } | null })[];
+  fulfillments: Fulfillment[];
+  refunds: Refund[];
+  notes: OrderNote[];
+  /* Added by 0033. */
+  payment_requests: PaymentRequest[];
+  previous_id: string | null;
+  next_id: string | null;
+}
+
 export default async function OrderDetailPage({
   params,
 }: {
@@ -43,515 +63,180 @@ export default async function OrderDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [
-    { data: orderData },
-    { data: itemsData },
-    { data: fulfillmentsData },
-    { data: refundsData },
-    { data: notesData },
-  ] = await Promise.all([
-    supabase.from("orders").select("*, customers(*)").eq("id", id).single(),
-    supabase.from("order_items").select("*").eq("order_id", id),
-    supabase
-      .from("fulfillments")
-      .select("*")
-      .eq("order_id", id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("refunds")
-      .select("*")
-      .eq("order_id", id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("order_notes")
-      .select("id, body, author_email, created_at")
-      .eq("order_id", id)
-      .order("created_at", { ascending: false }),
-  ]);
-
-  if (!orderData) notFound();
-
-  // Read after the order exists: both go through the service-role client, and
-  // there is no point paying for them on a 404.
-  const [qikinkStatus, qikinkFulfillment] = await Promise.all([
+  // One round trip. This page used to make four sequential waves of requests
+  // to Tokyo — the order and its children, then the line images, then the
+  // previous/next neighbours — which was over half a second of waiting on
+  // network alone. `admin_order_detail` (0032) composes all of it in Postgres
+  // under the caller's own RLS. Qikink's status lives behind the service role
+  // and is read alongside rather than after.
+  const [{ data: detail }, qikinkStatus, qikinkFulfillment, codSettings, headerList] = await Promise.all([
+    supabase.rpc("admin_order_detail", { p_id: id }),
     getQikinkStatus(),
     getFulfillment(id),
+    getCodSettings(),
+    headers(),
   ]);
 
-  const order = orderData as Order & { customers: Customer | null };
-  const items = (itemsData ?? []) as OrderItem[];
+  const payload = detail as OrderDetailPayload | null;
+  if (!payload?.order) notFound();
 
-  /**
-   * One thumbnail per line, keyed by product.
-   *
-   * Fetched in a single query after the items rather than embedded in the
-   * `order_items` select: the join would be per-line, and an order with the
-   * same product twice would pull the same image rows twice. Position 0 is the
-   * product's primary shot, which is the one the catalogue shows.
-   *
-   * Deliberately not variant-specific — `order_items` carries no image and the
-   * variant's own shot is not modelled, so the product image is the honest
-   * answer rather than a guess at which colourway shipped.
-   */
-  const productIds = [...new Set(items.map((i) => i.product_id).filter(Boolean))] as string[];
-  const { data: imageRows } = productIds.length
-    ? await supabase
-        .from("product_images")
-        .select("product_id, url, alt, position")
-        .in("product_id", productIds)
-        .order("position")
-    : { data: [] as { product_id: string; url: string; alt: string | null }[] };
-
+  const order = payload.order;
+  const items = payload.items;
   const imageByProduct = new Map<string, { url: string; alt: string | null }>();
-  for (const row of (imageRows ?? []) as { product_id: string; url: string; alt: string | null }[]) {
-    if (!imageByProduct.has(row.product_id)) {
-      imageByProduct.set(row.product_id, { url: row.url, alt: row.alt });
+  for (const item of items) {
+    if (item.product_id && item.image && !imageByProduct.has(item.product_id)) {
+      imageByProduct.set(item.product_id, item.image);
     }
   }
-  const fulfillments = (fulfillmentsData ?? []) as Fulfillment[];
-  const refunds = (refundsData ?? []) as Refund[];
-  const notes = (notesData ?? []) as OrderNote[];
+  const fulfillments = payload.fulfillments;
+  const refunds = payload.refunds;
+  const notes = payload.notes;
   const refunded = refunds.reduce((sum, r) => sum + Number(r.amount), 0);
   const customer = order.customers;
+  const previous = payload.previous_id ? { id: payload.previous_id } : null;
+  const next = payload.next_id ? { id: payload.next_id } : null;
+  const canFulfill = !order.is_draft && !order.cancelled_at && order.payment_status !== "voided" && !["fulfilled", "restocked"].includes(order.fulfillment_status);
+  const configured = qikinkStatus.enabled && qikinkStatus.configured;
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const email = order.email || customer?.email || "";
+  const phone = order.phone || customer?.phone || "";
+  const shipping = order.shipping_address ?? {};
+  const billing = Object.keys(order.billing_address ?? {}).length ? order.billing_address : shipping;
+  const fulfillmentLabel = order.fulfillment_status === "partial" ? "Partially fulfilled" : order.fulfillment_status.replace(/^./, c => c.toUpperCase());
+  const paymentLabel = order.payment_status.replaceAll("_", " ").replace(/^./, c => c.toUpperCase());
+  const money = (amount: number | string) => formatMoney(Number(amount), order.currency);
+  const amountPaid = Number(order.amount_paid ?? 0);
+  const isCod = isCodMethod(order.payment_method);
+  // The shopper's own order page, absolute, for the advance share link. The
+  // origin comes from the request (or NEXT_PUBLIC_SITE_URL behind a proxy) for
+  // the same reason the Payments settings page resolves its webhook URL here.
+  const payLink = order.checkout_token ? `${siteOrigin(headerList)}/orders/${order.checkout_token}` : null;
 
   return (
-    <div>
-      <PageHeader
-        title={`${order.is_draft ? "Draft " : ""}#${order.is_draft ? "D" : ""}${order.order_number}`}
-        backHref={order.is_draft ? "/admin/orders/drafts" : "/admin/orders"}
-        backLabel={order.is_draft ? "Drafts" : "Orders"}
-      >
-        {order.is_draft ? (
-          <>
-            <DeleteOrderButton orderId={order.id} />
-            <ConvertDraftButton orderId={order.id} />
-          </>
-        ) : (
-          <>
-            {order.payment_status === "pending" && !order.cancelled_at && (
-              <MarkPaidButton orderId={order.id} />
-            )}
-            {(order.payment_status === "paid" ||
-              order.payment_status === "partially_refunded") &&
-              refunded < Number(order.total) && (
-                <RefundDialog
-                  orderId={order.id}
-                  maxAmount={Number(order.total) - refunded}
-                />
-              )}
-            {order.fulfillment_status !== "fulfilled" &&
-              order.fulfillment_status !== "restocked" &&
-              order.payment_status !== "voided" &&
-              !order.cancelled_at && <FulfillDialog orderId={order.id} />}
-            <OrderActionsMenu
-              orderId={order.id}
-              cancelled={Boolean(order.cancelled_at)}
-            />
-          </>
-        )}
-      </PageHeader>
-
-      <div className="mb-5 flex flex-wrap items-center gap-2">
-        {order.is_draft ? (
-          <Badge variant="secondary">Draft</Badge>
-        ) : (
-          <>
-            {/* First, and destructive-coloured: once an order is cancelled that
-                fact outranks how it was paid or fulfilled. */}
+    <div data-full-bleed className="order-detail">
+      <header className="order-heading">
+        <div className="min-w-0">
+          <div className="order-title-row">
+            <Link href={order.is_draft ? "/admin/orders/drafts" : "/admin/orders"} aria-label="Back to orders" className="order-back"><Package size={16} /><ChevronLeft size={12} /></Link>
+            <h1>{order.is_draft ? "Draft #D" : "#"}{order.order_number}</h1>
             {order.cancelled_at && <Badge variant="destructive">Cancelled</Badge>}
-            <PaymentBadge status={order.payment_status} />
-            <FulfillmentBadge status={order.fulfillment_status} />
-            {/* How the shopper chose to pay, which is not the same question as
-                whether they have. Absent on everything placed before the
-                checkout offered a choice. */}
-            {paymentMethodLabel(order.payment_method) && (
-              <Badge variant="outline">
-                {paymentMethodLabel(order.payment_method)}
-              </Badge>
-            )}
-          </>
-        )}
-        <span className="text-sm text-muted-foreground">
-          Placed {formatDateTime(order.created_at)}
-        </span>
-      </div>
-
-      {/* Narrower than the shell's max-w-6xl and centred within it.
-          An order is read top-to-bottom like a document — line items, money,
-          then the aside — and at full width the summary column drifts to the
-          far edge of a large monitor, far from the items it describes. Capping
-          the pair keeps them within one comfortable scan. */}
-      <div className="mx-auto grid max-w-5xl gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
-        <div className="space-y-5">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Items</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="divide-y">
-                {items.map((item) => {
-                  const image = item.product_id ? imageByProduct.get(item.product_id) : null;
-                  return (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      {/* Fixed 48px box whether or not an image exists, so the
-                          titles stay on one vertical line down the list. A
-                          product with no shot gets a neutral placeholder rather
-                          than collapsing the column. */}
-                      <div className="relative size-12 shrink-0 overflow-hidden rounded-md border bg-muted">
-                        {image ? (
-                          <Image
-                            src={image.url}
-                            alt={image.alt ?? item.title_snapshot}
-                            fill
-                            sizes="48px"
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="flex size-full items-center justify-center text-muted-foreground">
-                            <Package className="size-4" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                      <p className="font-medium">
-                        {item.product_id ? (
-                          <Link
-                            href={`/admin/products/${item.product_id}`}
-                            className="transition-colors duration-150 hover:text-primary hover:underline"
-                          >
-                            {item.title_snapshot}
-                          </Link>
-                        ) : (
-                          item.title_snapshot
-                        )}
-                      </p>
-                      {item.variant_snapshot && (
-                        <p className="text-xs text-muted-foreground">
-                          {item.variant_snapshot}
-                        </p>
-                      )}
-                      </div>
-                    </div>
-                    <div className="text-right text-sm tabular-nums">
-                      <p>
-                        {formatMoney(item.price_snapshot)} × {item.quantity}
-                      </p>
-                      <p className="font-medium">
-                        {formatMoney(Number(item.price_snapshot) * item.quantity)}
-                      </p>
-                    </div>
-                  </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-4 space-y-1.5 border-t pt-4 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span className="tabular-nums">{formatMoney(order.subtotal)}</span>
-                </div>
-                {Number(order.discount_total) > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      Discount{order.discount_code ? ` (${order.discount_code})` : ""}
-                    </span>
-                    <span className="tabular-nums">
-                      −{formatMoney(order.discount_total)}
-                    </span>
-                  </div>
-                )}
-                {Number(order.prepaid_discount) > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      Prepaid discount (5%)
-                    </span>
-                    <span className="tabular-nums">
-                      −{formatMoney(order.prepaid_discount)}
-                    </span>
-                  </div>
-                )}
-                {/* Present on every storefront order since 0014; admin-created
-                    orders still default both to zero, so they stay hidden there
-                    rather than adding two "—" rows to every draft. */}
-                {Number(order.shipping_total) > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Shipping</span>
-                    <span className="tabular-nums">
-                      {formatMoney(order.shipping_total)}
-                    </span>
-                  </div>
-                )}
-                {Number(order.tax_total) > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tax</span>
-                    <span className="tabular-nums">{formatMoney(order.tax_total)}</span>
-                  </div>
-                )}
-                {/* The courier collects this alongside the goods — it is inside
-                    the total Qikink is told to collect, not a separate charge
-                    the operator has to remember. */}
-                {Number(order.cod_fee) > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">COD fee</span>
-                    <span className="tabular-nums">{formatMoney(order.cod_fee)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between font-semibold">
-                  <span>Total</span>
-                  <span className="tabular-nums">{formatMoney(order.total)}</span>
-                </div>
-                {refunded > 0 && (
-                  <div className="flex justify-between text-destructive">
-                    <span>Refunded</span>
-                    <span className="tabular-nums">−{formatMoney(refunded)}</span>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Only once the integration is switched on — an unconfigured store
-              should not carry a card for a supplier it does not use. */}
-          {qikinkStatus.enabled && qikinkStatus.configured && (
-            <QikinkCard
-              orderId={order.id}
-              fulfillment={qikinkFulfillment}
-              isDraft={order.is_draft}
+            {order.is_draft ? <Badge variant="secondary">Draft</Badge> : <><PaymentBadge status={order.payment_status} /><FulfillmentBadge status={order.fulfillment_status} /></>}
+          </div>
+          <p className="order-date">{formatDateTime(order.created_at)} from {order.source === "storefront" ? "Online Store" : "Admin"}</p>
+        </div>
+        <div className="order-toolbar">
+          {order.is_draft ? <><DeleteOrderButton orderId={id} /><ConvertDraftButton orderId={id} /></> : <>
+            {["paid", "partially_refunded"].includes(order.payment_status) && refunded < Number(order.total) && <RefundDialog orderId={id} maxAmount={Number(order.total) - refunded} />}
+            <DetailEditor orderId={id} field="contact" value={{ email, phone }} label="Edit" />
+            <OrderActionsMenu orderId={id} cancelled={Boolean(order.cancelled_at)} />
+          </>}
+          <div className="flex gap-1">
+            {previous ? <Button size="sm" variant="ghost" asChild><Link href={`/admin/orders/${previous.id}`} aria-label="Previous order"><ChevronUp size={16} /></Link></Button> : <Button size="sm" variant="ghost" disabled aria-label="Previous order"><ChevronUp size={16} /></Button>}
+            {next ? <Button size="sm" variant="ghost" asChild><Link href={`/admin/orders/${next.id}`} aria-label="Next order"><ChevronDown size={16} /></Link></Button> : <Button size="sm" variant="ghost" disabled aria-label="Next order"><ChevronDown size={16} /></Button>}
+          </div>
+        </div>
+      </header>
+      <div className="order-columns">
+        <div className="order-main">
+          <section className="order-card fulfillment-card">
+            <div className="section-heading">
+              <h2 className="flex items-center gap-2"><span className={`section-icon ${order.fulfillment_status === "unfulfilled" ? "unfulfilled" : ""}`}><Package size={16} /></span>{fulfillmentLabel}</h2>
+              {canFulfill && <div className="fulfillment-actions"><FulfillDialog orderId={id} /><RequestFulfillment orderId={id} configured={configured} disabled={qikinkFulfillment?.status === "sent"} /></div>}
+            </div>
+            <div className="shipping-summary">
+              <div className="flex flex-wrap items-center justify-between gap-2"><span className="flex items-center gap-2"><Truck size={16} />Standard Shipping</span>{configured && <Link className="location-badge" href="/admin/settings/qikink"><MapPin size={13} />Qikink_Fulfillment</Link>}</div>
+              <details><summary className="shipping-profile cursor-pointer"><Tag size={15} />General profile</summary><p className="order-muted mt-2">Standard shipping · {money(order.shipping_total ?? 0)} charged on this order. {configured ? "Fulfillment is handled by Qikink." : "Fulfillment is managed by your store."}</p></details>
+            </div>
+            <div className="order-lines">
+              {items.map(item => { const image = item.product_id ? imageByProduct.get(item.product_id) : undefined; return <div className="order-line" key={item.id}>
+                <div className="line-product"><div className="line-image">{image ? <Image src={image.url} alt={image.alt || item.title_snapshot} fill sizes="40px" className="object-contain" /> : <Package size={20} />}</div><div className="min-w-0">
+                  {item.product_id ? <Link href={`/admin/products/${item.product_id}`} className="product-title">{item.title_snapshot}</Link> : <span className="product-title">{item.title_snapshot}</span>}
+                  {item.variant_snapshot && <p><span className="variant-label">{item.variant_snapshot}</span></p>}
+                  {item.variant_id && <p className="line-id">{item.variant_id}</p>}
+                </div></div>
+                <div className="line-price">{money(item.price_snapshot)} <span>×</span> <span className="quantity-label">{item.quantity}</span></div><div className="line-total">{money(Number(item.price_snapshot) * item.quantity)}</div>
+              </div>; })}
+              {!items.length && <p className="p-3 order-muted">No items in this order.</p>}
+            </div>
+          </section>
+          {isCod && !order.is_draft && (
+            <CodAdvanceCard
+              orderId={id}
+              order={{
+                order_number: order.order_number,
+                total: Number(order.total),
+                amount_paid: amountPaid,
+                currency: order.currency,
+                phone,
+                first_name: shipping.first_name ?? customer?.first_name ?? "",
+                payment_status: order.payment_status,
+                cancelled_at: order.cancelled_at,
+                held_at: order.held_at ?? null,
+                released_at: order.released_at ?? null,
+              }}
+              requests={payload.payment_requests ?? []}
+              qikinkSent={qikinkFulfillment?.status === "sent"}
+              qikinkSentAt={qikinkFulfillment?.sent_at ?? null}
+              settings={codSettings}
+              payLink={payLink}
             />
           )}
-
-          {fulfillments.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Fulfillments</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                {fulfillments.map((f) => (
-                  <div key={f.id} className="flex justify-between">
-                    <span>
-                      {f.carrier || "Shipment"}
-                      {f.tracking_number && (
-                        <span className="ml-2 font-mono text-xs text-muted-foreground">
-                          {f.tracking_number}
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {formatDateTime(f.created_at)}
-                    </span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-
-          {refunds.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Refunds</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                {refunds.map((r) => (
-                  <div key={r.id} className="flex justify-between">
-                    <span>
-                      {formatMoney(r.amount)}
-                      {r.reason && (
-                        <span className="ml-2 text-muted-foreground">
-                          {r.reason}
-                        </span>
-                      )}
-                      {r.restock && (
-                        <Badge variant="secondary" className="ml-2">
-                          Restocked
-                        </Badge>
-                      )}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {formatDateTime(r.created_at)}
-                    </span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Last in the main column: notes are written after reading the order
-              above them, and they grow unbounded, so anything below would drift
-              further down the page with every note added. */}
-          <OrderNotes orderId={order.id} notes={notes} />
+          <section className="order-card payment-card">
+            <div className="section-heading"><h2 className="flex items-center gap-2"><span className="section-icon"><ReceiptText size={16} /></span>{paymentLabel}</h2>{["pending", "partially_paid"].includes(order.payment_status) && !order.cancelled_at && <MarkPaidButton orderId={id} />}</div>
+            <div className="payment-summary">
+              <dl className="payment-rows">
+                <div><dt>Subtotal</dt><dd>{itemCount} {itemCount === 1 ? "item" : "items"}</dd><dd>{money(order.subtotal)}</dd></div>
+                <div><dt>Shipping</dt><dd>Standard Shipping</dd><dd>{money(order.shipping_total ?? 0)}</dd></div>
+                <div><dt>Taxes</dt><dd><details><summary>Tax details</summary><p className="order-muted">Tax recorded on this order: {money(order.tax_total ?? 0)}</p></details></dd><dd>{money(order.tax_total ?? 0)}</dd></div>
+                {Number(order.discount_total) > 0 && <div><dt>Discount</dt><dd>{order.discount_code}</dd><dd>−{money(order.discount_total)}</dd></div>}
+                {Number(order.prepaid_discount) > 0 && <div><dt>Prepaid discount</dt><dd /><dd>−{money(order.prepaid_discount)}</dd></div>}
+                {Number(order.cod_fee) > 0 && <div><dt>COD fee</dt><dd /><dd>{money(order.cod_fee)}</dd></div>}
+                <div className="font-semibold"><dt>Total</dt><dd /><dd>{money(order.total)}</dd></div>
+                {amountPaid > 0 && <div><dt>Advance paid</dt><dd className="order-muted">Online</dd><dd>−{money(amountPaid)}</dd></div>}
+                {amountPaid > 0 && <div className="font-semibold"><dt>{isCod ? "Due on delivery" : "Balance due"}</dt><dd /><dd>{money(Math.max(0, Number(order.total) - amountPaid))}</dd></div>}
+              </dl>
+              <div className="payment-bottom"><span>{["paid", "partially_refunded", "refunded"].includes(order.payment_status) ? "Paid" : paymentLabel}</span><span>{["paid", "partially_refunded", "refunded"].includes(order.payment_status) ? money(order.total) : paymentMethodLabel(order.payment_method)}</span></div>
+              {refunded > 0 && <div className="payment-bottom"><span>Refunded</span><span>−{money(refunded)}</span></div>}
+            </div>
+          </section>
+          <Metafields orderId={id} values={order.metafields ?? {}} />
+          {fulfillments.length > 0 && <Card><CardHeader><CardTitle>Fulfillments</CardTitle></CardHeader><CardContent className="space-y-3">{fulfillments.map(f => <div key={f.id}><p>{f.carrier || "Shipment"} {f.tracking_number}</p><p className="order-muted">{formatDateTime(f.created_at)}</p></div>)}</CardContent></Card>}
+          {refunds.length > 0 && <Card><CardHeader><CardTitle>Refunds</CardTitle></CardHeader><CardContent className="space-y-3">{refunds.map(r => <div key={r.id}><p>{money(r.amount)} {r.reason} {r.restock && <Badge variant="secondary">Restocked</Badge>}</p><p className="order-muted">{formatDateTime(r.created_at)}</p></div>)}</CardContent></Card>}
+          <OrderNotes orderId={id} notes={notes} />
+          <div className="order-created"><span />{formatDateTime(order.created_at)} — Order created.</div>
+          {configured && qikinkFulfillment && <QikinkCard orderId={id} fulfillment={qikinkFulfillment} isDraft={order.is_draft} />}
         </div>
-
-        {/* `min-w-0` on the aside, and `break-words` on the values inside it.
-            A long email or a single unbroken address line is wider than the
-            300px track, and a grid item's default `min-width: auto` refuses to
-            shrink below its content — so the column silently grew past the
-            container and overflowed the page. */}
-        <div className="min-w-0 space-y-5">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Customer</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm">
-              {customer ? (
-                <div className="space-y-1">
-                  <Link
-                    href={`/admin/customers/${customer.id}`}
-                    className="break-words font-medium text-primary hover:underline"
-                  >
-                    {`${customer.first_name} ${customer.last_name}`.trim() ||
-                      customer.email}
-                  </Link>
-                  {customer.email && (
-                    <p className="break-words text-muted-foreground">{customer.email}</p>
-                  )}
-                  {customer.phone && (
-                    <p className="text-muted-foreground">{customer.phone}</p>
-                  )}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">No customer attached.</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Contact on the order, not on the customer. These are the values
-              captured at purchase and are what the parcel and the receipt have
-              to match, even after the customer record moves on. */}
-          {(order.email || order.shipping_address?.address1) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Delivery</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                {order.email && (
-                  <div>
-                    <p className="text-xs text-muted-foreground">Contact</p>
-                    <p className="break-words">{order.email}</p>
-                    {order.phone && <p className="break-words">{order.phone}</p>}
-                  </div>
-                )}
-
-                {order.shipping_address?.address1 && (
-                  <div>
-                    <p className="text-xs text-muted-foreground">Ship to</p>
-                    <address className="not-italic leading-relaxed">
-                      {[
-                        order.shipping_address.first_name,
-                        order.shipping_address.last_name,
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                      <br />
-                      {order.shipping_address.address1}
-                      {order.shipping_address.address2 && (
-                        <>
-                          <br />
-                          {order.shipping_address.address2}
-                        </>
-                      )}
-                      <br />
-                      {[
-                        order.shipping_address.city,
-                        order.shipping_address.province,
-                        order.shipping_address.postal_code,
-                      ]
-                        .filter(Boolean)
-                        .join(", ")}
-                      <br />
-                      {order.shipping_address.country}
-                    </address>
-                  </div>
-                )}
-
-                {Object.keys(order.billing_address ?? {}).length > 0 && (
-                  <div>
-                    <p className="text-xs text-muted-foreground">Bill to</p>
-                    <address className="not-italic leading-relaxed">
-                      {order.billing_address.address1}
-                      <br />
-                      {[
-                        order.billing_address.city,
-                        order.billing_address.postal_code,
-                        order.billing_address.country,
-                      ]
-                        .filter(Boolean)
-                        .join(", ")}
-                    </address>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Where this order came from. Only rendered for orders that carry
-              attribution — an admin-created order has none by definition, and a
-              card of empty rows is worse than no card. */}
-          {(order.source === "storefront" || order.marketing_opt_in) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Attribution</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between gap-3">
-                  <span className="text-muted-foreground">Source</span>
-                  <span className="capitalize">{order.source}</span>
-                </div>
-
-                {Object.entries(order.utm ?? {}).map(([key, value]) => (
-                  <div key={key} className="flex justify-between gap-3">
-                    <span className="text-muted-foreground capitalize">{key}</span>
-                    <span className="truncate" title={value}>
-                      {value}
-                    </span>
-                  </div>
-                ))}
-
-                {order.referrer && (
-                  <div className="flex justify-between gap-3">
-                    <span className="text-muted-foreground">Referrer</span>
-                    <span className="truncate" title={order.referrer}>
-                      {order.referrer.replace(/^https?:\/\/(www\.)?/, "")}
-                    </span>
-                  </div>
-                )}
-
-                {order.landing_path && (
-                  <div className="flex justify-between gap-3">
-                    <span className="text-muted-foreground">Landed on</span>
-                    <span className="truncate" title={order.landing_path}>
-                      {order.landing_path}
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex justify-between gap-3 border-t pt-2">
-                  <span className="text-muted-foreground">Email marketing</span>
-                  {order.marketing_opt_in ? (
-                    <Badge variant="secondary">Opted in</Badge>
-                  ) : (
-                    <span className="text-muted-foreground">Declined</span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {order.note && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Note</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
-                {order.note}
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        <aside className="order-aside">
+          <section className="order-card customer-note"><div className="section-heading"><h2>Notes</h2><DetailEditor orderId={id} field="note" value={order.note || ""} label="Edit notes" icon /></div><p className="order-muted whitespace-pre-wrap">{order.note || "No notes from customer"}</p></section>
+          <section className="order-card customer-card">
+            <div className="section-heading"><h2>Customer</h2><CustomerMenu customerId={customer?.id} /></div>
+            {customer ? <><Link className="order-link" href={`/admin/customers/${customer.id}`}>{`${customer.first_name} ${customer.last_name}`.trim() || customer.email}</Link><p className="mt-1"><Link className="order-link" href={`/admin/customers/${customer.id}`}>{customer.orders_count} {customer.orders_count === 1 ? "order" : "orders"}</Link></p></> : <p className="order-muted">Guest customer</p>}
+            <div className="customer-section"><div className="section-heading"><h3>Contact information</h3><DetailEditor orderId={id} field="contact" value={{ email, phone }} label="Edit contact information" icon /></div>{email ? <a className="order-link break-all" href={`mailto:${email}`}>{email}</a> : <p className="order-muted">No email address</p>}<p className="order-muted mt-1">{phone || "No phone number"}</p></div>
+            <div className="customer-section"><div className="section-heading"><h3>Shipping address</h3><DetailEditor orderId={id} field="shipping_address" value={shipping} label="Edit shipping address" icon /></div><OrderAddress address={shipping} phone={order.phone} />{shipping.address1 && <a className="order-link" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([shipping.address1, shipping.address2, shipping.city, shipping.province, shipping.postal_code, shipping.country].filter(Boolean).join(", "))}`} target="_blank" rel="noreferrer">View map</a>}</div>
+            <div className="customer-section"><div className="section-heading"><h3>Billing address</h3><DetailEditor orderId={id} field="billing_address" value={billing} label="Edit billing address" icon /></div><OrderAddress address={billing} phone={order.phone} /></div>
+          </section>
+          <section className="order-card conversion-card"><h2>Conversion summary</h2>
+            {customer && <p className="conversion-row"><Package size={16} />{customer.orders_count === 1 ? "This is their 1st order" : `${customer.orders_count} customer orders`}</p>}
+            <p className="conversion-row"><Globe size={16} />{order.source === "storefront" ? "Online Store" : "Admin-created order"}</p>
+            <p className="conversion-row"><MousePointerClick size={16} />{order.referrer ? "Referred visit" : "Unknown referral source"}</p>
+            <details className="conversion-details"><summary className="order-link">View conversion details</summary><dl className="space-y-2 mt-3">{Object.entries(order.utm ?? {}).map(([key,value]) => <div key={key}><dt className="order-muted capitalize">{key.replaceAll("_", " ")}</dt><dd className="break-all">{value}</dd></div>)}<div><dt className="order-muted">Referrer</dt><dd className="break-all">{order.referrer || "Not recorded"}</dd></div><div><dt className="order-muted">Landing page</dt><dd className="break-all">{order.landing_path || "Not recorded"}</dd></div><div><dt className="order-muted">Email marketing</dt><dd>{order.marketing_opt_in ? "Opted in" : "Not opted in"}</dd></div></dl></details>
+          </section>
+        </aside>
       </div>
     </div>
   );
+}
+
+/** The public origin of this deployment, for links handed to customers. */
+function siteOrigin(headerList: Awaited<ReturnType<typeof headers>>): string {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "");
+  if (configured) return configured;
+  const host = headerList.get("x-forwarded-host") ?? headerList.get("host") ?? "";
+  const proto = headerList.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return host ? `${proto}://${host}` : "";
+}
+
+function OrderAddress({ address, phone }: { address: Record<string, string>; phone?: string }) {
+  if (!address.address1) return <p className="order-muted">No address provided</p>;
+  return <address className="not-italic leading-[20px]">{[address.first_name, address.last_name].filter(Boolean).join(" ")}<br />{address.address1}{address.address2 && <><br />{address.address2}</>}<br />{[address.postal_code, address.city, address.province].filter(Boolean).join(" ")}<br />{address.country}{(address.phone || phone) && <><br />{address.phone || phone}</>}</address>;
 }

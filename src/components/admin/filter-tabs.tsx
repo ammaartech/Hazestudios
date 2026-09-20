@@ -27,7 +27,7 @@ export function FilterTabs({
       `p-1` is what keeps the first and last of them off the corners as they
       scroll past.
     */
-    <div className="strip max-w-full gap-1 rounded-lg bg-muted p-1 [--strip-gutter:0px]">
+    <div data-slot="filter-tabs" className="strip max-w-full gap-1 rounded-lg bg-muted p-1 [--strip-gutter:0px]">
       {tabs.map((tab) => {
         const active = (current ?? undefined) === tab.value;
         const href = tab.value
@@ -36,6 +36,7 @@ export function FilterTabs({
         return (
           <Link
             key={tab.label}
+            aria-current={active ? "page" : undefined}
             href={href}
             className={cn(
               "rounded-md px-3 py-1 text-sm font-medium whitespace-nowrap transition-colors duration-150",

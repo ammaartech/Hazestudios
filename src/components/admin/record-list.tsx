@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { RowLink } from "@/components/admin/row-link";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -50,7 +50,7 @@ export function RecordList({
     <ul className={cn("-mx-2 divide-y md:hidden", className)}>
       {items.map((item) => (
         <li key={item.id}>
-          <Link
+          <RowLink
             href={item.href}
             // min-h-16 keeps every row comfortably past the 44px both mobile
             // platforms ask for, even when it holds a single short line.
@@ -100,7 +100,7 @@ export function RecordList({
               className="size-4 shrink-0 text-muted-foreground"
               aria-hidden
             />
-          </Link>
+          </RowLink>
         </li>
       ))}
     </ul>

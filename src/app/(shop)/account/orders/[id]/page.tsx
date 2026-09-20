@@ -1,9 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, LifeBuoy } from "lucide-react";
+import { ArrowLeft, ArrowRight, LifeBuoy } from "lucide-react";
 import { formatDate, formatMoney } from "@/lib/format";
 import { getAccountOrder, requireAccount } from "@/lib/shop/account";
+import { getPaymentRequests } from "@/lib/cashfree/advance";
+import { isCodMethod } from "@/lib/shop/payment-methods";
+import { balanceDue, findOpenRequest } from "@/lib/shop/cod-advance";
 import { createClient } from "@/lib/supabase/server";
 import { AccountShell } from "../../account-shell";
 import { StatusPill } from "../../order-parts";
@@ -41,6 +44,16 @@ export default async function OrderDetailPage({
     .order("created_at");
   const fulfillments = (fulfillmentData ?? []) as Fulfillment[];
 
+  // An advance the store has asked for on a COD order (0033). The payment
+  // itself happens on the token page — it holds the Cashfree window and the
+  // reconcile — so this page only has to point there.
+  const isCod = isCodMethod(order.payment_method);
+  const advance =
+    isCod && order.payment_status === "pending" && order.checkout_token
+      ? findOpenRequest(await getPaymentRequests(order.id))
+      : null;
+  const amountPaid = Number(order.amount_paid ?? 0);
+
   const itemTotal = order.items.reduce(
     (sum, i) => sum + Number(i.price_snapshot) * i.quantity,
     0
@@ -71,6 +84,21 @@ export default async function OrderDetailPage({
           </div>
           <StatusPill order={order} />
         </div>
+
+        {advance && order.checkout_token && (
+          <Link
+            href={`/orders/${order.checkout_token}`}
+            className="glass glass-panel glass-press glass-primary flex items-center justify-between gap-3 p-5 text-[15px] font-medium"
+          >
+            <span>
+              Pay the {formatMoney(advance.amount, order.currency)} advance to confirm this order
+              <span className="mt-0.5 block text-sm font-normal opacity-80">
+                The remaining {formatMoney(Math.max(0, Number(order.total) - Number(advance.amount)), order.currency)} is paid to the courier · valid until {formatDate(advance.expires_at)}
+              </span>
+            </span>
+            <ArrowRight className="size-5 shrink-0" aria-hidden />
+          </Link>
+        )}
 
         {fulfillments.length > 0 && (
           <section className="glass glass-on-light glass-panel p-5">
@@ -160,6 +188,22 @@ export default async function OrderDetailPage({
                 {formatMoney(order.total, order.currency)}
               </dd>
             </div>
+            {amountPaid > 0 && (
+              <>
+                <div className="flex justify-between">
+                  <dt className="text-(--shop-mute)">Advance paid</dt>
+                  <dd className="tabular-nums text-(--shop-success)">
+                    −{formatMoney(amountPaid, order.currency)}
+                  </dd>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <dt>{isCod ? "Pay on delivery" : "Balance due"}</dt>
+                  <dd className="tabular-nums">
+                    {formatMoney(balanceDue(order), order.currency)}
+                  </dd>
+                </div>
+              </>
+            )}
           </dl>
         </section>
 

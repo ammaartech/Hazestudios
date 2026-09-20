@@ -2,7 +2,6 @@
 
 import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +18,6 @@ import type { ShopSettings } from "@/lib/types";
 import { updateShopSettings } from "../actions";
 
 export function BrandForm({ settings }: { settings: ShopSettings }) {
-  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [pending, startTransition] = useTransition();
   const [uploading, setUploading] = useState(false);
@@ -65,7 +63,6 @@ export function BrandForm({ settings }: { settings: ShopSettings }) {
       if (result.error) toast.error(result.error);
       else {
         toast.success("Brand saved");
-        router.refresh();
       }
     });
   }

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { requireStaff as requireStaffSession } from "@/lib/auth/staff";
 import { testConnection } from "@/lib/cashfree/client";
 import {
   HOSTS,
@@ -15,7 +16,7 @@ import {
  *
  * Every write here goes through the service-role client, because
  * `integration_credentials` has RLS on and no policies (0016_qikink.sql). That
- * bypass is exactly why each action gates on `is_staff()` first: a Server Action
+ * bypass is exactly why each action gates on staff status first: a Server Action
  * is a public POST endpoint, and without the gate this file would let anyone on
  * the internet read the store's payment secret back out through "test
  * connection" — the one secret in this application that can move money.
@@ -30,9 +31,8 @@ type Result = { ok: true; message?: string } | { ok: false; error: string };
 
 async function requireStaff(): Promise<boolean> {
   try {
-    const supabase = await createClient();
-    const { data } = await supabase.rpc("is_staff");
-    return Boolean(data);
+    // Read off the signed token — no round trip; see lib/auth/staff.ts.
+    return (await requireStaffSession()).ok;
   } catch {
     return false;
   }
@@ -146,4 +146,37 @@ export async function testCashfreeConnection(): Promise<Result> {
       error: cause instanceof Error ? cause.message : "Could not reach Cashfree.",
     };
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Cash on delivery                                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The COD review rule and the advance-request defaults (`shop_settings.cod`,
+ * 0033). Nothing secret here — the row is world-readable by design — so this
+ * goes through the session client and RLS rather than the service role, like
+ * `updateShopSettings`. Normalised through `parseCodSettings` on the way in so
+ * the column only ever holds a shape every reader already understands.
+ */
+export async function saveCodSettings(input: unknown): Promise<Result> {
+  if (!(await requireStaff())) {
+    return { ok: false, error: "You do not have permission to change this." };
+  }
+
+  const { parseCodSettings, serializeCodSettings } = await import("@/lib/shop/cod-advance");
+  const settings = parseCodSettings(input);
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("shop_settings")
+    .update({ cod: serializeCodSettings(settings) })
+    .eq("id", 1);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/settings/payments");
+  revalidatePath("/admin/orders");
+
+  return { ok: true, message: "Cash on delivery settings saved" };
 }

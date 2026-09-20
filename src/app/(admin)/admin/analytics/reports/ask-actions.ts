@@ -1,6 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { requireStaff } from "@/lib/auth/staff";
+import { getShopSettings } from "@/lib/admin/reference";
 import { questionToSql, textToSqlConfigured } from "@/lib/ai/text-to-sql";
 import { assertReadOnlySql, SqlGuardError } from "@/lib/analytics/sql-guard";
 import {
@@ -14,7 +15,7 @@ import {
 /**
  * "Ask for a report" — the natural-language half of the report catalog.
  *
- * A Server Action is a public POST endpoint, so this gates on `is_staff()`
+ * A Server Action is a public POST endpoint, so this gates on staff status
  * before spending a model call or opening a database connection, exactly as
  * `products/ai-actions.ts` does. The hidden panel in the admin is a hint, not
  * the boundary.
@@ -121,9 +122,8 @@ export async function askForReport(question: string): Promise<AskResult> {
   let timezone = FALLBACK_TIMEZONE;
   let currency = "INR";
   try {
-    const supabase = await createClient();
-    const { data: isStaff } = await supabase.rpc("is_staff");
-    if (!isStaff) {
+    const staff = await requireStaff();
+    if (!staff.ok) {
       return {
         ok: false,
         reason: "unauthorized",
@@ -131,10 +131,7 @@ export async function askForReport(question: string): Promise<AskResult> {
       };
     }
 
-    const { data: settings } = await supabase
-      .from("shop_settings")
-      .select("timezone, currency")
-      .single();
+    const settings = await getShopSettings();
     timezone = resolveTimezone(settings?.timezone);
     if (settings?.currency) currency = settings.currency;
   } catch {

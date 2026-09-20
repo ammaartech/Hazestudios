@@ -1,15 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { getShopSettings } from "@/lib/admin/reference";
 import type { ShopSettings } from "@/lib/types";
 import { GeneralForm } from "./general-form";
 
 export const metadata = { title: "Store details" };
 export default async function GeneralSettingsPage() {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("shop_settings")
-    .select("*")
-    .eq("id", 1)
-    .single();
+  // From the shared reference cache; the save action expires it on write.
+  const data = await getShopSettings();
 
   return <GeneralForm settings={data as ShopSettings} />;
 }

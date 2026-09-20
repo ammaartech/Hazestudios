@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateOrders } from "@/lib/analytics/dashboard";
 import { revalidateCatalog } from "@/lib/shop/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getStaffSession } from "@/lib/auth/staff";
 import type { Discount } from "@/lib/types";
 
 export interface OrderItemPayload {
@@ -175,6 +177,7 @@ export async function createOrder(payload: OrderPayload) {
   }
 
   revalidatePath("/admin/orders");
+  revalidateOrders();
   return { id: order.id as string };
 }
 
@@ -193,6 +196,7 @@ export async function convertDraftToOrder(orderId: string) {
 
   await adjustStock(supabase, items ?? [], -1);
   revalidatePath("/admin/orders");
+  revalidateOrders();
   revalidatePath(`/admin/orders/${orderId}`);
   return { ok: true };
 }
@@ -206,6 +210,7 @@ export async function markOrderPaid(orderId: string) {
   if (error) return { error: error.message };
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
+  revalidateOrders();
   return { ok: true };
 }
 
@@ -234,6 +239,7 @@ export async function fulfillOrder(
 
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
+  revalidateOrders();
   return { ok: true };
 }
 
@@ -288,6 +294,7 @@ export async function refundOrder(
 
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
+  revalidateOrders();
   return { ok: true };
 }
 
@@ -296,6 +303,7 @@ export async function deleteOrder(orderId: string) {
   const { error } = await supabase.from("orders").delete().eq("id", orderId);
   if (error) return { error: error.message };
   revalidatePath("/admin/orders");
+  revalidateOrders();
   return { ok: true };
 }
 
@@ -351,8 +359,19 @@ export async function cancelOrder(orderId: string, restock: boolean) {
 
   if (error) return { error: error.message };
 
+  // A cancelled order must stop asking for money: any open advance request
+  // (0033) is withdrawn so the shopper's page no longer offers a pay button.
+  // A partially paid order keeps its status — the advance is real money and
+  // needs a refund, which is its own action, exactly as for a paid one.
+  await supabase
+    .from("payment_requests")
+    .update({ status: "cancelled", resolved_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq("order_id", orderId)
+    .eq("status", "open");
+
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
+  revalidateOrders();
   return { ok: true };
 }
 
@@ -367,14 +386,13 @@ export async function addOrderNote(orderId: string, body: string) {
   const trimmed = body.trim();
   if (!trimmed) return { error: "Write something first." };
 
-  const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
+  const [supabase, author] = await Promise.all([createClient(), getStaffSession()]);
 
   const { error } = await supabase.from("order_notes").insert({
     order_id: orderId,
     body: trimmed,
-    author_id: auth.user?.id ?? null,
-    author_email: auth.user?.email ?? null,
+    author_id: author.userId,
+    author_email: author.email,
   });
 
   if (error) return { error: error.message };

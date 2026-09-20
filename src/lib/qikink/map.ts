@@ -142,9 +142,18 @@ export function mapOrderToQikink(
       order_number: String(order.order_number),
       qikink_shipping: "1",
       // Prepaid means the money is already with us. Anything not yet paid is
-      // collected on delivery, which is what Qikink's courier will do.
+      // collected on delivery, which is what Qikink's courier will do — and
+      // for a partial-COD order that is the *balance*: the advance in
+      // `amount_paid` (0033) has already been captured online, so the courier
+      // must ask for `total - amount_paid`, never the total. A prepaid order
+      // still reports its full value; that figure is for the invoice, not for
+      // collection.
       gateway: order.payment_status === "paid" ? "Prepaid" : "COD",
-      total_order_value: money(order.total),
+      total_order_value: money(
+        order.payment_status === "paid"
+          ? Number(order.total)
+          : Math.max(0, Number(order.total) - Number(order.amount_paid ?? 0))
+      ),
       line_items,
       shipping_address: address,
     },

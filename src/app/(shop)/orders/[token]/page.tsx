@@ -7,8 +7,15 @@ import { formatDate, formatMoney } from "@/lib/format";
 import { getOrderByToken } from "@/lib/shop/checkout";
 import { countryName } from "@/lib/shop/countries";
 import { getPaymentAttempts } from "@/lib/cashfree/payment";
-import { isPrepaidMethod } from "@/lib/shop/payment-methods";
+import { getPaymentRequests } from "@/lib/cashfree/advance";
+import { isCodMethod, isPrepaidMethod } from "@/lib/shop/payment-methods";
+import {
+  balanceDue,
+  findOpenRequest,
+  requestState,
+} from "@/lib/shop/cod-advance";
 import type { CheckoutAddress } from "@/lib/shop/checkout-totals";
+import type { PaymentRequest } from "@/lib/types";
 import { PayNow } from "./pay-now";
 import { PurchaseBeacon } from "./purchase-beacon";
 
@@ -53,6 +60,22 @@ export default async function OrderConfirmationPage({
   const awaitingPayment =
     isPrepaidMethod(order.payment_method) && order.payment_status === "pending";
 
+  /* The other thing this page can ask for: an advance on a cash-on-delivery
+     order (0033). Only while the order is still pending — once the advance is
+     in, `amount_paid` and the "pay on delivery" line below tell the rest. A
+     request past its deadline is shown as lapsed rather than payable; the
+     store decides what happens next, not the clock. */
+  const isCod = isCodMethod(order.payment_method);
+  const requests: PaymentRequest[] =
+    isCod && order.payment_status === "pending"
+      ? await getPaymentRequests(order.id)
+      : [];
+  const advance = findOpenRequest(requests);
+  const lapsedAdvance =
+    !advance && requests.length > 0 && requestState(requests[0]) === "expired";
+  const awaitingAdvance = Boolean(advance);
+  const awaiting = awaitingPayment || awaitingAdvance;
+
   /* Whether to open the payment window without waiting for a click.
      "No attempt has ever been made on this order" is only true on the first
      render after checkout redirected here, and the attempt the auto-open
@@ -80,13 +103,13 @@ export default async function OrderConfirmationPage({
             changes. */}
         <span
           className={
-            awaitingPayment
+            awaiting
               ? "flex size-11 items-center justify-center rounded-full bg-(--shop-ink)/8 text-(--shop-charcoal)"
               : "flex size-11 items-center justify-center rounded-full bg-(--shop-success)/10 text-(--shop-success)"
           }
           aria-hidden
         >
-          {awaitingPayment ? (
+          {awaiting ? (
             <Clock className="size-5" strokeWidth={2.5} />
           ) : (
             <Check className="size-5" strokeWidth={2.5} />
@@ -100,7 +123,9 @@ export default async function OrderConfirmationPage({
           <h1 className="display mt-2 text-3xl tracking-[-0.03em] md:text-4xl">
             {awaitingPayment
               ? "One step left."
-              : `Thank you${
+              : awaitingAdvance
+                ? "One step to confirm."
+                : `Thank you${
                   order.shipping_address?.first_name
                     ? `, ${(address.first_name ?? "").trim()}`
                     : ""
@@ -110,9 +135,9 @@ export default async function OrderConfirmationPage({
             {/* "Reserved" stays true in both states — the stock came out of
                 inventory when the order was placed, whether or not the money
                 has. What follows is the part that differs. */}
-            Your order is {awaitingPayment ? "reserved" : "confirmed and reserved"},
+            Your order is {awaiting ? "reserved" : "confirmed and reserved"},
             under <span className="text-(--shop-ink)">{order.email}</span>.{" "}
-            {paymentNote(order.payment_method, order.payment_status)}
+            {paymentNote(order, { advance, lapsedAdvance })}
           </p>
         </div>
       </header>
@@ -122,6 +147,22 @@ export default async function OrderConfirmationPage({
           telling them. */}
       {awaitingPayment && (
         <PayNow token={token} autoStart={autoStartPayment} />
+      )}
+      {advance && (
+        <PayNow
+          token={token}
+          autoStart={false}
+          advance={{
+            requestId: advance.id,
+            amount: formatMoney(advance.amount, order.currency),
+            balance: formatMoney(
+              Math.max(0, Number(order.total) - Number(advance.amount)),
+              order.currency
+            ),
+            expires: formatDate(advance.expires_at),
+            reason: advance.reason,
+          }}
+        />
       )}
 
       {/* ---- Items ---- */}
@@ -213,6 +254,26 @@ export default async function OrderConfirmationPage({
             {formatMoney(order.total, order.currency)}
           </span>
         </div>
+
+        {/* Money already taken online against a COD order, and what that
+            leaves for the door. Only rendered once something has been paid,
+            so every order placed before 0033 reads exactly as it did. */}
+        {Number(order.amount_paid) > 0 && (
+          <dl className="mt-4 flex flex-col gap-3 border-t border-(--shop-ink)/10 pt-4 text-sm">
+            <Row
+              label="Advance paid"
+              value={`−${formatMoney(order.amount_paid, order.currency)}`}
+            />
+            <div className="flex items-baseline justify-between gap-4">
+              <dt className="font-medium">
+                {isCod ? "Pay on delivery" : "Balance due"}
+              </dt>
+              <dd className="font-medium tabular-nums">
+                {formatMoney(balanceDue(order), order.currency)}
+              </dd>
+            </div>
+          </dl>
+        )}
       </section>
 
       {/* ---- Delivery ---- */}
@@ -274,11 +335,35 @@ export default async function OrderConfirmationPage({
  * `payment_status` is checked before the method because an order paid by any
  * route is finished, and the operator can still mark one paid by hand.
  */
-function paymentNote(method: string, status: string): string {
+function paymentNote(
+  order: {
+    payment_method: string;
+    payment_status: string;
+    total: number;
+    amount_paid: number;
+    currency: string;
+  },
+  cod: { advance: PaymentRequest | null; lapsedAdvance: boolean }
+): string {
+  const { payment_method: method, payment_status: status } = order;
+
   if (status === "paid") return "It's paid in full — nothing more to do.";
   if (status === "refunded") return "This order has been refunded.";
 
   if (method === "cod") {
+    // The advance states, most specific first. A COD order with money against
+    // it is the partial-COD case; one with a live request is being asked; one
+    // whose request lapsed is told so plainly rather than left wondering why
+    // the button went away.
+    if (Number(order.amount_paid) > 0) {
+      return `Your ${formatMoney(order.amount_paid, order.currency)} advance is in. Pay the remaining ${formatMoney(balanceDue(order), order.currency)} to the courier when it arrives.`;
+    }
+    if (cod.advance) {
+      return "To confirm this cash-on-delivery order we're asking for a small advance below — the rest is paid to the courier when it arrives.";
+    }
+    if (cod.lapsedAdvance) {
+      return "The advance request on this order has lapsed. Get in touch and we'll send you a fresh one.";
+    }
     return "Pay the courier when it arrives — nothing has been charged now.";
   }
   // 'upi' is the legacy spelling of the same choice; both mean the shopper

@@ -1,42 +1,8 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { PageHeader } from "@/components/admin/page-header";
-import { FilterTabs } from "@/components/admin/filter-tabs";
-import { Pagination } from "@/components/admin/pagination";
-import { SearchInput } from "@/components/admin/search-input";
-import { DesktopTable, RecordList } from "@/components/admin/record-list";
-import { PaymentBadge, FulfillmentBadge } from "@/components/admin/status-badges";
 import { createClient } from "@/lib/supabase/server";
-import { formatDateTime, formatMoney } from "@/lib/format";
-import type { Customer, Order } from "@/lib/types";
+import { OrderList, type OrderRow } from "./order-list";
 
 export const metadata = { title: "Orders" };
-
 const PAGE_SIZE = 50;
-
-/** Only what the list renders — the full row (addresses, notes, …) stays home. */
-type OrderRow = Pick<
-  Order,
-  | "id"
-  | "order_number"
-  | "created_at"
-  | "total"
-  | "currency"
-  | "payment_status"
-  | "fulfillment_status"
-> & {
-  customers: Pick<Customer, "first_name" | "last_name" | "email"> | null;
-  order_items: { quantity: number }[];
-};
 
 export default async function OrdersPage({
   searchParams,
@@ -53,7 +19,7 @@ export default async function OrdersPage({
   let query = supabase
     .from("orders")
     .select(
-      "id, order_number, created_at, total, currency, payment_status, fulfillment_status, customers(first_name, last_name, email), order_items(quantity)",
+      "id, order_number, created_at, total, currency, payment_status, fulfillment_status, cancelled_at, held_at, released_at, customers(first_name, last_name, email), order_items(quantity), fulfillments(tracking_number, status)",
       { count: "exact" }
     )
     .eq("is_draft", false)
@@ -61,7 +27,10 @@ export default async function OrdersPage({
     .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
   if (tab === "unfulfilled") query = query.eq("fulfillment_status", "unfulfilled");
-  if (tab === "unpaid") query = query.eq("payment_status", "pending");
+  // Partially paid is still owed money — a COD order whose advance is in.
+  if (tab === "unpaid") query = query.in("payment_status", ["pending", "partially_paid"]);
+  // Parked by the COD rule (0033) and not yet approved or paid an advance.
+  if (tab === "review") query = query.not("held_at", "is", null).is("released_at", null).is("cancelled_at", null);
   if (tab === "open") query = query.is("closed_at", null);
   if (tab === "closed") query = query.not("closed_at", "is", null);
   if (q && /^\d+$/.test(q)) query = query.eq("order_number", parseInt(q));
@@ -72,133 +41,5 @@ export default async function OrdersPage({
   const orders = (data ?? []) as unknown as OrderRow[];
   const total = count ?? 0;
 
-  return (
-    <div>
-      <PageHeader
-        title="Orders"
-        primary={
-          <Button asChild>
-            <Link href="/admin/orders/new">Create order</Link>
-          </Button>
-        }
-      >
-        <Button variant="outline" asChild>
-          <Link href="/admin/orders/tracking">Delivery tracking</Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link href="/admin/orders/drafts">Drafts</Link>
-        </Button>
-      </PageHeader>
-
-      <Card>
-        <CardContent className="pt-0">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <FilterTabs
-              basePath="/admin/orders"
-              param="tab"
-              current={tab}
-              tabs={[
-                { label: "All", value: undefined },
-                { label: "Unfulfilled", value: "unfulfilled" },
-                { label: "Unpaid", value: "unpaid" },
-                { label: "Open", value: "open" },
-                { label: "Closed", value: "closed" },
-              ]}
-            />
-            <SearchInput placeholder="Search order number" />
-          </div>
-
-          {orders.length === 0 ? (
-            <p className="py-12 text-center text-sm text-muted-foreground">
-              No orders found.{" "}
-              <Link href="/admin/orders/new" className="text-primary hover:underline">
-                Create an order
-              </Link>
-            </p>
-          ) : (
-            <>
-              {/* Phones get one tappable card per order; the table below is for
-                  pointer-sized screens. Same `orders`, two presentations. */}
-              <RecordList
-                items={orders.map((o) => ({
-                  id: o.id,
-                  href: `/admin/orders/${o.id}`,
-                  title: `#${o.order_number}`,
-                  subtitle: `${
-                    o.customers
-                      ? `${o.customers.first_name} ${o.customers.last_name}`.trim() ||
-                        o.customers.email
-                      : "No customer"
-                  } · ${formatDateTime(o.created_at)}`,
-                  amount: formatMoney(o.total, o.currency),
-                  badges: (
-                    <>
-                      <PaymentBadge status={o.payment_status} />
-                      <FulfillmentBadge status={o.fulfillment_status} />
-                    </>
-                  ),
-                }))}
-              />
-
-              <DesktopTable>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Payment status</TableHead>
-                  <TableHead>Fulfillment status</TableHead>
-                  <TableHead>Items</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.map((o) => {
-                  const customerName = o.customers
-                    ? `${o.customers.first_name} ${o.customers.last_name}`.trim() ||
-                      o.customers.email
-                    : "No customer";
-                  const itemCount = o.order_items.reduce(
-                    (sum, i) => sum + i.quantity,
-                    0
-                  );
-                  return (
-                    <TableRow key={o.id}>
-                      <TableCell>
-                        <Link
-                          href={`/admin/orders/${o.id}`}
-                          className="font-semibold text-foreground hover:underline"
-                        >
-                          #{o.order_number}
-                        </Link>
-                      </TableCell>
-                      <TableCell>{formatDateTime(o.created_at)}</TableCell>
-                      <TableCell>{customerName}</TableCell>
-                      <TableCell className="tabular-nums">
-                        {formatMoney(o.total, o.currency)}
-                      </TableCell>
-                      <TableCell>
-                        <PaymentBadge status={o.payment_status} />
-                      </TableCell>
-                      <TableCell>
-                        <FulfillmentBadge status={o.fulfillment_status} />
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {itemCount} item{itemCount === 1 ? "" : "s"}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-              </DesktopTable>
-            </>
-          )}
-
-          <Pagination page={page} pageSize={PAGE_SIZE} total={total} />
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return <OrderList key={`${tab ?? ""}:${q ?? ""}:${page}`} orders={orders} total={total} page={page} pageSize={PAGE_SIZE} tab={tab} />;
 }

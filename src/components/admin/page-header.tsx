@@ -32,7 +32,7 @@ export function PageHeader({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="mb-5 md:mb-6">
+    <div data-slot="page-header" className="mb-3">
       {backHref && (
         <Link
           href={backHref}

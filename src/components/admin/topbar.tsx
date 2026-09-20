@@ -1,9 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ShoppingBag, LogOut, ExternalLink, Search } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { signOut } from "@/lib/auth/sign-out";
 import { GlobalSearch } from "@/components/admin/global-search";
 import { openAdminSearch } from "@/lib/search/open-search";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -23,15 +22,6 @@ export function Topbar({
   storeName: string;
   userEmail: string;
 }) {
-  const router = useRouter();
-
-  async function signOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
-  }
-
   const initials = userEmail.slice(0, 2).toUpperCase();
 
   return (
@@ -128,7 +118,7 @@ export function Topbar({
               </a>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+            <DropdownMenuItem onClick={() => void signOut()} className="cursor-pointer">
               <LogOut className="size-4" />
               Log out
             </DropdownMenuItem>

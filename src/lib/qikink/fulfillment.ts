@@ -133,6 +133,18 @@ export async function pushOrderToQikink(orderId: string): Promise<PushResult> {
     return { ok: false, error: "This is still a draft order. Convert it before sending to Qikink." };
   }
 
+  // Parked for COD review (0033). Qikink cannot change an order once it has
+  // one, so the collectable amount is fixed at the moment of this push — and
+  // the whole point of the hold is that nobody has decided it yet. Every
+  // legitimate route here (approve, advance paid, the manual button) releases
+  // the hold first; this is the guard for any that forgets.
+  if (order.held_at && !order.released_at) {
+    return {
+      ok: false,
+      error: "This order is held for COD review. Approve it, or collect the advance, before sending it to Qikink.",
+    };
+  }
+
   const mapped = mapOrderToQikink(order, await resolveSkus(items));
 
   if (isMappingFailure(mapped)) {

@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { requireStaff } from "@/lib/auth/staff";
 import { syncAllQikinkOrders } from "@/lib/qikink/tracking";
 
 /**
  * Manual "Sync now" for the tracking page.
  *
- * Gated on `is_staff()` for the same reason as qikink-actions.ts: the work
+ * Gated on staff status for the same reason as qikink-actions.ts: the work
  * underneath runs on the service-role client, and a Server Action is a public
  * POST endpoint. Without this check anyone could drive a merchant's Qikink
  * rate limit into the ground.
@@ -17,9 +17,8 @@ type Result = { ok: true; message: string } | { ok: false; error: string };
 
 export async function syncQikinkTracking(): Promise<Result> {
   try {
-    const supabase = await createClient();
-    const { data } = await supabase.rpc("is_staff");
-    if (!data) return { ok: false, error: "You do not have permission to do this." };
+    const staff = await requireStaff();
+    if (!staff.ok) return { ok: false, error: "You do not have permission to do this." };
   } catch {
     return { ok: false, error: "You do not have permission to do this." };
   }
@@ -32,7 +31,7 @@ export async function syncQikinkTracking(): Promise<Result> {
     return { ok: false, error: result.error ?? "Could not sync with Qikink." };
   }
 
-  revalidatePath("/admin/orders/tracking");
+  revalidatePath("/admin/orders/tracking/qikink");
 
   if (result.skipped === "nothing-to-sync") {
     return { ok: true, message: "Nothing in flight — every order is delivered or cancelled." };

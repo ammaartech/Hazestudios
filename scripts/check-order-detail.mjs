@@ -1,0 +1,85 @@
+import puppeteer from 'puppeteer-core';
+import { loadEnv, dbConfig } from './db-config.mjs';
+import pg from 'pg';
+import { mkdirSync } from 'node:fs';
+loadEnv();
+const browser = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
+const page = await browser.newPage();
+const errors = [];
+page.on('pageerror', e => errors.push(e.message));
+const base = process.env.BASE_URL || 'http://localhost:3000';
+const db = new pg.Client(dbConfig());
+await db.connect();
+let fixture;
+try {
+  await page.setViewport({ width: 1920, height: 917 });
+  await page.goto(`${base}/login`, { waitUntil: 'networkidle2' });
+  await page.type('input[type=email]', process.env.adminlogin);
+  await page.type('input[type=password]', process.env.adminpassword);
+  await Promise.all([page.waitForNavigation({ waitUntil: 'networkidle2' }), page.click('button[type=submit]')]);
+  await page.goto(`${base}/admin/orders`, { waitUntil: 'networkidle2' });
+  await page.waitForSelector('a[href^="/admin/orders/"]');
+  const href = await page.evaluate(() => [...document.querySelectorAll('a')].find(a => /^\/admin\/orders\/[0-9a-f-]{36}$/.test(a.getAttribute('href')))?.getAttribute('href'));
+  if (!href) throw new Error('No order available for verification');
+  await page.goto(base + href, { waitUntil: 'networkidle2' });
+  await page.waitForSelector('.order-detail');
+  mkdirSync('.codex/order-detail', { recursive: true });
+  await page.screenshot({ path: '.codex/order-detail/desktop.png', fullPage: true });
+  console.log('Desktop:', await page.evaluate(() => ({ width: document.querySelector('.order-detail').getBoundingClientRect().width, columns: getComputedStyle(document.querySelector('.order-columns')).gridTemplateColumns, sections: [...document.querySelectorAll('.order-detail h2')].map(x => x.textContent) })));
+  for (const label of ['Edit notes', 'Edit contact information', 'Edit shipping address', 'Edit billing address']) {
+    await page.click(`button[aria-label="${label}"]`);
+    await page.waitForSelector('[role=dialog]');
+    if (!(await page.$('[role=dialog] form'))) throw new Error(`Missing editor: ${label}`);
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('[role=dialog]', { hidden: true });
+  }
+  await page.locator('::-p-text(Add definition)').click();
+  await page.waitForSelector('input[aria-label="Field 1 name"]');
+  await page.keyboard.press('Escape');
+  await page.waitForSelector('[role=dialog]', { hidden: true });
+  await page.locator('::-p-text(View conversion details)').click();
+  if (!(await page.$('.conversion-details[open]'))) throw new Error('Conversion disclosure failed');
+  await page.type('textarea[aria-label="Leave a comment"]', 'Preview comment');
+  const postEnabled = await page.evaluate(() => ![...document.querySelectorAll('button')].find(b => b.textContent === 'Post')?.disabled);
+  if (!postEnabled) throw new Error('Comment post remains disabled');
+  for (const width of [1440, 1024, 768, 390]) {
+    await page.setViewport({ width, height: 917 });
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
+    if (overflow) throw new Error(`Horizontal overflow at ${width}`);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.screenshot({ path: `.codex/order-detail/${width}.png`, fullPage: true });
+  }
+  // All writes use an isolated fixture; no real order is altered or fulfilled.
+  fixture = (await db.query("insert into orders (order_number, is_draft, note) values ($1, true, '') returning id", [-Math.floor(Date.now() / 1000)])).rows[0].id;
+  await page.goto(`${base}/admin/orders/${fixture}`, { waitUntil: 'networkidle2' });
+  await page.click('button[aria-label="Edit notes"]');
+  await page.type('#note-value', 'Order detail verification');
+  await page.click('[role=dialog] button[type=submit]');
+  await page.waitForSelector('[role=dialog]', { hidden: true });
+  if ((await db.query('select note from orders where id=$1', [fixture])).rows[0].note !== 'Order detail verification') throw new Error('Note did not persist');
+  await page.click('button[aria-label="Edit contact information"]');
+  await page.type('#contact-email', 'order-check@example.com');
+  await page.type('#contact-phone', '9000000000');
+  await page.click('[role=dialog] button[type=submit]');
+  await page.waitForSelector('[role=dialog]', { hidden: true });
+  if ((await db.query('select email from orders where id=$1', [fixture])).rows[0].email !== 'order-check@example.com') throw new Error('Contact did not persist');
+  await page.click('button[aria-label="Edit shipping address"]');
+  await page.type('#shipping_address-address1', 'Test address');
+  await page.type('#shipping_address-city', 'Mumbai');
+  await page.click('[role=dialog] button[type=submit]');
+  await page.waitForSelector('[role=dialog]', { hidden: true });
+  if ((await db.query('select shipping_address from orders where id=$1', [fixture])).rows[0].shipping_address.city !== 'Mumbai') throw new Error('Address did not persist');
+  await page.locator('::-p-text(Add definition)').click();
+  await page.type('input[aria-label="Field 1 name"]', 'packing');
+  await page.type('input[aria-label="Field 1 value"]', 'Gift wrap');
+  await page.click('[role=dialog] button[type=submit]');
+  await page.waitForSelector('[role=dialog]', { hidden: true });
+  if ((await db.query('select metafields from orders where id=$1', [fixture])).rows[0].metafields.packing !== 'Gift wrap') throw new Error('Metafield did not persist');
+  await page.type('textarea[aria-label="Leave a comment"]', 'Internal verification comment');
+  await page.locator('::-p-text(Post)').click();
+  await page.waitForFunction(() => document.querySelector('textarea[aria-label="Leave a comment"]').value === '');
+  if (!(await db.query('select id from order_notes where order_id=$1', [fixture])).rowCount) throw new Error('Comment did not persist');
+  console.log('PASS: note, contact, address, metafield and internal comment persistence on isolated draft.');
+  if (errors.length) throw new Error(errors.join('\n'));
+  console.log('PASS: editors, metafields, conversion disclosure, comment state, desktop and mobile overflow; no runtime errors.');
+} finally { if (fixture) await db.query('delete from orders where id=$1', [fixture]); await db.end(); await browser.close(); }

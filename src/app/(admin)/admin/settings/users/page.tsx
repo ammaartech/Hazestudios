@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { UserPlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getStaffSession } from "@/lib/auth/staff";
 import { formatDate } from "@/lib/format";
 import type { StaffMember } from "@/lib/types";
 import { DesktopTable } from "@/components/admin/record-list";
@@ -24,13 +25,13 @@ import { RoleSelect } from "./role-select";
 export const metadata = { title: "Users and permissions" };
 export default async function UsersSettingsPage() {
   const supabase = await createClient();
-  const [{ data: staffData }, { data: userData }] = await Promise.all([
+  const [{ data: staffData }, session] = await Promise.all([
     supabase.from("staff_roles").select("*").order("created_at"),
-    supabase.auth.getUser(),
+    getStaffSession(),
   ]);
 
   const staff = (staffData ?? []) as StaffMember[];
-  const currentUserId = userData.user?.id;
+  const currentUserId = session.userId;
   const me = staff.find((s) => s.user_id === currentUserId);
   const canManage = me?.role === "owner" || me?.role === "admin";
 

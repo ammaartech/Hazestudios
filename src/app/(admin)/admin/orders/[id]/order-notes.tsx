@@ -3,9 +3,9 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, Smile, AtSign, Hash, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateTime } from "@/lib/format";
 import { addOrderNote, deleteOrderNote } from "../actions";
@@ -49,17 +49,17 @@ export function OrderNotes({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Internal notes</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
+    <section className="order-timeline">
+      <h2>Timeline</h2>
+      <div>
+        <div className="timeline-composer">
+          <div className="timeline-input"><span className="timeline-avatar">fog</span>
           <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Add a note for the team…"
-            rows={2}
+            aria-label="Leave a comment"
+            placeholder="Leave a comment…"
+            rows={1}
             // Ctrl/Cmd+Enter submits: these get typed mid-task, often one-handed
             // while reading something else, and reaching for the mouse to post a
             // line of text is friction the keyboard already solves.
@@ -70,20 +70,25 @@ export function OrderNotes({
               }
             }}
           />
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
-              Only visible to staff — the customer never sees this.
-            </p>
+          </div>
+          <div className="timeline-footer">
+            <div className="timeline-tools">
+              <Button variant="ghost" size="sm" aria-label="Insert smile" onClick={() => setBody(body + " 🙂")}><Smile size={15} /></Button>
+              <Button variant="ghost" size="sm" aria-label="Insert mention text" onClick={() => setBody(body + " @")}><AtSign size={15} /></Button>
+              <Button variant="ghost" size="sm" aria-label="Insert order reference" onClick={() => setBody(body + " #")}><Hash size={15} /></Button>
+              <Button variant="ghost" size="sm" aria-label="Insert link" onClick={() => setBody(body + " https://")}><LinkIcon size={15} /></Button>
+            </div>
             <Button size="sm" onClick={submit} disabled={pending || !body.trim()}>
-              {pending ? "Saving…" : "Add note"}
+              {pending ? "Posting…" : "Post"}
             </Button>
           </div>
         </div>
 
+        <p className="timeline-help">Only you and other staff can see comments</p>
         {notes.length > 0 && (
-          <div className="space-y-3 border-t pt-4">
+          <div className="space-y-1">
             {notes.map((note) => (
-              <div key={note.id} className="group flex gap-3 text-sm">
+              <div key={note.id} className="timeline-entry group flex gap-3 text-sm">
                 <div className="min-w-0 flex-1">
                   {/* `whitespace-pre-wrap`: notes are typed prose and people use
                       line breaks to separate thoughts. Collapsing them would run
@@ -113,7 +118,7 @@ export function OrderNotes({
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }

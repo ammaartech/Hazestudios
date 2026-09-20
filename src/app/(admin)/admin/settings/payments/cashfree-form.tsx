@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Check, Copy, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +33,6 @@ export function CashfreeForm({
   status: CashfreeStatus;
   webhookUrl: string;
 }) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [testing, startTesting] = useTransition();
 
@@ -62,7 +60,6 @@ export function CashfreeForm({
       }
       setSecretKey("");
       toast.success(result.message ?? "Saved");
-      router.refresh();
     });
   }
 

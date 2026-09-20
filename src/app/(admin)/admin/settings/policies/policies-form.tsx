@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +22,6 @@ const POLICY_FIELDS = [
 ] as const;
 
 export function PoliciesForm({ settings }: { settings: ShopSettings }) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [policies, setPolicies] = useState<Record<string, string>>({
     privacy: settings.policies?.privacy ?? "",
@@ -38,7 +36,6 @@ export function PoliciesForm({ settings }: { settings: ShopSettings }) {
       if (result.error) toast.error(result.error);
       else {
         toast.success("Policies saved");
-        router.refresh();
       }
     });
   }

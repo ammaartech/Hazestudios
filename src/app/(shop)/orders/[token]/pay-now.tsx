@@ -32,14 +32,32 @@ import { confirmPayment, retryPayment } from "@/app/(checkout)/checkout/actions"
  * **Either way it offers another go.** A dismissed modal, a declined card, a
  * gateway that was down. Each press mints a fresh Cashfree session against the
  * same order of ours.
+ *
+ * With `advance` set it is the same window for a different sum: the advance
+ * the store has asked for on a cash-on-delivery order (0033). The request id is
+ * all that goes back to the server; the amount shown here is for the shopper's
+ * eyes and the amount charged is read from the request row.
  */
 export function PayNow({
   token,
   autoStart,
+  advance,
 }: {
   token: string;
   /** No payment has been attempted yet, i.e. the shopper just got here. */
   autoStart: boolean;
+  /** Present when this is an advance on a COD order rather than the total. */
+  advance?: {
+    requestId: string;
+    /** Formatted for display: "₹199". */
+    amount: string;
+    /** What the courier will collect, formatted. */
+    balance: string;
+    /** The deadline, formatted. */
+    expires: string;
+    /** The store's note to the shopper, if any. */
+    reason: string | null;
+  };
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -83,7 +101,7 @@ export function PayNow({
     setError(null);
     setPaying(true);
 
-    const started = await retryPayment(token);
+    const started = await retryPayment(token, advance?.requestId);
     if (!started.ok) {
       setError(started.error);
       setPaying(false);
@@ -113,16 +131,28 @@ export function PayNow({
     await confirmPayment(token);
   }
 
+  const idle = advance
+    ? `Pay ${advance.amount} now to confirm your order. The remaining ${advance.balance} is paid to the courier at your door.`
+    : "Your order is held and nothing has been charged. Complete the payment to send it into production.";
+
   return (
     <section className="mt-12 rounded-3xl bg-(--shop-cloud) px-5 py-6 md:px-7 md:py-7">
-      <h2 className="meta text-(--shop-mute)">Payment</h2>
+      <h2 className="meta text-(--shop-mute)">
+        {advance ? "Advance payment" : "Payment"}
+      </h2>
       <p className="mt-3 max-w-prose text-sm text-(--shop-charcoal)">
         {checking
           ? "Checking with your bank…"
           : paying
             ? "Finish in the payment window. Don't close this page."
-            : "Your order is held and nothing has been charged. Complete the payment to send it into production."}
+            : idle}
       </p>
+
+      {advance?.reason && !paying && !checking && (
+        <p className="mt-2 max-w-prose text-sm text-(--shop-mute)">
+          {advance.reason}
+        </p>
+      )}
 
       {error && (
         <p
@@ -145,7 +175,7 @@ export function PayNow({
           <>
             {/* "Pay now" on a return visit; "Try again" once an attempt has
                 already failed in this session and left a message above it. */}
-            {error ? "Try again" : "Pay now"}
+            {error ? "Try again" : advance ? `Pay ${advance.amount} now` : "Pay now"}
             <ArrowRight className="size-4" aria-hidden />
           </>
         )}
@@ -154,6 +184,7 @@ export function PayNow({
       <p className="mt-4 flex items-center gap-2 text-xs text-(--shop-mute)">
         <Lock className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
         Handled by Cashfree. We never see your card details.
+        {advance && ` Valid until ${advance.expires}.`}
       </p>
     </section>
   );

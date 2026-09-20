@@ -14,6 +14,7 @@ import type { LiveSnapshot } from "@/lib/analytics/queries";
 export function useLiveSnapshot(initial: LiveSnapshot, intervalMs = 10_000) {
   const [snapshot, setSnapshot] = useState(initial);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [history, setHistory] = useState<{ time: number; value: number }[]>([]);
   // Guards against a slow response landing after a newer one.
   const requestId = useRef(0);
 
@@ -33,6 +34,7 @@ export function useLiveSnapshot(initial: LiveSnapshot, intervalMs = 10_000) {
         if (!cancelled && id === requestId.current) {
           setSnapshot(data);
           setUpdatedAt(new Date());
+          setHistory(points => [...points, { time: Date.now() / 1000, value: data.visitorsRightNow }].slice(-180));
         }
       } catch {
         // Offline or a dropped request — keep showing the last good snapshot.
@@ -50,7 +52,7 @@ export function useLiveSnapshot(initial: LiveSnapshot, intervalMs = 10_000) {
     };
   }, [intervalMs]);
 
-  return { snapshot, updatedAt };
+  return { snapshot, updatedAt, history };
 }
 
 /**

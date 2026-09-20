@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { revalidateSettings } from "@/lib/shop/cache";
+import { revalidateLocations } from "@/lib/admin/reference";
 import { createClient } from "@/lib/supabase/server";
 import type { ShopSettings, StaffRole } from "@/lib/types";
 
@@ -69,6 +70,7 @@ export async function saveLocation(payload: {
     if (error) return { error: error.message };
   }
   revalidatePath("/admin/settings/locations");
+  revalidateLocations();
   return { ok: true };
 }
 
@@ -85,6 +87,7 @@ export async function deleteLocation(id: string) {
   const { error } = await supabase.from("locations").delete().eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/admin/settings/locations");
+  revalidateLocations();
   return { ok: true };
 }
 

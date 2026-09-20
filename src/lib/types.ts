@@ -228,6 +228,15 @@ export interface Order {
   checkout_token: string | null;
   source: string;
 
+  /* Added in 0033_partial_cod.sql. `amount_paid` is money captured online so
+     far — the advance on a COD order — and the courier collects the rest. The
+     hold trio parks a COD order for review before it goes to fulfilment; it is
+     on hold while `held_at` is set and `released_at` is not. */
+  amount_paid: number;
+  held_at: string | null;
+  hold_reason: string | null;
+  released_at: string | null;
+
   /* Marketing capture — consent and attribution as facts about this purchase. */
   marketing_opt_in: boolean;
   utm: Record<string, string>;
@@ -262,6 +271,35 @@ export interface Refund {
   reason: string;
   restock: boolean;
   created_at: string;
+}
+
+export type PaymentRequestStatus = "open" | "paid" | "expired" | "cancelled";
+
+/**
+ * An amount the store has asked a shopper to pay online against an order that
+ * already exists — today, the advance on a cash-on-delivery order
+ * (0033_partial_cod.sql). `status` is the stored value; an `open` request past
+ * `expires_at` is treated as expired everywhere it is read, and flipped on the
+ * first write that touches it.
+ */
+export interface PaymentRequest {
+  id: string;
+  order_id: string;
+  kind: "cod_advance";
+  amount: number;
+  currency: string;
+  status: PaymentRequestStatus;
+  /** Shown to the shopper on their order page. */
+  reason: string | null;
+  expires_at: string;
+  created_by: string | null;
+  created_by_email: string | null;
+  paid_at: string | null;
+  /** The `payments` attempt that settled it. */
+  payment_id: string | null;
+  resolved_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Discount {

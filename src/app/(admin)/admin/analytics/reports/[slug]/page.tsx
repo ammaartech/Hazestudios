@@ -140,9 +140,12 @@ export default async function ReportPage({
                     <TrendLineChart
                       data={chartData.map((d) => ({
                         label: d.label,
+                        date: d.date,
                         value: d.value,
                       }))}
                       money={result.money ?? false}
+                      label={report.name}
+                      format={slug === "conversion-rate-over-time" ? "percent" : undefined}
                       height={260}
                     />
                   ) : (

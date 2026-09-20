@@ -27,10 +27,9 @@ export async function GET(request: NextRequest) {
   // RLS is `to authenticated`, so an anonymous caller would get an empty list
   // rather than a refusal. Saying 401 lets the dropdown distinguish "signed
   // out" from "no matches", which are very different things to render.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
+  // Verified locally against the JWKS — no Auth round trip per keystroke.
+  const { data: claims } = await supabase.auth.getClaims();
+  if (!claims) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

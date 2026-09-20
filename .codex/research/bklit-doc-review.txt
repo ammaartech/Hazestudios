@@ -1,0 +1,1069 @@
+apps\web\content\docs\components\area-chart.mdx
+---
+title: Area Chart
+description: A composable area chart with gradient fills, tooltips, and hover interactions
+---
+];
+## Installation
+## Usage
+The Area Chart uses the same composable API as the Line Chart. See the [charts gallery](/charts/area-chart) for interactive examples.
+## Components
+### AreaChart
+The root component that provides context to all children. It shares the same props as `LineChart`.
+### Area
+Renders a filled area on the chart with a gradient fill.
+### PatternArea
+Renders a filled area using an SVG pattern (`url(#id)`). Define the pattern (e.g. `PatternLines`) as a child of `AreaChart`, then pair `PatternArea` with an `Area` that has `fillOpacity={0}` for the stroke line.
+### Grid
+Renders grid lines.
+### Background
+Pattern fill for the plot area when you omit `Grid`. See the [Background utility](/docs/utility/background) and **Pattern Background** examples on the [area chart gallery](/charts/area-chart).
+### YAxis
+Value labels on the left or right. See [Y Axis](/docs/utility/axis/y-axis) for `yAxisId`, `orientation`, and biaxial usage.
+### XAxis
+Renders x-axis labels that fade when the crosshair passes.
+### ChartTooltip
+Renders the tooltip with crosshair, dots, and content box.
+## Brush zoom
+See the [Brush](/docs/utility/brush) utility docs for `ChartBrushLayout` and `ChartBrush` props.
+Wrap the main chart in `ChartBrushLayout`, render a simplified mini chart in `brushStrip`, and add `ChartBrush` as a child of that strip. Pass `xDomain`, `xDomainSlotCount`, and `tweenYDomainOnXDomainChange` to the main `AreaChart` so the y-scale adapts as users pan and resize the brush.
+>
+>
+Open [Studio with brush enabled](/studio?chart=area-chart&showBrush=true) to tune strip height, blur, and selection pattern.
+## Loading state
+Drive loading and ready from your data layer with a single `AreaChart` — one `Grid`, one `Area`, no component swap. Set `status="loading"` while fetching; switch to `"ready"` when data resolves.
+**Loading → ready:** pulse loop on skeleton data → pulse finishes its grow, then flows out right → loading label drifts down 30px, blurs, and fades → grid y-domain tween (500ms) → clip-path reveal (`cubic-bezier(0.85, 0, 0.15, 1)`) → interaction enabled.
+**Ready → loading:** ready area conceals to the right → grid y-domain tween → pulse loop and shimmer resume.
+Pair `Grid` `stroke` / `loadingStroke` with shimmer props. Pair `Area` `loadingStroke` props. Use `loadingLabel` on `AreaChart` for centered shimmer text via `@bklit/shimmering-text`.
+const [loadingStyle, setLoadingStyle] = useState<"pulse" | "sweep">("pulse");
+>
+>
+Toggle **Loading** / **Ready** in the preview to replay the transition, and **Pulse** / **Sweep** to switch the loading animation style. When target data spans a different y-range than the skeleton, `yDomainTween` morphs the scale before the area reveals.
+### Studio
+Open [Studio in loading mode](/studio?chart=area-chart&areaChartState=loading) and set **State** to **Loading**. In **Settings**, choose **Loading style** — **Pulse** (traveling segment) or **Sweep** (diagonal shimmer). The components tree exposes **Grid**, **Label**, and **Area**:
+Data and animation panels stay collapsed in loading mode; scramble data is disabled. See the [area chart gallery](/charts/area-chart) (**Loading** example).
+Installing `@bklit/area-chart` pulls in `@bklit/shimmering-text` automatically.
+### Loading style: pulse or sweep
+The loading state has two animation styles, set with `loadingStyle` on the `Area`: the default `"pulse"` (a segment travels along the skeleton stroke) or `"sweep"` (a soft diagonal shimmer sweeps across the whole area). Set it on the `Area` inside a `status="loading"` chart, or on the `AreaChartLoading` wrapper:
+The sweep masks over the real skeleton stroke, so it follows whatever `curve` the `Area` uses and respects `prefers-reduced-motion`. The sweep is used only during steady loading; the pulse still drives the exit transition. See the **Loading (Sweep)** example on the [area chart gallery](/charts/area-chart).
+## Dashed tail
+Set `dashFromIndex` on `Area` to draw a solid stroke through one data point, then a dashed segment through the end of the series. Useful when the final period is still in progress (e.g. yesterday → today).
+`dashFromIndex` is **inclusive** — dashing starts at that row and continues through the last point. The dashed segment follows the same curved path as the solid stroke and respects the stroke gradient fade from `fadeEdges`.
+## Markers
+Add markers to annotate specific dates on the chart:
+### ChartMarker Interface
+### ChartMarkers Props
+## Segment Selection
+Add click-drag and touch segment selection with composable components. The area highlight automatically shows the selected path segment.
+### Basic Usage
+Use `SegmentBackground`, `SegmentLineFrom`, and `SegmentLineTo` independently — you do not need all three. Boundary lines support `variant="dashed" | "solid" | "gradient"`.
+### Reading Selection Data
+Use the `useChart` hook inside a child component to read the active selection:
+### SegmentBackground
+### SegmentLineFrom / SegmentLineTo
+## Theming
+The Area Chart uses the same CSS variables as the Line Chart:
+## Dependencies
+This component requires the same packages as the Line Chart:
+
+apps\web\content\docs\components\bar-chart.mdx
+---
+title: Bar Chart
+description: A composable bar chart with spring animations, stacked bars, horizontal orientation, and grouped series support
+---
+];
+## Installation
+/>
+## Usage
+The Bar Chart uses the same composable API as the Line and Area charts. Build charts by combining components:
+See the [charts gallery](/charts/bar-chart) for stacked bars, horizontal layouts, gradients, patterns, the **Shape** square-column variant, and more.
+## Components
+### BarChart
+The root component that provides context to all children.
+### Bar
+Renders a bar for each data point with configurable styling and animations.
+### BarSquares
+Renders a **Shape** bar as a vertical stack of discrete squares instead of a continuous `<Bar>`. Use one `<BarSquares>` per series (grouped, vertical charts only). Squares cascade upward on enter; supports solid fills, bar-spanning gradients, and pattern presets.
+Pass **`squareSnap`** on `<BarChart>` with the same `squareGap`, `groupGap`, and `squareFit` so tooltip ring indicators align with square columns:
+See the **Shape & Gradient** and **Shape Squircle Ring** examples on the [bar chart gallery](/charts/bar-chart).
+### BarColumnTrack
+Optional underlay for Shape bars: patterned or solid fill in the **empty space above** each square column (not behind the bars). Place before `<BarSquares>`.
+Tracks animate from full column height on enter and shrink in sync as squares stack upward.
+### BarXAxis
+Displays categorical labels along the x-axis (for vertical bar charts).
+### BarYAxis
+Displays categorical labels along the y-axis (for horizontal bar charts).
+### Grid
+The Grid component now supports `fadeVertical` for vertical grid lines.
+### Background
+Pattern fill for the plot area when you omit `Grid`. See the [Background utility](/docs/utility/background) and **Pattern Background** examples on the [bar chart gallery](/charts/bar-chart).
+### BarDepthBack
+Renders the 3D side + top faces. Place **before** `<Bar>` so the bar's front face occludes depth that would extend into the next column.
+### BarDepthFront
+Renders the glossy glass sheen over the bar's fill. Place **after** `<Bar>`.
+### BarPulse
+Optional looping vertical sweep over a single active bar (e.g. a live value). Place **after** `<BarDepthFront>`.
+### BarDepthProvider
+Optional wrapper supplying shared depth config to every layer beneath it. Wrap it **around** `<BarChart>`, not inside it. Use it to split **stacked** bars (`segmentsAccessor`) and/or tune the baseline contact shadow (`groundShadow`).
+## 3D Depth & Glass Surfaces
+Give bars a head-on 3D perspective and a glass-block sheen by layering `BarDepthBack` (side + top faces, before `Bar`) and `BarDepthFront` (front glass, after `Bar`). The layers read geometry from the chart context, so the only required prop is the matching `dataKey`.
+Add **`perspective`** to the `Bar` and you're done — it shrinks the front face's top so the lid sits flush on the bar (instead of floating above it) and forces a flat top so the lid meets it with no gap. **Always pass it when using the depth layers.**
+### Custom indicator (optional)
+The [3D Depth gallery example](/charts/bar-chart) pairs depth bars with a rising line indicator. Disable the default crosshair and dots on `ChartTooltip`, then render your own overlay via `useChart` and a portal — see [Custom Indicator](/docs/utility/custom-indicator).
+Color bars individually with `colorAccessor`:
+Highlight a live / in-progress bar with `BarPulse` (render it after `BarDepthFront`):
+### Stacked bars (multiple data sources)
+To give a **stacked** bar 3D depth, wrap the chart in `BarDepthProvider` with a `segmentsAccessor` returning one `{ value, color }` per data source (bottom→top). The side face splits into a matching parallelogram per segment, and the lid takes the topmost segment's color. The depth's height is the **sum of the segments**, so you don't need a separate total column — just stack a `<Bar>` per source (each with `perspective`) in the same order:
+Each bar gets a subtle dark "contact shadow" at the baseline so it reads as sitting on the axis. Tune or remove it with `groundShadow` on the provider (it reads strongest over bright fills):
+To keep **zero or very short** bars visible as a tiny bar instead of vanishing, set `minBarHeight` on **both** the `<Bar>` (floors the front face) and `<BarDepthProvider>` (floors the 3D surfaces) — they must match:
+Negative values are supported (bars grow downward from the baseline) as long as the chart's value scale includes negatives. See the [charts gallery](/charts/bar-chart) for a live 3D depth example.
+## Loading state
+`BarChart` accepts a `status` prop. While `status="loading"`, it replaces the bars with a shimmer skeleton: placeholder bars with a soft diagonal shimmer sweeping across them on a loop. On `status="ready"` it switches to the real bars. No chart data is required during loading. Bar heights come from a deterministic seed (SSR-safe, no `Math.random()`), and it respects `prefers-reduced-motion` by rendering a calm, static skeleton.
+>
+Toggle **Loading** / **Ready** in the preview to swap the shimmer skeleton for the real bars.
+For the common "render a placeholder until data arrives" case, `BarChartLoading` is a turnkey shortcut for `<BarChart status="loading" />`:
+## Animation
+Bars animate with the same easing as Line charts (`cubic-bezier(0.85, 0, 0.15, 1)`) for a smooth, organic feel. The stagger delay is automatically calculated based on the number of bars to ensure all animations complete within the total animation duration (~1.2s).
+### Grow Animation (Default)
+Bars grow from zero to their final size:
+### Fade Animation
+Bars fade in with a blur effect:
+### Custom Stagger
+Stagger is calculated automatically, but you can override it:
+## Line Cap Styles
+Control the bar end style:
+## Theming
+The Bar Chart uses the same CSS variables as other charts:
+## Dependencies
+This component requires the same packages as the other charts:
+
+apps\web\content\docs\components\candlestick-chart.mdx
+---
+title: Candlestick Chart
+description: A composable OHLC candlestick chart with gradients, patterns, tooltips, and hover interactions
+---
+## Installation
+/>
+## Usage
+The Candlestick Chart uses the same composable API as the Line and Area charts. Provide OHLC data and compose Grid, Candlestick, ChartTooltip, and XAxis.
+### Basic Example
+### Data shape
+Each point must have `date`, `open`, `high`, `low`, and `close`:
+### Styling candles
+The default fill uses the chart palette: `--chart-1` (positive) and `--chart-5` (negative). Override with `positiveFill` and `negativeFill` for gradients or solid colors (e.g. `var(--color-emerald-500)` for up, `var(--color-red-500)` for down). Use `bodyPatternPositive` and `bodyPatternNegative` with `url(#pattern-id)` for pattern fills. Control spacing with `candleGap` (0–1) or fixed `candleWidth` in pixels.
+### Tooltip
+Pass a custom `content` renderer to `ChartTooltip` that receives `{ point, index }` to show OHLC fields. Use `showCrosshair={false}` and `showDots={false}` for tooltip-only (no crosshair or dot).
+### Background
+Use [`Background`](/docs/utility/background) instead of `Grid` for a pattern fill behind candles. See **Pattern Background** examples on the [candlestick chart gallery](/charts/candlestick-chart).
+
+apps\web\content\docs\components\choropleth-chart.mdx
+---
+title: Choropleth Chart
+description: A composable geographic map chart for visualizing data across regions with interactive tooltips, zoom controls, and pattern support
+---
+## Installation
+## Usage
+The Choropleth Chart uses a composable API similar to other charts. Build maps by combining components:
+## Components
+### ChoroplethChart
+The root component that sets up the Mercator projection and provides context to children.
+### ChoroplethFeatureComponent
+Renders the geographic feature paths with hover states and optional patterns.
+### ChoroplethGraticule
+Renders optional graticule (latitude/longitude grid lines).
+### ChoroplethTooltip
+Displays tooltips for features on hover, following the mouse position.
+## Data Format
+The choropleth expects a GeoJSON FeatureCollection:
+For TopoJSON data, convert it using `topojson-client`:
+See the [charts gallery](/charts/choropleth-chart) for analytics color scales, zoom controls, and pattern fills.
+## Theming
+For categorical maps, `defaultChoroplethColors` cycles through **`--chart-scale-01`** … **`--chart-scale-05`**. Pass `getFeatureColor` for custom bins (see gallery analytics demo). Empty / no-data regions typically use `var(--muted)`.
+See [Theming](/docs/theming) for the full sequential scale reference.
+## Dependencies
+This component requires:
+
+apps\web\content\docs\components\composed-chart.mdx
+---
+title: Composed Chart
+description: Mix SeriesBar, Line, and Area on one shared time axis (Recharts ComposedChart–style)
+---
+## Installation
+/>
+## Usage
+`ComposedChart` is the time-series shell for **mixing marks** on one `data` array and one pair of scales. Use **`SeriesBar`** for vertical columns aligned to dates (not the categorical `<Bar />` from `BarChart`, which uses a band scale).
+- **`aspectRatio`** — wide charts (e.g. `4 / 1`) work for full-width heroes; in **narrow cards** use **`3 / 2`** or **`2 / 1`** so the plot stays tall enough to read.
+- **`barSize`**, **`maxBarSize`**, **`barGap`** — parent-level layout for `SeriesBar` groups (similar to Recharts `ComposedChart` props). Use **`barGap={0}`** and a higher **`maxBarSize`** for dense daily data so columns read like the [90 days of data](/docs/components/bar-chart#90-days-of-data) bar example.
+- **`stacked`** / **`stackGap`** — stack `SeriesBar` segments in child order at each x (lines and areas are not stacked).
+- **`SeriesBar`** — default **`radius` is 0** (square tops). Pass **`radius={4}`** (or similar) for rounded corners.
+- **`Line`** / **`Area`** — pass a **`curve`** from `@visx/curve` (e.g. **`curveCatmullRom.alpha(0.42)`**) to soften paths when you have many daily points (preview + hero use the same curve for `revenue` and `runRate`).
+- **`Line`** / **`Area`** — use **`showMarkers`** for scatter-style ring markers at each point; pass **`markers={{ radius, ringGap, strokeWidth }}`** to tune styling.
+- **`Line`** / **`Area`** — use **`dashFromIndex`** and **`dashArray`** for a dashed tail on incomplete periods (the dashed segment follows the same curve and edge fade).
+- **`XAxis`** — default ticks snap to data rows so the crosshair aligns. Tune **`numTicks`** for dense series (e.g. daily). Use **`tickMode="domain"`** only when you want calendar-even spacing instead of data alignment.
+- **`ChartTooltip`** — for bar-heavy layouts, **`showCrosshair={false}`** often looks cleaner because the hover band is already vertical columns.
+- **`YAxis`** / **`yAxisId`** — `Line` and `Area` support independent left/right scales (see [Y Axis](/docs/utility/axis/y-axis)). `SeriesBar` uses the primary scale.
+- **Hover dimming** — `SeriesBar` fades non-hovered columns using `tooltipData.index`, like grouped bars in `BarChart`. Tune with **`fadedOpacity`** on each `SeriesBar`.
+### Basic example
+`composedDemoData` is 30 daily rows with ISO `date` strings, one slow wave across the month plus light ripples (kept readable next to dense bars). Outside this monorepo, copy the helpers from `apps/web/lib/composed-demo-data.ts` into your app.
+See the [charts gallery](/charts/composed-chart) for stacked bars, pattern fills, rounded bars, and more compositions.
+### Background
+Use [`Background`](/docs/utility/background) instead of `Grid` for a pattern fill behind bars and lines. See **Pattern Background** examples on the [composed chart gallery](/charts/composed-chart).
+## See also
+- [Line Chart](/docs/components/line-chart) — lines only
+- [Area Chart](/docs/components/area-chart) — areas only
+- [Bar Chart](/docs/components/bar-chart) — categorical bars with `<Bar />`
+
+apps\web\content\docs\components\funnel-chart.mdx
+---
+title: Funnel Chart
+description: An animated funnel chart with multi-layer halo rings, hover interactions, and staggered entrance animations
+---
+];
+## Installation
+## Usage
+The Funnel Chart is a standalone component that renders an animated funnel visualization. Each segment represents a stage in a pipeline, with the width (or height in vertical mode) proportional to the value.
+## Props
+### FunnelChart
+### FunnelStage
+### GridConfig
+When passing an object to `grid`, the following options are available:
+See the [charts gallery](/charts/funnel-chart) for vertical layouts, per-segment colors, patterns, and legend sync.
+
+apps\web\content\docs\components\gauge-chart.mdx
+---
+title: Gauge
+description: Notch-based radial or linear gauge with optional center label, theme fills, patterns, arc gradients, and responsive sizing
+---
+## Installation
+/>
+## Usage
+`Gauge` draws **notches** around an arc (default) or along a horizontal track (`orientation="linear"`). The center label is **optional** — omit `centerValue` for a track-only gauge.
+- **Fill vs center:** `value` is the fill level **0–100**. `centerValue` is the statistic shown in the label (often the same story or a related KPI).
+- **Arc center:** arc gauges overlay the label in the middle of the sweep (PieCenter-style NumberFlow + caption).
+- **Linear label placement:** with `orientation="linear"`, place the label above or below the track using `labelPlacement` (`top` | `bottom`) and `labelAlign` (`start` | `center` | `end`) — the same six-position model as chart legend (top/bottom × left/center/right).
+- **Responsive:** omit `width` and `height` to fill the parent. Arc gauges use **`minWidth`** (default **300**) and an aspect ratio. Linear gauges fill the parent width and use **`linearHeight`** (default **24**).
+- **Linear notches:** linear gauges default to **`uniformWidth`** (rectangular notches). Pass `uniformWidth={false}` for tapered ticks.
+- **Patterns / gradients in `<defs>`:** pass **`PatternLines`**, **`LinearGradient`**, etc. as **`children`**, then set **`activeFill`** / **`inactiveFill`** to `url(#id)`.
+- **Arc gradients:** set **`useGradient`**. Optional **`activeGradient`** and **`inactiveGradient`** are **`[hexFrom, hexTo]`** tuples (interpolated along the notch index).
+- **Fill opacity:** `activeFillOpacity` and `inactiveFillOpacity` map to SVG `fill-opacity` (0–1). Defaults are **1** for active notches and **0.8** for the track; docs and gallery examples use **`inactiveFillOpacity={0.4}`** for a lighter track.
+- **Corner radius:** `notchCornerRadius` is the fillet in **pixels** at each notch corner (**0** = sharp). Large values are clamped by edge length and radial depth so shapes can approach a **capsule** / near-circular look.
+### Linear gauge
+Track-only (no label):
+With label below center:
+## Props
+### Gauge
+## Theming
+Inactive (track) notches default to **`var(--border)`** — shared with ring tracks and radar grid lines. Active notches default to **`var(--chart-1)`**. Override with `inactiveFill` / `activeFill`, or tune **`--border`** / **`--chart-1`** in your theme. See [Theming](/docs/theming).
+## Live examples
+See the [Gauge gallery](/charts/gauge-chart) for arc and linear variants. Use [Studio](/studio?chart=gauge-chart) to tune every gauge prop interactively — toggle **Linear** for the horizontal notch track, **Show label** for optional center text, and the legend-style **Position** picker for label placement — then copy the resulting code.
+
+apps\web\content\docs\components\heatmap-chart.mdx
+---
+title: Heatmap Chart
+description: A contribution heatmap with animated cells, configurable level colors and patterns, and an interactive legend
+---
+## Installation
+When using `loadingLabel` or `HeatmapChartLoading`, centered shimmer text uses `@bklit/shimmering-text` — installed automatically with `@bklit/heatmap-chart`.
+## Usage
+The Heatmap Chart uses a composable API. Wrap the chart and legend in `HeatmapInteractionProvider` so hover dimming and tooltips stay in sync:
+## Components
+### HeatmapChart
+The root component that sizes the grid, builds color scales, and provides context to children.
+### HeatmapCells
+Renders the grid of cells with enter animation and hover dimming.
+When `inactiveOpacity`, `inactiveScale`, and `activeScale` are all `1`, hover dimming is disabled.
+### HeatmapXAxis / HeatmapYAxis
+Month labels along the top and weekday labels along the left. Y-axis labels follow `weekStartDay` on `HeatmapChart`.
+### HeatmapLegend
+Less → More scale swatches that share `levelStyles` with the chart.
+Gradient mode uses solid colors only (patterns are ignored).
+### HeatmapSeparator
+Vertical column separators with optional quarter labels.
+**Solid stroke** — no `gradient` prop:
+**Gradient fade** — softens the top and bottom of each line:
+### HeatmapTooltip
+Shows the contribution count and date for the hovered cell.
+## Level styles and patterns
+Pass `levelStyles` (five entries: empty + levels 1–4) to control both cell fills and legend swatches. Each level can be solid or use a pattern preset. Omit `patternColor` to derive stripe color from the level color, or set `patternColor: "var(--chart-scale-pattern-color)"` for the theme default:
+## Data format
+Counts map to five visual levels (0 = empty, 1–4 = increasing activity). Use `getHeatmapContributionLevel(count)` from `@bklitui/ui/charts` to derive the level from a raw count.
+### Row opacity
+`rowOpacity` on `HeatmapCells` and `HeatmapYAxis` controls opacity **per display row** — the row index after `weekStartDay` rotation, where `0` is the top row of the grid.
+With `weekStartDay={1}` (Monday-first):
+Pass the **same** value to `HeatmapCells` and `HeatmapYAxis` so faded rows and their labels stay aligned.
+**Plain array** — explicit opacity per row:
+**Helper** — `buildHeatmapRowOpacity` from `@bklitui/ui/charts`:
+Other predicate examples:
+**Single number** — applies to every row:
+### Monday-first grid with faded weekends
+Source data can stay Sunday-first; `weekStartDay` rotates display rows without reshaping your data:
+Default level colors use **`--chart-scale-01`** … **`--chart-scale-05`**. See [Theming](/docs/theming).
+## Gallery
+See the [charts gallery](/charts/heatmap-chart) for pattern fills and layout variants.
+
+apps\web\content\docs\components\index.mdx
+---
+title: Components
+description: A collection of chart components for your applications.
+---
+Mix lines, areas, and time-aligned columns on one chart with the [**Composed Chart**](/docs/components/composed-chart) (`SeriesBar` + `Line` / `Area`).
+
+apps\web\content\docs\components\line-chart.mdx
+---
+title: Line Chart
+description: A composable line chart with tooltips, markers, and hover interactions
+---
+## Installation
+## Usage
+Build charts by composing components. See the [charts gallery](/charts/line-chart) for interactive examples.
+## Updating data smoothly
+When your data changes (e.g. filtering by date range, refreshing from an API), the chart automatically updates smoothly without replaying the enter animation. The y-domain tweens to the new scale via `yDomainTween` (enabled by default).
+**Do not** change or pass the `revealSignature` prop when updating data — that prop is only for manually replaying the reveal animation (used in Studio's replay button).
+const filteredData = useMemo(() => {
+>
+Click the date range buttons — the line and y-axis morph smoothly without reinitialization. Use the replay button to run the enter animation again.
+## Components
+### LineChart
+The root component that provides context to all children.
+### Line
+Renders a line on the chart.
+### Grid
+Renders grid lines.
+### Background
+Pattern fill for the plot area when you omit `Grid`. Fades in after the series reveal on time-series charts. See the [Background utility](/docs/utility/background) for presets (`diagonal`, `dots`, `cross`, …), edge fade, and opacity — and the **Pattern Background** examples on the [line chart gallery](/charts/line-chart).
+### XAxis
+Renders x-axis labels that fade when the crosshair passes.
+### ChartTooltip
+Renders the tooltip with crosshair, dots, and content box.
+## Dual Y axes (biaxial)
+Pair `yAxisId` on each `Line` with matching `YAxis` components. Increase `margin.left` and `margin.right` so labels fit. See [Y Axis](/docs/utility/axis/y-axis) and the **Left and right Y axes** examples on the [line chart gallery](/charts/line-chart).
+## Profit/Loss line
+For a single series that crosses zero, use [`ProfitLossLine`](/docs/components/profit-loss-line) inside `LineChart`. Pair it with a hidden `Line` (same `dataKey`) so the chart registers the series for the y-domain and tooltip. When any value is negative, the y-axis automatically includes the full data extent instead of anchoring at zero.
+Highlight the break-even baseline with `Grid highlightRowValues={[0]}`:
+See the [Profit/Loss Line](/docs/components/profit-loss-line) docs and the [line chart gallery](/charts/line-chart) (**Profit/Loss** example).
+## Projection
+Extend a series past the last data point with [`ProjectionLine`](/docs/utility/projection-line). Build the path with `buildProjectionPath` (auto slope, target value, or manual points). Optionally add [`LineSeriesTerminalMarker`](/docs/utility/projection-line#terminal-marker) at the anchor.
+Projections extend the x-domain to the horizon and are not supported together with [brush zoom](/docs/utility/brush).
+const projectionPath = buildProjectionPath({
+>
+Open [Studio with a projection](/studio?chart=line-chart) via **Settings → Projections** or the series context menu. See the [Projection Line utility](/docs/utility/projection-line) for props and `buildProjectionPath` options.
+## Brush zoom
+Use `ChartBrushLayout` and `ChartBrush` the same way as on [`AreaChart`](/docs/components/area-chart#brush-zoom). See the [Brush](/docs/utility/brush) utility docs for full API reference. The brush strip typically shows simplified `Line` series; the main chart receives `xDomain`, `xDomainSlotCount`, and `tweenYDomainOnXDomainChange` for live zoom and y-domain tweening.
+>
+>
+Open [Studio with brush enabled](/studio?chart=line-chart&showBrush=true) to tune strip height, blur, and selection pattern.
+## Loading state
+Drive loading and ready from your data layer with a single `LineChart` — one `Grid`, one `Line`, no component swap. Set `status="loading"` while fetching; switch to `"ready"` when data resolves.
+**Loading → ready:** pulse loop on skeleton data → pulse finishes its grow, then flows out right → loading label drifts down 30px, blurs, and fades → grid y-domain tween (500ms) → clip-path reveal (`cubic-bezier(0.85, 0, 0.15, 1)`) → interaction enabled.
+**Ready → loading:** ready line conceals to the right → grid y-domain tween → pulse loop and shimmer resume.
+Pair `Grid` `stroke` / `loadingStroke` with shimmer props. Pair `Line` `loadingStroke` props. Use `loadingLabel` on `LineChart` for centered shimmer text via `@bklit/shimmering-text`.
+const [loadingStyle, setLoadingStyle] = useState<"pulse" | "sweep">("pulse");
+>
+>
+Toggle **Loading** / **Ready** in the preview to replay the transition, and **Pulse** / **Sweep** to switch the loading animation style. When target data spans a different y-range than the skeleton, `yDomainTween` morphs the scale before the line reveals.
+### Studio
+Open [Studio in loading mode](/studio?chart=line-chart&lineChartState=loading) and set **State** to **Loading**. In **Settings**, choose **Loading style** — **Pulse** (traveling segment) or **Sweep** (diagonal shimmer). The components tree exposes **Grid**, **Label**, and **Line**:
+Data and animation panels stay collapsed in loading mode; scramble data is disabled. See the [line chart gallery](/charts/line-chart) (**Loading** example).
+Installing `@bklit/line-chart` pulls in `@bklit/shimmering-text` automatically.
+### Loading style: pulse or sweep
+The loading state has two animation styles, set with `loadingStyle` on the `Line`: the default `"pulse"` (a segment travels along the skeleton stroke) or `"sweep"` (a soft diagonal shimmer sweeps across the whole line). Set it on the `Line` inside a `status="loading"` chart, or on the `LineChartLoading` wrapper:
+The sweep masks over the real skeleton line, so it follows whatever `curve` the `Line` uses (`curveStepAfter`, `curveNatural`, …) and respects `prefers-reduced-motion`. To keep the loading→ready handoff smooth, the sweep is used only during steady loading; the pulse still drives the exit transition. See the **Loading (Sweep)** example on the [line chart gallery](/charts/line-chart).
+## Dashed tail
+Set `dashFromIndex` on `Line` to draw a solid stroke through one data point, then a dashed segment through the end of the series. Useful when the final period is still in progress (e.g. yesterday → today).
+`dashFromIndex` is **inclusive** — dashing starts at that row and continues through the last point. The dashed segment follows the same curved path as the solid stroke and respects `fadeEdges`.
+## Markers
+Add markers to annotate specific dates on the chart:
+### ChartMarker Interface
+### ChartMarkers Props
+## Segment Selection
+Add click-drag and touch segment selection with composable components. The line highlight automatically shows the selected path segment.
+### Basic Usage
+Click and drag (or two-finger touch on mobile) to select a range:
+Use `SegmentBackground`, `SegmentLineFrom`, and `SegmentLineTo` independently — you do not need all three. Boundary lines support `variant="dashed" | "solid" | "gradient"`.
+### Reading Selection Data
+Use the `useChart` hook inside a child component to read the active selection:
+### SegmentBackground
+### SegmentLineFrom / SegmentLineTo
+## Theming
+The chart uses CSS variables for theming. Define these in your CSS:
+## Dependencies
+This component requires the following packages:
+
+apps\web\content\docs\components\live-line-chart.mdx
+---
+title: Live Line Chart
+description: Real-time streaming line chart with smooth scrolling, crosshair, and animated axes
+---
+## Installation
+## Usage
+The Live Line Chart is built for **streaming time-series data**: a sliding time window, smooth interpolation, a live dot at the current value, and an interactive crosshair. Use it for stock tickers, crypto micro-prices, or any real-time metric.
+Data is an array of `{ time: number, value: number }` where `time` is Unix seconds. You push new points as they arrive and pass the **latest value** so the chart can smoothly interpolate the display.
+### Basic Example
+### Data Shape
+Each point must have:
+Use `dataKey` on `LiveLineChart` if your value field has a different name (default is `"value"`).
+### Time Window and Now Offset
+- **`window`** (default `30`): Visible time window in seconds. Older points scroll off the left.
+- **`nowOffsetUnits`** (default `0`): How many X-tick units to leave between the live dot and the right edge. Use `1` to get a short leading gap and a visible fade on the line/area at the right.
+### Pause Scrolling
+Set **`paused`** to freeze the chart (e.g. while the user inspects). The "now" marker and domain stop advancing; new data can still be appended.
+### Momentum Colors
+Pass **`momentumColors`** to `LiveLine` to color the line, fill, and dot by short-term trend (up / down / flat).
+### Live Line Props
+### LiveLineChart Props
+### LiveXAxis / LiveYAxis
+- **LiveXAxis**: Time labels and a time pill that follows the crosshair. No required props.
+- **LiveYAxis**: Animated value labels. Use **`position`** `"left"` or `"right"` and **`formatValue`** for display.
+### Tooltip
+Use **`ChartTooltip`** with **`showDatePill={false}`** and a custom **`content`** renderer so the time and value match the live chart. The crosshair and time pill stay in sync via shared context.
+### Grid with Live Charts
+If you use **Grid** inside `LiveLineChart`, you can pass **`rowTickValues`** (from context or derived from the same scale as `LiveYAxis`) so horizontal grid lines align with the Y-axis labels. See the [Grid](/docs/utility/grid) docs for `rowTickValues`.
+### Background
+Use [`Background`](/docs/utility/background) instead of `Grid` for a pattern fill behind the live line. See **Pattern Background** examples on the [live line chart gallery](/charts/live-line-chart).
+## Loading state
+`LiveLineChart` has no loading status of its own. A live chart's loading state is just a line, so render a [`LineChartLoading`](/docs/components/line-chart) while the stream connects, then swap in `LiveLineChart` once data starts arriving:
+`loadingStyle="sweep"` gives the diagonal shimmer; omit it for the default traveling pulse. See the [Line Chart loading docs](/docs/components/line-chart#loading-state) for the full set of loading props.
+## Theming
+Uses the same chart CSS variables as the Line Chart (`--chart-line-primary`, `--chart-grid`, `--chart-tooltip-*`, etc.). The live dot and badge use the line color or `momentumColors` when provided.
+## Dependencies
+
+apps\web\content\docs\components\pie-chart.mdx
+---
+title: Pie Chart
+description: A composable pie and donut chart with animated slices, hover interactions, patterns, gradients, and an interactive legend
+---
+## Installation
+## Usage
+The Pie Chart uses a composable API similar to other charts in the library. Build charts by combining components:
+## Components
+### PieChart
+The root component that provides context to all children.
+### PieSlice
+Renders an individual slice with animated arc and hover effects.
+### PieCenter
+Displays content in the center of a donut chart. Only renders when `innerRadius > 0`.
+### Legend
+A composable legend component for pie charts and other visualizations. See the full [Legend documentation](/docs/components/legend) for all components and options.
+## Data Shape
+See the [charts gallery](/charts/pie-chart) for donut charts, patterns, gradients, legend sync, and hover effects.
+## Theming
+The Pie Chart uses CSS variables for theming. Slice colors default to `--chart-1` through `--chart-5`:
+## Animation
+The pie chart features animations on mount:
+1. **Slice Appearance** - Slices animate in with staggered timing
+2. **Hover Effects** - Slices scale up on hover with glow effect
+3. **Fade Effect** - Non-hovered slices fade when another slice is hovered
+4. **Center Content** - Value animates when switching between slices
+All animations use spring physics for natural motion.
+## Dependencies
+
+apps\web\content\docs\components\profit-loss-line.mdx
+---
+title: Profit/Loss Line
+description: Sign-colored line segments for profit and loss on a shared zero baseline
+---
+## Installation
+## Usage
+Use `ProfitLossLine` inside `LineChart` for a single series that crosses zero. Pair it with a hidden `Line` (same `dataKey`) so the chart registers the series for the y-domain and tooltip. Highlight the zero baseline with `Grid highlightRowValues`.
+## Components
+### ProfitLossLine
+Renders linear segments colored by sign. Values ≥ 0 use emerald; values &lt; 0 use red (Tailwind CSS variables by default).
+### ProfitLossLegend
+Optional legend with Profit/Loss items. Hover dims the opposite segment when wrapped with `ProfitLossLegendHoverProvider`.
+### Grid zero line
+Use `highlightRowValues={[0]}` on `Grid` to emphasize the break-even baseline:
+See the [Line Chart](/docs/components/line-chart) docs for full `Grid` props.
+### Background
+Use [`Background`](/docs/utility/background) instead of `Grid` for a pattern fill behind the profit/loss line. See **Pattern Background** examples on the [line chart gallery](/charts/line-chart).
+## Gallery
+Interactive examples live on the [line chart gallery](/charts/line-chart) under **Profit/Loss**.
+
+apps\web\content\docs\components\radar-chart.mdx
+---
+title: Radar Chart
+description: A composable multi-series radar chart with animated polygons, hover interactions, and customizable metrics
+---
+## Installation
+## Usage
+The Radar Chart uses a composable API. Define your metrics and data, then combine components:
+## Components
+### RadarChart
+The root container that provides context to all children.
+### RadarGrid
+Renders the circular grid lines (spider web pattern).
+### RadarAxis
+Renders axis lines from center to each metric.
+### RadarLabels
+Renders metric labels around the perimeter.
+### RadarArea
+Renders a single data polygon with hover effects.
+## Data Shape
+See the [charts gallery](/charts/radar-chart) for minimal styles, legend sync, and layout variations.
+## Theming
+`RadarGrid` and `RadarAxis` stroke defaults use `radarCssVars.border` → **`var(--border)`** — the same token as ring tracks and gauge inactive notches. Override `--border` in your theme or pass a custom `stroke` prop.
+Series fill colors default to `--chart-1` through `--chart-5` via `defaultRadarColors`.
+## Hooks
+### useRadar
+Access the radar context from any child component:
+## Animation
+The radar chart features a multi-phase animation on mount:
+1. **Grid Expansion** - Concentric circles scale in from center
+2. **Axis Growth** - Lines grow outward from center
+3. **Label Fade** - Metric labels fade in
+4. **Area Expansion** - Data polygons animate from center to values
+All animations use spring physics for natural motion. Hover interactions are instant with no delays.
+## Dependencies
+
+apps\web\content\docs\components\ring-chart.mdx
+---
+title: Ring Chart
+description: A composable multi-ring progress chart with animated arcs, hover interactions, and a reusable legend component
+---
+## Installation
+## Usage
+The Ring Chart uses a composable API similar to other charts in the library. Build charts by combining components:
+## Components
+### RingChart
+The root component that provides context to all children.
+### Ring
+Renders an individual ring with background track and animated progress arc.
+### RingCenter
+Displays the total or hovered value in the center of the chart.
+### Legend
+A composable legend component for ring charts, pie charts, and other visualizations. See the full [Legend documentation](/docs/components/legend) for all components and options.
+## Data Shape
+See the [charts gallery](/charts/ring-chart) for custom colors, legend sync, and center content variations.
+## Theming
+The Ring Chart uses CSS variables for theming. The ring track uses `--border` (same as radar grid lines), and ring colors default to `--chart-1` through `--chart-5`:
+## Animation
+The ring chart features a multi-phase animation on mount:
+1. **Ring Expansion** - Background rings scale in with staggered timing
+2. **Progress Arcs** - Progress arcs animate from 0 to their target value
+3. **Center Content** - Value and label fade in
+4. **Legend** - Items slide in from the right with progress bars filling
+All animations use spring physics for natural motion.
+## Dependencies
+
+apps\web\content\docs\components\sankey-chart.mdx
+---
+title: Sankey Chart
+description: A composable sankey diagram for visualizing flow between nodes with animated links and interactive tooltips
+---
+## Installation
+## Usage
+The Sankey Chart uses a composable API similar to other charts. Build diagrams by combining components:
+## Components
+### SankeyChart
+The root component that computes the layout and provides context to children.
+### SankeyNode
+Renders the nodes (bars) in the diagram with animated initialization and internal labels.
+### SankeyLink
+Renders the links (flows) between nodes with animated path reveal and gradient colors.
+### SankeyTooltip
+Displays tooltips for nodes and links on hover.
+## Data Format
+The sankey data follows the d3-sankey format:
+## Label orientation
+Outside node labels default to horizontal text on the left or right of each column. Pass `labelOrientation="vertical"` on `SankeyNode` to rotate labels 90° along the node edge — the node name and session count stay on separate lines, stacked along the reading direction. Use wider side margins so rotated labels are not clipped.
+## Animation
+The sankey chart uses the same animation system as other charts:
+- **Nodes**: ScaleY and opacity fade in, staggered by index
+- **Links**: Grow from source to target node using stroke-dashoffset animation
+- **Gradients**: Links use gradient colors flowing from source node color to target node color
+- **Easing**: `cubic-bezier(0.85, 0, 0.15, 1)` for smooth, organic motion
+### Animation Timeline
+- **0-600ms**: Nodes fade/scale in (staggered)
+- **200-1100ms**: Links grow from source to target (staggered, starts after nodes begin appearing)
+## Hover Behavior
+When hovering over a node or link:
+- Hovered link and its source/target nodes stay at full opacity
+- Connected nodes and links remain visible
+- All other links and nodes fade
+- Tooltip appears showing relevant data
+See the [charts gallery](/charts/sankey-chart) for label-free layouts and pattern fills.
+## Dependencies
+This component requires:
+
+apps\web\content\docs\components\scatter-chart.mdx
+---
+title: Scatter Chart
+description: A composable time-series scatter chart with offset rings, hover dimming, and animated enter
+---
+## Installation
+/>
+## Usage
+Build scatter charts by composing `ScatterChart` with one or more `Scatter` series, plus shared cartesian pieces (`Grid` or [`Background`](/docs/utility/background), `XAxis`, `ChartTooltip`).
+### Basic Example
+### Multiple Series
+Series colors default to the chart palette (`--chart-1` … `--chart-5`) in child order:
+### Offset Ring
+Each dot is an inner fill plus an outer ring separated by a gap (`ringGap`):
+### Hover Interaction
+Non-active points can fade and blur while the crosshair is active:
+### Y Gradient
+Color dots by vertical position with a chart-space gradient — lower values toward red, higher toward green. Set `strokeWidth={0}` for solid fills without rings:
+## Props
+### ScatterChart
+### Scatter
+## Shared Components
+Use the same cartesian building blocks as `LineChart`:
+- `Grid` — horizontal/vertical grid lines
+- [`Background`](/docs/utility/background) — pattern fill when grid lines are hidden (see [gallery](/charts/scatter-chart))
+- `YAxis` — value labels (single shared scale; see [Y Axis](/docs/utility/axis/y-axis))
+- `XAxis` — date labels with crosshair fade
+- `ChartTooltip` — crosshair, date pill, and series rows
+
+apps\web\content\docs\components\sunburst-chart.mdx
+---
+title: Sunburst Chart
+description: A composable hierarchical sunburst chart with drill-down zoom, animated segments, breadcrumb navigation, and legend sync
+---
+## Installation
+## Usage
+The Sunburst Chart uses a composable API. Map one `SunburstSegment` per arc in the layout, then add optional chrome for navigation and labels:
+Click a segment with children to zoom in. Click the center hub or a breadcrumb crumb to zoom back out.
+## Breadcrumb composition
+`SunburstBreadcrumb` is a chrome slot rendered above the SVG. Compose your own trail UI with `useSunburstBreadcrumbItems()`:
+## Components
+### SunburstChart
+The root component that computes the layout and provides context to children.
+### SunburstSegment
+Renders one arc with enter animation, drill-down click handling, and hover grow along the ancestor path.
+### SunburstCenter
+Navigation hub rendered after drill-down. Click to zoom out to the parent focus.
+### SunburstBreadcrumb
+Chrome slot above the chart for drill-down navigation. Pass your breadcrumb UI as `children`. Use `useSunburstBreadcrumbItems()` inside children to read the trail and `zoomTo`.
+### useSunburstBreadcrumbItems
+Hook for building breadcrumb UI inside `SunburstBreadcrumb`:
+### SunburstLabels
+Segment name labels positioned at arc centroids. Each label fades in after its segment finishes the enter animation.
+### SunburstHint
+Contextual hint text below the chart (hover trail or zoom instructions). Rendered outside the SVG.
+Custom hint example:
+### Legend
+A composable legend synced to the current focus level. See the full [Legend documentation](/docs/utility/legend) for all components and options.
+## Data Shape
+Use `buildArcs(data)` to get the flat `arcs` array, `maxDepth`, and `focusById` map for controlled drill-down and legend wiring.
+See the [charts gallery](/charts/sunburst-chart) for pattern fills, legend sync, and drill-down interaction.
+## Theming
+The Sunburst Chart uses CSS variables for theming. Category colors default to `--chart-1` through `--chart-5`. Inner rings use full opacity; outer rings step down in opacity for depth:
+## Animation
+1. **Enter reveal** — Rings animate clockwise with staggered segment timing
+2. **Label fade** — Labels fade in per segment after that segment's reveal completes
+3. **Drill-down zoom** — Focus morphs matching arcs; others collapse to a point
+4. **Hover grow** — Segments on the path from root to the hovered node extend outward, capped at the thickness of one expanded ring at the first drill level; descendants shift radially to accommodate parent growth. A padded inset inside the view box (auto from `hoverPop` and depth) prevents clipping.
+5. **Fade** — Unrelated segments dim to 25% opacity when another branch is hovered (160ms ease-out)
+All animations respect `prefers-reduced-motion`.
+## Dependencies
+Add `@visx/pattern` when using `PatternLines` or other pattern fills.
+
+apps\web\content\docs\index.mdx
+---
+title: Introduction
+description: Beautiful, modern UI components for React applications
+---
+Bklit UI is a component library built on top of shadcn/ui to help you build charts and data visualizations more easily.
+### Community
+Join our community to get help, share your projects, stay updated on new releases, and connect with other developers building with Bklit UI.
+### Author
+Bklit UI is built and maintained by <a href="https://x.com/uixmat" target="_blank" rel="noreferrer">uixmat</a>.
+
+apps\web\content\docs\installation.mdx
+---
+title: Installation
+description: How to install and configure Bklit UI in your project
+---
+Bklit UI is a trusted registry for shadcn/ui. Follow the steps below to get started.
+## Prerequisites
+Before installing Bklit UI components, make sure you have shadcn/ui set up in your project. If you haven't already, run:
+## Registry namespace
+Bklit is published on the shadcn registry index as `@bklit`. Add it to your `components.json` if it is not already configured:
+Then install components with the namespace, for example `npx shadcn@latest add @bklit/area-chart`.
+Chart loading labels use `@bklit/shimmering-text`, included automatically when you install `@bklit/line-chart`, `@bklit/area-chart`, or `@bklit/heatmap-chart`.
+## Install Components
+Install any Bklit UI component using the CLI:
+The `@bklit` namespace is configured automatically for new projects — no manual setup needed. This will:
+- Download the component source code
+- Install any required dependencies
+- Place files in your configured component directory
+## Next Steps
+You're all set! Browse the [Components](/docs/components) section to start adding charts and visualizations to your project.
+
+apps\web\content\docs\skills.mdx
+---
+title: Skills
+description: Give AI agents project-aware context for Bklit charts in your application.
+---
+Skills give AI assistants project-aware context about Bklit UI. When installed, your agent knows how to install, compose, theme, and animate charts using the correct APIs and patterns for your project.
+For example, you can ask your AI assistant to:
+- "Add an area chart with tooltips to my dashboard."
+- "Install and theme a gauge chart for this KPI card."
+- "Build a stats page with bar and line charts using the @bklit registry."
+- "Fix the crosshair color on my candlestick chart tooltip."
+The skill reads your project's `components.json` and provides the assistant with your framework, aliases, installed components, and resolved paths so it can generate correct chart code on the first try.
+## Install
+This installs the **bklit-ui** skill into your project. Once installed, your AI assistant automatically loads it when working with Bklit charts and data visualization.
+Learn more about skills at [skills.sh](https://skills.sh/docs/).
+## What's Included
+The skill provides your AI assistant with the following knowledge:
+### Project Context
+On every interaction, the skill runs `shadcn info --json` to get your project's configuration: framework, Tailwind version, aliases, installed components, and resolved file paths — including which `@bklit` charts are already installed.
+### Registry Installation
+How to configure the `@bklit` namespace and install charts with the shadcn CLI:
+### Composition and Theming
+How to compose charts (`LineChart` → `Grid` → `Line` → `XAxis` → `ChartTooltip`), use `chartCssVars` for type-safe theming, and apply series palette tokens (`--chart-1` … `--chart-5`) plus sequential scale tokens (`--chart-scale-01` … `--chart-scale-05`) for heatmaps and choropleths.
+### Animation and Tooltips
+Enter animation defaults, replay patterns via `revealSignature`, custom tooltip content, `indicatorColor` for candlesticks, and the `useChart` hook for custom indicators.
+### Chart Catalog
+A decision guide for all 15 chart types with doc URLs, gallery links, and install commands — area, bar, line, live line, composed, scatter, candlestick, pie, ring, radar, gauge, heatmap, funnel, sankey, and choropleth.
+## How It Works
+1. **Project detection** — The skill activates when working with `@bklit` registry components, `@bklitui/ui/charts`, or chart/data-visualization tasks.
+2. **Context injection** — It runs `shadcn info --json` to read your project configuration and injects the result into the assistant's context.
+3. **Pattern enforcement** — The assistant follows Bklit composition rules: root chart + children, semantic chart CSS variables, and correct tooltip/crosshair patterns.
+4. **Doc discovery** — The assistant references [ui.bklit.com](https://ui.bklit.com/docs/components) documentation and the [charts gallery](https://ui.bklit.com/charts/area-chart) before generating code.
+## Learn More
+- [Installation](/docs/installation) — Set up the `@bklit` registry in your project
+- [Theming](/docs/theming) — CSS variables and `chartCssVars`
+- [Components](/docs/components) — Chart API reference
+- [Charts gallery](/charts/area-chart) — Interactive examples
+- [Studio](/studio) — Tune props and copy generated code
+- [skills.sh](https://skills.sh/docs/) — Learn more about AI skills
+## Contributing to bklit-ui
+If you cloned the [bklit-ui repository](https://github.com/bklit/bklit-ui) to contribute new charts, additional contributor-only skills live in `.agents/skills/`:
+These skills are **not** published to skills.sh — they are for monorepo development only.
+
+apps\web\content\docs\theming.mdx
+---
+title: Theming
+description: Theme your charts using CSS custom properties for consistent, customizable styling.
+---
+Charts use CSS custom properties (variables) for theming, allowing you to customize colors across light and dark modes without modifying component code.
+## Using chartCssVars
+The `chartCssVars` object provides type-safe access to chart CSS variables:
+This is preferred over hardcoding CSS variable strings, as it provides autocomplete and prevents typos.
+## Available Variables
+### Core Colors
+### Line & Grid
+### Indicators
+### Markers
+### Data Series Colors
+These are used for coloring different data series in multi-line charts:
+### Sequential Scale
+For heatmaps, choropleths, and other binned or intensity-based charts, use the sequential scale tokens (`01` = lowest, `05` = highest):
+Import typed references from `@bklitui/ui/charts`:
+### Track & radial charts
+Ring tracks, gauge inactive notches, and radar grid lines share the shadcn **`--border`** token:
+## Customizing Variables
+Override CSS variables in your stylesheet to customize chart appearance:
+## Example: Custom Indicator Theming
+The [Custom Indicator](/docs/utility/custom-indicator) pattern uses `--chart-indicator-color`:
+Or using the typed object:
+## Related
+- [Custom Indicator](/docs/utility/custom-indicator) - Building animated indicators
+- [useChart](/docs/utility/use-chart) - Accessing chart context
+
+apps\web\content\docs\utility\axis\index.mdx
+---
+title: Axis
+description: X and Y axis components for line and area charts
+---
+Axis components add value and date labels to line and area charts.
+## Components
+- **[X Axis](/docs/utility/axis/x-axis)** — Date labels along the bottom (horizontal axis)
+- **[Y Axis](/docs/utility/axis/y-axis)** — Value labels along the left (vertical axis)
+Both components must be used inside a chart (`LineChart` or `AreaChart`) and render via portal into the chart container.
+
+apps\web\content\docs\utility\axis\x-axis.mdx
+---
+title: X Axis
+description: Date labels for the horizontal axis in line and area charts
+---
+## Installation
+## Usage
+The XAxis component displays date labels along the bottom of line and area charts. It must be used inside a chart component (`LineChart` or `AreaChart`).
+## Props
+## Behavior
+- **Data-aligned labels**: By default, XAxis picks evenly spaced data rows for tick labels so crosshair and tooltip line up with the axis. Use `tickMode="domain"` for calendar-even spacing when alignment is not needed.
+- **Crosshair fade**: When the tooltip is visible, labels near the crosshair fade to reduce visual clutter and improve readability.
+- **Client-side only**: Renders via portal after mount to avoid SSR issues.
+## Theming
+Labels use the `text-chart-label` class, which inherits from your theme's muted foreground color.
+
+apps\web\content\docs\utility\axis\y-axis.mdx
+---
+title: Y Axis
+description: Value labels for the vertical axis in line and area charts
+---
+## Installation
+## Usage
+The YAxis component displays value labels along the left or right side of time-series charts (`LineChart`, `AreaChart`, `ComposedChart`, `ScatterChart`, and vertical `BarChart`). It must be used inside the chart shell. Ensure your chart has sufficient margin for the labels.
+## Props
+In **Studio** (`/studio`), open a time-series chart (line, area, composed, scatter, vertical bar, or profit/loss line) and select **YAxis · left** or **YAxis · right** in the components tree to edit `numTicks` and `formatLargeNumbers` per axis. Each series exposes a **Y axis** control (left / right) except horizontal bar charts (categorical `BarYAxis` only).
+## Multiple Y axes (biaxial)
+Assign each series and axis the same `yAxisId`, and use `orientation="right"` on the secondary `YAxis`. Increase `margin.right` (and `margin.left` if needed) so labels fit.
+## Margin
+YAxis renders labels in the chart's left margin. Use `margin={{ left: 50 }}` (or more) on your chart to leave space for the labels.
+## Theming
+Labels use the `text-chart-label` class, which inherits from your theme's muted foreground color.
+
+apps\web\content\docs\utility\background.mdx
+---
+title: Background
+description: Pattern fill for the plot area when grid lines are hidden — presets, edge fade, and enter animation
+---
+## Installation
+## Usage
+Use `Background` instead of `Grid` when you want a textured plot fill rather than reference lines. It must be a child of a cartesian chart (`LineChart`, `AreaChart`, `BarChart`, `ScatterChart`, `CandlestickChart`, `ComposedChart`, `LiveLineChart`, and other charts that provide chart context).
+`Background` renders behind series layers. On time-series charts it sits outside the series clip reveal and fades in after the chart finishes loading.
+## Props
+Patterns use [@visx/pattern](https://visx.airbnb.tech/docs/pattern) under the hood (`PatternLines` and `PatternCircles`).
+## Studio
+Open [Studio with the line chart](/studio?chart=line-chart), hide **Grid** in the layers panel, then select **Background** to tune pattern, fade, and opacity. The same layer is available on area, bar, candlestick, composed, live line, line, and scatter charts.
+## Examples
+### Diagonal (default)
+### Dot grid
+### Cross hatch
+### No edge fade
+## Grid vs Background
+Use [`Grid`](/docs/utility/grid) for reference lines. Use `Background` when you want a subtle pattern fill without ticks. They are typically mutually exclusive — pick one visual treatment for the plot area.
+
+apps\web\content\docs\utility\brush.mdx
+---
+title: Brush
+description: Time-range brush for zooming area and line charts with a mini-chart strip and draggable selection handles
+---
+## Installation
+`ChartBrush` and `ChartBrushLayout` ship with time-series charts. Install the [area chart](/docs/components/area-chart) (or [line chart](/docs/components/line-chart)) registry item, then import from your charts package:
+## Usage
+Wrap the main chart in `ChartBrushLayout`. Render a simplified mini chart in `brushStrip` with `ChartBrush` as a child. Pass `xDomain`, `xDomainSlotCount`, and `tweenYDomainOnXDomainChange` to the main chart so it zooms and tweens the y-scale as the brush changes.
+Works the same with `LineChart` and `Line` in the brush strip and main chart. See [Area Chart](/docs/components/area-chart#brush-zoom) and [Line Chart](/docs/components/line-chart#brush-zoom) for chart-specific notes.
+Open [Studio with brush enabled](/studio?chart=area-chart&showBrush=true) to tune strip height, blur, fade edges, and selection pattern.
+## ChartBrushLayout
+Orchestrates the main chart and optional brush strip. Owns brush selection state and derives `xDomain` for the main chart.
+The `layout` argument provides:
+## ChartBrush
+Renders inside a time-series chart (typically the brush strip). Drag handles to pan and resize; the main chart zooms via `ChartBrushLayout`.
+### Selection pattern presets
+`selectionPattern.preset` accepts: `diagonal`, `horizontal`, `vertical`, `cross`, `dots`, or `accent`. Omit `selectionPattern` for a solid selection fill.
+## Main chart props
+When brush zoom is active, pass these to `AreaChart` or `LineChart`:
+## CSS variables
+
+apps\web\content\docs\utility\custom-indicator.mdx
+---
+title: Custom Indicator
+description: Create custom tooltip indicators for charts using the useChart hook
+---
+## Preview
+## Overview
+Custom indicators allow you to replace the default tooltip crosshair and dots with your own animated elements. This is useful for creating unique visual feedback like rising lines, custom shapes, or other interactive effects.
+The demo above shows a grouped bar chart with two series—one with a gradient fill and one with a diagonal pattern—each with its own animated line indicator that rises on hover.
+## Disabling Default Indicators
+First, disable the built-in indicators on `ChartTooltip`:
+## Creating an Animated Line Indicator
+### Step 1: Create the Animated Element
+Use `motion/react` with `useSpring` for smooth spring animations:
+### Step 2: Access Chart State with useChart
+The `useChart` hook provides all the data needed to position your indicator:
+### Step 3: Render via Portal
+Use a portal to render the SVG overlay in the chart container. For grouped bar charts with multiple series, calculate each bar's position within the group:
+### Step 4: Add to Your Chart
+Add the custom indicator as a child of your chart component. You can use gradients and patterns for different series:
+## Key useChart Values for Indicators
+## Theming
+Use CSS variables for proper light/dark mode support:
+Available indicator variables:
+- `--chart-indicator-color` - Primary indicator color
+- `--chart-indicator-secondary-color` - Secondary/stroke color
+See [Theming](/docs/theming) for the full list.
+
+apps\web\content\docs\utility\grid.mdx
+---
+title: Grid
+description: A customizable grid component for charts with horizontal and vertical lines, edge fade, edge line hiding, and dashed styling
+---
+## Installation
+## Usage
+The Grid component adds visual reference lines to charts. It must be used inside a chart component (`LineChart`, `AreaChart`, `BarChart`, `ScatterChart`, `CandlestickChart`, `LiveLineChart`, and other cartesian charts).
+## Props
+## Studio
+Open [Studio with the line chart](/studio?chart=line-chart), select **Grid** in the components tree, and tune lines, stroke, and edge options in the properties panel. The same controls are available on area, bar, candlestick, live line, line, and scatter charts.
+For a pattern fill instead of grid lines, hide **Grid** and use [`Background`](/docs/utility/background) in Studio or in code.
+## Examples
+### Horizontal Only (Default)
+The most common configuration with horizontal reference lines.
+### Vertical Only
+Use vertical grid lines to emphasize time intervals.
+### Both Horizontal and Vertical
+Display a full grid for detailed reference.
+### Solid Lines
+Remove the dash pattern for solid grid lines.
+### Without Edge Fade
+Disable the edge fade effect for sharp line endings.
+### Hide edge lines
+Omit the outermost horizontal or vertical grid lines — useful when the chart border already provides a frame.
+### Dense Grid
+Increase the number of grid lines for more granular reference.
+### Custom Styling
+## Theming
+The Grid uses CSS variables for theming:
+
+apps\web\content\docs\utility\legend.mdx
+---
+title: Legend
+description: A composable legend component for charts with progress bars, markers, and customizable layouts
+---
+];
+## Installation
+## Usage
+The Legend uses a composable API where you define the layout once and it maps to each item in your data:
+## Components
+### Legend
+The root container that provides context and maps items.
+### LegendItemComponent
+Wrapper for each legend item. Handles hover interactions and animations.
+### LegendMarker
+Color indicator dot.
+### LegendLabel
+Displays the item label.
+### LegendValue
+Displays the item value with optional percentage.
+### LegendProgress
+Progress bar using base-ui Progress component.
+## Data Shape
+## Examples
+### Simple Legend
+### With Progress Bars
+### Horizontal Layout
+### Custom Value Formatting
+### Synced with Chart
+Connect the legend to a chart for bidirectional hover interactions:
+## Hooks
+### useLegend
+Access the legend context from any child component:
+### useLegendItem
+Access the current item data from within a LegendItemComponent:
+## Theming
+The Legend uses CSS variables for theming:
+## Dependencies
+The LegendProgress component uses base-ui for accessible progress bars:
+
+apps\web\content\docs\utility\projection-line.mdx
+---
+title: Projection Line
+description: Forecast segment extending a line series past the last data point — dashed stroke, gradient, and horizon marker
+---
+## Installation
+## Usage
+`ProjectionLine` draws a segment from the last data row (the anchor) into the future. It renders outside the series reveal clip so the horizon stays visible while the main line animates in.
+Build the path with `buildProjectionPath`, or pass manual `{ date, value }[]` points. Pair with [`LineSeriesTerminalMarker`](/docs/utility/projection-line#terminal-marker) at the anchor when you want a ring at the hand-off.
+The chart extends its x-domain to fit the projection horizon. Projections are intended for line charts without [brush zoom](/docs/utility/brush) — the two features are not supported together.
+## ProjectionLine props
+## buildProjectionPath
+## Terminal marker
+`LineSeriesTerminalMarker` renders a hollow ring at the last data point for the given `dataKey`. It fades in after the clip reveal completes.
+## Studio
+Open [Studio with a projection](/studio?chart=line-chart) and use **Settings → Projections** or the series context menu to add a projection line. Tune stroke, dash, curve, and terminal marker in the layers panel.
+## Examples
+### Auto forecast with terminal marker
+### Gradient stroke
+## Gallery
+See **Projection** on the [line chart gallery](/charts/line-chart).
+
+apps\web\content\docs\utility\reference-area.mdx
+---
+title: Reference Area
+description: Shaded Y band for target ranges and thresholds on cartesian charts — solid or pattern fill, dashed edges, and Y-axis tick coloring
+---
+## Installation
+## Usage
+`ReferenceArea` draws a horizontal band between two Y data values. Place it as a child of any cartesian chart (`LineChart`, `AreaChart`, `BarChart`, `ScatterChart`, `CandlestickChart`, `ComposedChart`, `LiveLineChart`). It renders in the underlay layer — above grid and background, behind series.
+Omit `y1` or `y2` to extend the band to the top or bottom of the plot. Use `axisLabelColor` to tint Y-axis tick labels whose values fall inside the band.
+## Props
+Pattern presets match [`Background`](/docs/utility/background) (`diagonal`, `dots`, `cross`, …).
+## Studio
+Open [Studio with the line chart](/studio?chart=line-chart) and select **Reference Area** in the layers panel to tune bounds, fill, pattern, edges, and markers. The same layer is available on area, bar, candlestick, composed, live line, line, and scatter charts.
+## Examples
+### Dashed band with markers
+### Pattern fill with axis labels
+### Colored markers
+## Gallery
+See **Reference Band** examples on each cartesian chart gallery: [line](/charts/line-chart), [area](/charts/area-chart), [bar](/charts/bar-chart), [composed](/charts/composed-chart), [scatter](/charts/scatter-chart), [candlestick](/charts/candlestick-chart), [live line](/charts/live-line-chart), and [profit/loss line](/charts/profit-loss-line).
+
+apps\web\content\docs\utility\tooltip.mdx
+---
+title: Tooltip
+description: An interactive tooltip component for charts with crosshair, dots, date picker, and customizable content
+---
+## Installation
+## Usage
+The ChartTooltip component provides hover interactions for charts. It must be used inside a chart component (`LineChart`, `AreaChart`, `BarChart`).
+## Props
+### TooltipRow Interface
+## Anatomy
+The tooltip has several visual components:
+1. **Crosshair** - Vertical line that follows the cursor
+2. **Dots** - Circles on each data point at the hovered position
+3. **Tooltip Box** - Content panel with title and rows
+4. **Date Pill** - Animated date ticker at the bottom
+Each component can be shown/hidden independently.
+## Examples
+### Default Tooltip
+Full-featured tooltip with crosshair, dots, and date pill.
+### Solid crosshair
+Remove vertical fade with `indicatorFadeEdges="none"` for a flat crosshair line.
+### Crosshair fade
+Fade the crosshair from the top, bottom, both ends, or not at all. Use `indicatorFadeLength` to control how far the fade extends (percentage of chart height).
+### Dashed crosshair
+Pass an SVG dash pattern to `indicatorDasharray`.
+### Match crosshair
+By default the tooltip panel eases independently with `damping={20}`. Set `matchCrosshair` to lock the panel to the crosshair spring.
+### Panel damping
+The default panel uses `damping={20}` without any props. Increase `damping` for heavier lag, or set `damping={0}` for instant follow.
+### Crosshair Only
+Minimal tooltip with just the crosshair line and tooltip box.
+### Minimal (Box Only)
+Just the tooltip content box, no visual indicators.
+### Custom Row Labels
+Use the `rows` prop to customize row labels and value formatting.
+### With Bar Chart
+The tooltip adapts to bar charts, showing category names instead of dates.
+### Fully Custom Content
+Use the `content` prop for complete control over the tooltip layout.
+## Animation
+The tooltip features smooth animations:
+- **Tooltip panel** - By default the panel eases with `damping={20}`. Set `matchCrosshair` to share the crosshair spring, or tune lag with `damping` (`0`–`100`) or `boxSpringConfig`.
+- **Crosshair** - Spring physics for snappy following (`springConfig`)
+- **Crosshair style** - Solid by default; pass `indicatorDasharray="4,4"` (or any SVG dash pattern) for a dashed line.
+- **Tooltip Box** - Scale/fade animation with flip detection (`boxSpringConfig`)
+- **Date Pill** - Slot machine-style number animation
+- **Dots** - Fade in/out with the tooltip
+All animations use motion/react for fluid, natural movement.
+## Theming
+The tooltip uses CSS variables for theming:
+The tooltip box itself uses a semi-transparent dark background with blur for universal readability.
+
+apps\web\content\docs\utility\use-chart.mdx
+---
+title: useChart Hook
+description: Access chart state and context for building custom chart components
+---
+## Overview
+The `useChart` hook provides access to the chart's internal state, scales, dimensions, and tooltip data. Use it to build custom components that integrate with the chart system.
+## Requirements
+The hook must be used within a chart component (`LineChart`, `AreaChart`, or `BarChart`). It will throw an error if used outside of a chart context.
+## Return Values
+### Dimensions
+### Scales
+### Tooltip State
+### TooltipData Structure
+### Container & Animation
+### Data & Configuration
+### Bar Chart Specific
+## Common Use Cases
+### Reading Hover Position
+### Accessing Bar Positions
+### Using Scales for Custom Rendering
+## Related
+- [Custom Indicator](/docs/utility/custom-indicator) - Building custom tooltip indicators
+- [Theming](/docs/theming) - Theming with CSS variables

@@ -209,7 +209,7 @@ function ProductFormInner({
         }
       />
 
-      <div className="mb-6">
+      <div data-slot="page-header" className="mb-3">
         <Link
           href="/admin/products"
           className="mb-1.5 -ml-1 inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-[13px] font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground"

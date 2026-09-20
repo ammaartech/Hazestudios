@@ -1,7 +1,6 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Select,
@@ -22,7 +21,6 @@ export function RoleSelect({
   role: StaffRole;
   disabled: boolean;
 }) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   return (
@@ -35,7 +33,6 @@ export function RoleSelect({
           if (result.error) toast.error(result.error);
           else {
             toast.success("Role updated");
-            router.refresh();
           }
         })
       }

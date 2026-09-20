@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getShopCurrency } from "@/lib/admin/reference";
 import { OrderBuilder } from "./order-builder";
 
 export const metadata = { title: "Create order" };
@@ -10,11 +10,5 @@ export const metadata = { title: "Create order" };
  * page ships only the currency the money is rendered in.
  */
 export default async function NewOrderPage() {
-  const supabase = await createClient();
-  const { data: shop } = await supabase
-    .from("shop_settings")
-    .select("currency")
-    .single();
-
-  return <OrderBuilder currency={shop?.currency ?? "INR"} />;
+  return <OrderBuilder currency={await getShopCurrency()} />;
 }

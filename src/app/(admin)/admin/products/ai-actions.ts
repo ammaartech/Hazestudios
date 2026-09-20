@@ -1,12 +1,12 @@
 "use server";
 
 import { classifyProductImages, geminiConfigured } from "@/lib/ai/gemini";
-import { createClient } from "@/lib/supabase/server";
+import { requireStaff } from "@/lib/auth/staff";
 
 /**
  * AI-assisted product fields, backed by Google Gemini.
  *
- * A Server Action is a public POST endpoint, so this gates on `is_staff()`
+ * A Server Action is a public POST endpoint, so this gates on staff status
  * before spending a model call — the hidden button in the editor is a hint, not
  * the boundary. Every failure path (no key, no usable image, a blocked or
  * empty response) returns a typed reason rather than throwing, because a
@@ -53,9 +53,8 @@ export async function suggestProductCategory(input: {
   // Staff gate — the admin shell blocks non-staff at the route, but a Server
   // Action is reachable directly, so re-check before any spend.
   try {
-    const supabase = await createClient();
-    const { data: isStaff } = await supabase.rpc("is_staff");
-    if (!isStaff) {
+    const staff = await requireStaff();
+    if (!staff.ok) {
       return {
         ok: false,
         reason: "unauthorized",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
+import { RowLink } from "@/components/admin/row-link";
 import { toast } from "sonner";
 import { DesktopTable } from "@/components/admin/record-list";
 import { Input } from "@/components/ui/input";
@@ -82,12 +82,12 @@ export function InventoryGrid({
               className="px-2 py-3.5"
             >
               <div className="flex items-baseline justify-between gap-3">
-                <Link
+                <RowLink
                   href={`/admin/products/${row.productId}`}
                   className="min-w-0 flex-1 truncate text-[15px] font-medium text-foreground"
                 >
                   {row.label}
-                </Link>
+                </RowLink>
                 <span className="shrink-0 text-[13px] tabular-nums text-muted-foreground">
                   {total} total
                 </span>
@@ -145,12 +145,12 @@ export function InventoryGrid({
           return (
             <TableRow key={`${row.productId}-${row.variantId ?? "simple"}`}>
               <TableCell>
-                <Link
+                <RowLink
                   href={`/admin/products/${row.productId}`}
                   className="font-medium transition-colors duration-150 hover:text-primary hover:underline"
                 >
                   {row.label}
-                </Link>
+                </RowLink>
                 {row.sublabel && (
                   <span className="block text-xs text-muted-foreground">
                     {row.sublabel}

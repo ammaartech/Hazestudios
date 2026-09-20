@@ -1,19 +1,48 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type {
-  Collection,
   InventoryLevel,
-  Location,
   Product,
   ProductImage,
   ProductOption,
   ProductVariant,
-  ShopSettings,
 } from "@/lib/types";
 import { geminiConfigured } from "@/lib/ai/gemini";
-import { getProductFacets } from "../actions";
+import {
+  getCollectionOptions,
+  getLocations,
+  getProductFacets,
+  getShopCurrency,
+} from "@/lib/admin/reference";
 import { draftFromProduct } from "../draft-mapping";
 import { ProductForm } from "../product-form";
+
+/** The product and every child row, as one PostgREST request. */
+const PRODUCT_COLUMNS =
+  "*, product_images(*), product_options(*), product_variants(*), product_collections(collection_id), inventory_levels(*)";
+
+type ProductRecord = Product & {
+  product_images: ProductImage[];
+  product_options: ProductOption[];
+  product_variants: ProductVariant[];
+  product_collections: { collection_id: string }[];
+  inventory_levels: InventoryLevel[];
+};
+
+/**
+ * Memoised per request so `generateMetadata` and the page — which Next runs
+ * concurrently — share one read instead of each paying for their own.
+ */
+const loadProduct = cache(async (id: string) => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("products")
+    .select(PRODUCT_COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+  return (data as unknown as ProductRecord | null) ?? null;
+});
 
 export async function generateMetadata({
   params,
@@ -21,13 +50,8 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("products")
-    .select("title")
-    .eq("id", id)
-    .maybeSingle();
-  return { title: data?.title ?? "Edit product" };
+  const product = await loadProduct(id);
+  return { title: product?.title ?? "Edit product" };
 }
 
 export default async function EditProductPage({
@@ -36,45 +60,42 @@ export default async function EditProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
 
-  const [
-    { data: product },
-    { data: images },
-    { data: options },
-    { data: variants },
-    { data: memberships },
-    { data: inventory },
-    { data: collections },
-    { data: locations },
-    { data: settings },
-    facets,
-  ] = await Promise.all([
-    supabase.from("products").select("*").eq("id", id).maybeSingle(),
-    supabase.from("product_images").select("*").eq("product_id", id).order("position"),
-    supabase.from("product_options").select("*").eq("product_id", id).order("position"),
-    supabase.from("product_variants").select("*").eq("product_id", id).order("position"),
-    supabase.from("product_collections").select("collection_id").eq("product_id", id),
-    supabase.from("inventory_levels").select("*").eq("product_id", id),
-    supabase.from("collections").select("*").order("title"),
-    supabase.from("locations").select("*").order("created_at"),
-    supabase.from("shop_settings").select("currency, store_name").single(),
+  // This page used to issue ten requests to Tokyo: the product and five child
+  // tables one by one, plus collections, locations, settings and facets. The
+  // children now ride along as embedded resources in the product read, and
+  // the other four are shop-wide reference data from the shared cache — so
+  // the common path is one database round trip.
+  const [record, collections, locations, currency, facets] = await Promise.all([
+    loadProduct(id),
+    getCollectionOptions(),
+    getLocations(),
+    getShopCurrency(),
     getProductFacets(),
   ]);
 
-  if (!product) notFound();
+  if (!record) notFound();
+  const {
+    product_images,
+    product_options,
+    product_variants,
+    product_collections,
+    inventory_levels,
+    ...product
+  } = record;
 
-  const shop = settings as Pick<ShopSettings, "currency" | "store_name"> | null;
-  const locationRows = (locations ?? []) as Location[];
+  // Embedded rows come back in table order; the editor relies on position.
+  const byPosition = <T extends { position: number }>(rows: T[]) =>
+    [...rows].sort((a, b) => a.position - b.position);
 
   const initial = draftFromProduct({
     product: product as Product,
-    images: (images ?? []) as ProductImage[],
-    options: (options ?? []) as ProductOption[],
-    variants: (variants ?? []) as ProductVariant[],
-    inventory: (inventory ?? []) as InventoryLevel[],
-    collectionIds: (memberships ?? []).map((m) => m.collection_id as string),
-    locations: locationRows,
+    images: byPosition(product_images),
+    options: byPosition(product_options),
+    variants: byPosition(product_variants),
+    inventory: inventory_levels,
+    collectionIds: product_collections.map((m) => m.collection_id),
+    locations,
   });
 
   return (
@@ -83,10 +104,10 @@ export default async function EditProductPage({
       // draft store onto another record's data.
       key={id}
       initial={initial}
-      collections={(collections ?? []) as Collection[]}
-      locations={locationRows}
+      collections={collections}
+      locations={locations}
       facets={facets}
-      currency={shop?.currency ?? "INR"}
+      currency={currency}
       aiEnabled={geminiConfigured()}
     />
   );

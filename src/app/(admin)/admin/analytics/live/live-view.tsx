@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { Globe, Maximize2, MapPin as MapPinIcon } from "lucide-react";
 import { WorldMap, type MapPin } from "@/components/admin/world-map";
 import { useLiveSnapshot, useRelativeTime } from "@/lib/analytics/use-live";
 import type { LiveSnapshot } from "@/lib/analytics/queries";
 import { formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { LiveActivityChart } from "@/components/admin/live-activity-chart";
 
 function Tile({
   label,
@@ -89,7 +90,8 @@ function BreakdownRow({
 }
 
 export function LiveView({ initial }: { initial: LiveSnapshot }) {
-  const { snapshot, updatedAt } = useLiveSnapshot(initial);
+  const { snapshot, updatedAt, history } = useLiveSnapshot(initial);
+  const mapRef = useRef<HTMLDivElement>(null);
   const relative = useRelativeTime(updatedAt);
 
   const pins = useMemo<MapPin[]>(
@@ -116,7 +118,7 @@ export function LiveView({ initial }: { initial: LiveSnapshot }) {
   );
 
   return (
-    <div data-full-bleed>
+    <div data-full-bleed className="analytics-live">
       <div className="flex items-center gap-2.5 px-4 py-4 md:px-8 xl:px-12">
         <Globe className="size-5 text-muted-foreground" />
         <h1 className="text-xl font-semibold tracking-tight">Live View</h1>
@@ -142,6 +144,8 @@ export function LiveView({ initial }: { initial: LiveSnapshot }) {
             <Tile label="Sessions" value={String(snapshot.sessionsToday)} />
             <Tile label="Orders" value={String(snapshot.ordersToday)} />
           </div>
+
+          <LiveActivityChart data={history} />
 
           <Panel title="Customer behavior">
             <div className="grid grid-cols-3 divide-x">
@@ -225,12 +229,13 @@ export function LiveView({ initial }: { initial: LiveSnapshot }) {
         </div>
 
         {/* Right — the map. */}
-        <div className="relative min-h-105 overflow-hidden rounded-xl border bg-linear-to-b from-sky-50 to-emerald-50/60 dark:from-sky-950/40 dark:to-emerald-950/20">
+        <div ref={mapRef} className="relative min-h-105 overflow-hidden rounded-xl border bg-linear-to-b from-sky-50 to-emerald-50/60 dark:from-sky-950/40 dark:to-emerald-950/20">
           <div className="absolute right-4 top-4 z-10 flex gap-2">
             <button
               type="button"
               className="cursor-pointer rounded-lg border bg-card/90 p-2 text-muted-foreground shadow-sm backdrop-blur transition-colors duration-150 hover:text-foreground"
               aria-label="Expand map"
+              onClick={() => { if (document.fullscreenElement) void document.exitFullscreen(); else void mapRef.current?.requestFullscreen(); }}
             >
               <Maximize2 className="size-4" />
             </button>

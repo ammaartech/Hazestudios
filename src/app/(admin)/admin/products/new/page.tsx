@@ -1,30 +1,31 @@
-import { createClient } from "@/lib/supabase/server";
-import type { Collection, Location, ShopSettings } from "@/lib/types";
 import { geminiConfigured } from "@/lib/ai/gemini";
-import { getProductFacets } from "../actions";
+import {
+  getCollectionOptions,
+  getLocations,
+  getProductFacets,
+  getShopCurrency,
+} from "@/lib/admin/reference";
 import { emptyDraft } from "../draft-mapping";
 import { ProductForm } from "../product-form";
 
 export const metadata = { title: "Add product" };
 export default async function NewProductPage() {
-  const supabase = await createClient();
-  const [{ data: collections }, { data: locations }, { data: settings }, facets] =
-    await Promise.all([
-      supabase.from("collections").select("*").order("title"),
-      supabase.from("locations").select("*").order("created_at"),
-      supabase.from("shop_settings").select("currency, store_name").single(),
-      getProductFacets(),
-    ]);
-
-  const shop = settings as Pick<ShopSettings, "currency" | "store_name"> | null;
+  // All four are shop-wide reference data served from the shared cache — no
+  // database round trip on the common path.
+  const [collections, locations, currency, facets] = await Promise.all([
+    getCollectionOptions(),
+    getLocations(),
+    getShopCurrency(),
+    getProductFacets(),
+  ]);
 
   return (
     <ProductForm
       initial={emptyDraft}
-      collections={(collections ?? []) as Collection[]}
-      locations={(locations ?? []) as Location[]}
+      collections={collections}
+      locations={locations}
       facets={facets}
-      currency={shop?.currency ?? "INR"}
+      currency={currency}
       aiEnabled={geminiConfigured()}
     />
   );

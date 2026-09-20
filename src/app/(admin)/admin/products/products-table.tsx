@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { RowLink } from "@/components/admin/row-link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChevronsUpDown, Columns3, ImageIcon } from "lucide-react";
@@ -335,12 +336,12 @@ export function ProductsTable({
                       </span>
                       {/* Opens the editor — the storefront link used to drop
                           the operator out of the admin mid-task. */}
-                      <Link
+                      <RowLink
                         href={`/admin/products/${p.id}`}
                         className="font-medium text-foreground transition-colors duration-150 hover:text-primary hover:underline"
                       >
                         {p.title}
-                      </Link>
+                      </RowLink>
                     </div>
                   </TableCell>
                   {visible.has("status") && (

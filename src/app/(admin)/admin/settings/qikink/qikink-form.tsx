@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +26,6 @@ import { saveQikinkSettings, testQikinkConnection } from "./actions";
 import { QikinkTestOrder } from "./qikink-test-order";
 
 export function QikinkForm({ status }: { status: QikinkStatus }) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [testing, startTesting] = useTransition();
 
@@ -55,7 +53,6 @@ export function QikinkForm({ status }: { status: QikinkStatus }) {
       }
       setClientSecret("");
       toast.success(result.message ?? "Saved");
-      router.refresh();
     });
   }
 

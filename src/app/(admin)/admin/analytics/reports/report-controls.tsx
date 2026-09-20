@@ -1,52 +1,7 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-
-export function DateRangeFilter() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  function setParam(key: string, value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) params.set(key, value);
-    else params.delete(key);
-    router.push(`${pathname}?${params.toString()}`);
-  }
-
-  return (
-    <div className="flex flex-wrap items-end gap-3">
-      <div className="space-y-1">
-        <Label htmlFor="from" className="text-xs">
-          From
-        </Label>
-        <Input
-          id="from"
-          type="date"
-          className="h-9 w-40"
-          defaultValue={searchParams.get("from") ?? ""}
-          onChange={(e) => setParam("from", e.target.value)}
-        />
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="to" className="text-xs">
-          To
-        </Label>
-        <Input
-          id="to"
-          type="date"
-          className="h-9 w-40"
-          defaultValue={searchParams.get("to") ?? ""}
-          onChange={(e) => setParam("to", e.target.value)}
-        />
-      </div>
-    </div>
-  );
-}
 
 export function CsvExportButton({
   headers,

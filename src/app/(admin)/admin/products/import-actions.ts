@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateCatalog } from "@/lib/shop/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getStaffSession } from "@/lib/auth/staff";
 import type { CsvProduct } from "@/lib/product-csv";
 
 /**
@@ -47,12 +49,8 @@ export async function beginImport(
   filename: string,
   total: number
 ): Promise<ActionResult<{ runId: string }>> {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Sign in to import products." };
+  const [supabase, { userId }] = await Promise.all([createClient(), getStaffSession()]);
+  if (!userId) return { ok: false, error: "Sign in to import products." };
 
   const { data, error } = await supabase
     .from("product_imports")
@@ -60,7 +58,7 @@ export async function beginImport(
       filename: filename.slice(0, 255),
       total,
       status: "running",
-      created_by: user.id,
+      created_by: userId,
     })
     .select("id")
     .single();
@@ -83,12 +81,8 @@ export async function importChunk(
 ): Promise<ActionResult<ChunkResult>> {
   if (!products.length) return { ok: true, data: EMPTY_TOTALS };
 
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Your session expired. Sign in and try again." };
+  const [supabase, { userId }] = await Promise.all([createClient(), getStaffSession()]);
+  if (!userId) return { ok: false, error: "Your session expired. Sign in and try again." };
 
   const { data, error } = await supabase.rpc("import_products", {
     payload: { overwrite, products },
@@ -145,6 +139,8 @@ export async function finishImport(
   revalidatePath("/admin/products/inventory");
   revalidatePath("/admin/products/collections");
   revalidatePath("/");
+  // Storefront catalogue and the admin's cached facets/collection list alike.
+  revalidateCatalog();
   // The route patterns, not concrete paths: an import touches hundreds of
   // handles, and naming them one at a time would be both slower and wrong the
   // moment a product is renamed.

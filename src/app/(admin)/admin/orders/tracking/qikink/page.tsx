@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RowLink } from "@/components/admin/row-link";
 import { AlertTriangle, ExternalLink, PackageCheck, Truck, Undo2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -24,8 +25,9 @@ import {
 } from "@/lib/qikink/tracking";
 import { Pagination } from "@/components/admin/pagination";
 import { SyncButton } from "./sync-button";
+import { CarrierTabs } from "../carrier-tabs";
 
-export const metadata = { title: "Delivery tracking" };
+export const metadata = { title: "Delivery tracking · Qikink" };
 
 /**
  * Delivery tracking.
@@ -110,9 +112,13 @@ export default async function TrackingPage({
 
   return (
     <div>
-      <PageHeader title="Delivery tracking" backHref="/admin/orders" backLabel="Orders">
-        <SyncButton lastSyncedAt={lastSyncedAt} />
-      </PageHeader>
+      <PageHeader
+        title="Delivery tracking — Qikink"
+        backHref="/admin/orders"
+        backLabel="Orders"
+        primary={<SyncButton lastSyncedAt={lastSyncedAt} />}
+      />
+      <CarrierTabs current="qikink" />
 
       {!qikink.configured || !qikink.enabled ? (
         <Card className="mb-4 border-amber-200 bg-amber-50">
@@ -163,7 +169,7 @@ export default async function TrackingPage({
         <CardContent className="pt-0">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <FilterTabs
-              basePath="/admin/orders/tracking"
+              basePath="/admin/orders/tracking/qikink"
               param="tab"
               current={tab}
               tabs={TABS}
@@ -223,12 +229,12 @@ export default async function TrackingPage({
                 {visible.map((o) => (
                   <TableRow key={o.orderId}>
                     <TableCell>
-                      <Link
+                      <RowLink
                         href={`/admin/orders/${o.orderId}`}
                         className="font-semibold text-foreground hover:underline"
                       >
                         #{o.orderNumber}
-                      </Link>
+                      </RowLink>
                       {o.alert && (
                         <p
                           className={

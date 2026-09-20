@@ -1,6 +1,8 @@
 import { headers } from "next/headers";
 import { getCashfreeStatus } from "@/lib/cashfree/config";
+import { getCodSettings } from "@/lib/shop/cod";
 import { CashfreeForm } from "./cashfree-form";
+import { CodForm } from "./cod-form";
 
 export const metadata = { title: "Payments" };
 
@@ -17,8 +19,9 @@ export const metadata = { title: "Payments" };
  * requires of request-time data.
  */
 export default async function PaymentsSettingsPage() {
-  const [status, headerList] = await Promise.all([
+  const [status, cod, headerList] = await Promise.all([
     getCashfreeStatus(),
+    getCodSettings(),
     headers(),
   ]);
 
@@ -28,9 +31,12 @@ export default async function PaymentsSettingsPage() {
     (host?.startsWith("localhost") ? "http" : "https");
 
   return (
-    <CashfreeForm
-      status={status}
-      webhookUrl={host ? `${proto}://${host}/api/webhooks/cashfree` : ""}
-    />
+    <div className="space-y-5">
+      <CashfreeForm
+        status={status}
+        webhookUrl={host ? `${proto}://${host}/api/webhooks/cashfree` : ""}
+      />
+      <CodForm settings={cod} gatewayLive={status.configured && status.enabled} />
+    </div>
   );
 }

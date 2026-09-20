@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +15,6 @@ import type { ShopSettings } from "@/lib/types";
 import { updateShopSettings } from "../actions";
 
 export function GeneralForm({ settings }: { settings: ShopSettings }) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [storeName, setStoreName] = useState(settings.store_name);
   const [legalName, setLegalName] = useState(settings.legal_name ?? "");
@@ -38,7 +36,6 @@ export function GeneralForm({ settings }: { settings: ShopSettings }) {
       if (result.error) toast.error(result.error);
       else {
         toast.success("Store details saved");
-        router.refresh();
       }
     });
   }

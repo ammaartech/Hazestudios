@@ -272,6 +272,35 @@ export async function placeOrder(
     const orderId = result.order_id;
     after(async () => {
       try {
+        // The COD review hold (0033). Decided here, after the order exists and
+        // before anything downstream sees it: a held order is not pushed, and
+        // sits on the "Needs review" list until staff approve it or ask for an
+        // advance. The update is conditional on the rule *in SQL* so the
+        // decision and the total it depends on come from the same row.
+        const { getCodSettings } = await import("@/lib/shop/cod");
+        const settings = await getCodSettings();
+        if (settings.holdEnabled) {
+          let hold = admin
+            .from("orders")
+            .update({ held_at: new Date().toISOString(), hold_reason: "cod_review" })
+            .eq("id", orderId)
+            .eq("payment_method", "cod")
+            .is("held_at", null);
+          if (settings.holdMinTotal != null) {
+            hold = hold.gte("total", settings.holdMinTotal);
+          }
+          const { data: held, error: holdError } = await hold.select("id");
+          // Held, or the hold could not be recorded. Either way this order is
+          // not sent: an order the rule wanted looked at must never slip into
+          // production because the write that would have parked it failed. It
+          // shows on the order page as not sent, with the button to send it.
+          if (holdError) {
+            console.error(`[cod] hold for order ${orderId} failed:`, holdError.message);
+            return;
+          }
+          if (held?.length) return;
+        }
+
         const { getQikinkConfig } = await import("@/lib/qikink/config");
         const config = await getQikinkConfig();
         if (!config?.autoSend) return;
@@ -393,7 +422,14 @@ export async function confirmPayment(token: string): Promise<void> {
  * but pending.
  */
 export async function retryPayment(
-  token: string
+  token: string,
+  /**
+   * A `payment_requests` id: pay that advance rather than the whole order.
+   * Only ever a pointer — the amount is read back from the row by
+   * `startCashfreePayment`, so a forged id can at most name a request the
+   * order genuinely has.
+   */
+  requestId?: string
 ): Promise<{ ok: true; payment: PaymentHandoff } | { ok: false; error: string }> {
   const orderId = await orderIdForToken(token);
   if (!orderId) return { ok: false, error: "We could not find that order." };
@@ -407,7 +443,9 @@ export async function retryPayment(
     // Advisory. startCashfreePayment re-reads the order and refuses on its own.
   }
 
-  const started = await startCashfreePayment(orderId, await paymentReturnUrl());
+  const started = await startCashfreePayment(orderId, await paymentReturnUrl(), {
+    requestId: typeof requestId === "string" ? requestId : undefined,
+  });
   if (!started.ok) return { ok: false, error: started.error };
 
   return {

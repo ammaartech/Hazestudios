@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isPrepaidMethod } from "@/lib/shop/payment-methods";
+import { isCodMethod, isPrepaidMethod } from "@/lib/shop/payment-methods";
 import { nationalPhoneDigits } from "@/lib/shop/phone-codes";
-import type { Order } from "@/lib/types";
+import type { Order, PaymentRequest } from "@/lib/types";
 import {
   CashfreeError,
   createCashfreeOrder,
@@ -52,11 +52,26 @@ export interface PaymentAttempt {
   method: string | null;
   error: string | null;
   created_at: string;
+  /**
+   * The `payment_requests` row this attempt pays, or null for the whole
+   * order. Decides what settling it means: a request is credited to the
+   * order, a full attempt closes it.
+   */
+  request_id: string | null;
 }
 
 export type StartResult =
   | { ok: true; paymentSessionId: string; mode: CashfreeMode; orderId: string }
   | { ok: false; error: string };
+
+export interface StartOptions {
+  /**
+   * Charge a payment request's amount instead of the order total. The request
+   * must be open and belong to the order; the order must be cash on delivery
+   * and still pending. This is the partial-COD advance.
+   */
+  requestId?: string;
+}
 
 /** What a settlement decided, so callers can tell "paid now" from "already". */
 export interface SettleResult {
@@ -66,7 +81,7 @@ export interface SettleResult {
 }
 
 const ATTEMPT_COLUMNS =
-  "id, order_id, provider_order_id, cf_order_id, cf_payment_id, payment_session_id, status, amount, currency, method, error, created_at";
+  "id, order_id, provider_order_id, cf_order_id, cf_payment_id, payment_session_id, status, amount, currency, method, error, created_at, request_id";
 
 /** A session Cashfree will no longer honour. Half an hour is their default. */
 const SESSION_MINUTES = 30;
@@ -158,6 +173,26 @@ async function loadOrder(orderId: string): Promise<Order | null> {
   return (data as Order) ?? null;
 }
 
+type PaymentRequestRow = Pick<
+  PaymentRequest,
+  "id" | "order_id" | "amount" | "status" | "expires_at"
+>;
+
+async function loadRequest(requestId: string): Promise<PaymentRequestRow | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(requestId)) return null;
+
+  const supabase = createAdminClient();
+  if (!supabase) return null;
+
+  const { data } = await supabase
+    .from("payment_requests")
+    .select("id, order_id, amount, status, expires_at")
+    .eq("id", requestId)
+    .maybeSingle();
+
+  return (data as PaymentRequestRow) ?? null;
+}
+
 /* -------------------------------------------------------------------------- */
 /* Starting a payment                                                          */
 /* -------------------------------------------------------------------------- */
@@ -188,7 +223,8 @@ function customerId(order: Order): string {
  */
 export async function startCashfreePayment(
   orderId: string,
-  returnUrlFor: (checkoutToken: string) => string
+  returnUrlFor: (checkoutToken: string) => string,
+  options: StartOptions = {}
 ): Promise<StartResult> {
   const supabase = createAdminClient();
   if (!supabase) {
@@ -206,8 +242,8 @@ export async function startCashfreePayment(
   const order = await loadOrder(orderId);
   if (!order) return { ok: false, error: "Order not found." };
 
-  // Three refusals, each of which would otherwise be a way to charge someone
-  // for something they do not owe.
+  // Refusals, each of which would otherwise be a way to charge someone for
+  // something they do not owe.
   if (order.is_draft) {
     return { ok: false, error: "This is a draft order." };
   }
@@ -217,18 +253,53 @@ export async function startCashfreePayment(
   if (order.payment_status !== "pending") {
     return { ok: false, error: "This order is not awaiting payment." };
   }
-  if (!isPrepaidMethod(order.payment_method)) {
-    return { ok: false, error: "This order is not set up for online payment." };
-  }
   if (!order.checkout_token) {
     return { ok: false, error: "This order has no checkout link." };
+  }
+
+  // What to charge. Two shapes: the whole order, for a prepaid one; or the
+  // amount of an open request, for a COD order the store has asked an advance
+  // on. The request is re-read here rather than trusted from the caller — the
+  // amount is the one thing a forged call must not be able to choose.
+  let amount: number;
+  let request: PaymentRequestRow | null = null;
+
+  if (options.requestId) {
+    request = await loadRequest(options.requestId);
+    if (!request || request.order_id !== order.id) {
+      return { ok: false, error: "That payment request doesn't belong to this order." };
+    }
+    if (request.status === "paid") {
+      return { ok: false, error: "This advance has already been paid." };
+    }
+    if (request.status !== "open") {
+      return { ok: false, error: "This payment request is no longer active." };
+    }
+    if (new Date(request.expires_at) <= new Date()) {
+      // Written down on the way out, so the next reader sees the row agree
+      // with the clock.
+      await supabase
+        .from("payment_requests")
+        .update({ status: "expired", resolved_at: new Date().toISOString() })
+        .eq("id", request.id)
+        .eq("status", "open");
+      return { ok: false, error: "This payment request has expired. Please contact us for a new one." };
+    }
+    if (!isCodMethod(order.payment_method)) {
+      return { ok: false, error: "This order is not set up for an advance." };
+    }
+    amount = Number(request.amount);
+  } else {
+    if (!isPrepaidMethod(order.payment_method)) {
+      return { ok: false, error: "This order is not set up for online payment." };
+    }
+    amount = Number(order.total);
   }
 
   // Cashfree's floor is ₹1, and it refuses anything under with
   // "order_amount : Invalid amount entered" — which sounds like a malformed
   // field and is actually a minimum. Caught here so a 95-paise test order says
   // something true instead of spending a round trip to be told off.
-  const amount = Number(order.total);
   if (!(amount >= MINIMUM_AMOUNT)) {
     return {
       ok: false,
@@ -283,7 +354,9 @@ export async function startCashfreePayment(
     order_expiry_time: new Date(
       Date.now() + SESSION_MINUTES * 60_000
     ).toISOString(),
-    order_note: `Order #${order.order_number}`,
+    order_note: request
+      ? `Advance on order #${order.order_number}`
+      : `Order #${order.order_number}`,
   };
 
   let created;
@@ -309,6 +382,7 @@ export async function startCashfreePayment(
     await supabase.from("payments").insert({
       order_id: orderId,
       provider_order_id: providerOrderId,
+      request_id: request?.id ?? null,
       status: "failed",
       amount,
       currency: order.currency || "INR",
@@ -330,6 +404,7 @@ export async function startCashfreePayment(
     await supabase.from("payments").insert({
       order_id: orderId,
       provider_order_id: providerOrderId,
+      request_id: request?.id ?? null,
       status: "failed",
       amount,
       currency: order.currency || "INR",
@@ -344,6 +419,7 @@ export async function startCashfreePayment(
   const { error: insertError } = await supabase.from("payments").insert({
     order_id: orderId,
     provider_order_id: providerOrderId,
+    request_id: request?.id ?? null,
     cf_order_id: created.cf_order_id != null ? String(created.cf_order_id) : null,
     payment_session_id: sessionId,
     status: "created",
@@ -434,20 +510,38 @@ export async function settlePayment(
 
   if (status !== "success") return { status, newlyPaid: false };
 
-  // Conditional on purpose: `select` after `update` returns only the rows the
-  // filter actually matched, so an empty result means somebody else got here
-  // first. That is how two deliveries of the same event end with one push.
-  const { data: flipped } = await supabase
-    .from("orders")
-    .update({ payment_status: "paid" })
-    .eq("id", attempt.order_id)
-    .eq("payment_status", "pending")
-    .select("id");
+  let newlyPaid: boolean;
 
-  const newlyPaid = Boolean(flipped?.length);
+  if (attempt.request_id) {
+    // An advance, not the whole order. `settle_payment_request` (0033) does
+    // the three writes that must land together — request paid, order credited
+    // and moved to partially_paid, hold released — and is idempotent on the
+    // request's status, which gives the webhook and the reconcile the same
+    // "only one of us did this" answer the conditional update below gives.
+    const { data: settled } = await supabase.rpc("settle_payment_request", {
+      p_request_id: attempt.request_id,
+      p_payment_id: attempt.id,
+    });
+    newlyPaid = settled === true;
+  } else {
+    // Conditional on purpose: `select` after `update` returns only the rows the
+    // filter actually matched, so an empty result means somebody else got here
+    // first. That is how two deliveries of the same event end with one push.
+    const { data: flipped } = await supabase
+      .from("orders")
+      .update({ payment_status: "paid" })
+      .eq("id", attempt.order_id)
+      .eq("payment_status", "pending")
+      .select("id");
+
+    newlyPaid = Boolean(flipped?.length);
+  }
 
   // Now, and only now, the printer. `payment_status` is already 'paid', which
-  // is the flag map.ts reads to send this in as Prepaid rather than COD.
+  // is the flag map.ts reads to send this in as Prepaid rather than COD — or,
+  // for an advance, 'partially_paid' with `amount_paid` credited, which map.ts
+  // turns into COD for the balance. Either way the order's money is settled
+  // before Qikink hears about it, and the hold (if any) is already released.
   //
   // Attempted on every successful settlement rather than only the flipping one:
   // an order can be marked paid by hand from the admin and then reconciled here,

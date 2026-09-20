@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/admin/page-header";
 import { Pagination } from "@/components/admin/pagination";
 import { createClient } from "@/lib/supabase/server";
+import { getShopCurrency } from "@/lib/admin/reference";
 import { formatMoney } from "@/lib/format";
 import type { Product, ProductImage } from "@/lib/types";
 import { ProductListActions } from "./product-list-actions";
@@ -60,10 +61,7 @@ export default async function ProductsPage({
     query = query.ilike("title", `%${q}%`);
   }
 
-  const [{ data, count }, { data: shop }] = await Promise.all([
-    query,
-    supabase.from("shop_settings").select("currency").single(),
-  ]);
+  const [{ data, count }, currency] = await Promise.all([query, getShopCurrency()]);
   const products = (data ?? []) as ProductRow[];
   const total = count ?? 0;
 
@@ -83,11 +81,8 @@ export default async function ProductsPage({
   }));
 
   return (
-    // Full-bleed: a nine-column product table needs the width, and capping it at
-    // max-w-6xl was what forced the columns apart. The layout zeroes its padding
-    // for `data-full-bleed`, so the page restates the gutter itself — same
-    // convention the analytics dashboards use.
-    <div data-full-bleed className="px-4 py-6 md:px-8 xl:px-12 lg:py-8">
+    // AdminContentFrame provides the full-width list gutter for this route.
+    <div>
       <PageHeader
         title="Products"
         primary={
@@ -98,7 +93,7 @@ export default async function ProductsPage({
           </Button>
         }
       >
-        <ProductListActions currency={shop?.currency ?? "INR"} />
+        <ProductListActions currency={currency} />
       </PageHeader>
 
       <ProductInsights />

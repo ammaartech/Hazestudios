@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { requireStaff as requireStaffSession } from "@/lib/auth/staff";
 import {
   clearTokenCache,
   createOrder,
@@ -22,7 +22,7 @@ import {
  *
  * Every write here goes through the service-role client, because
  * `integration_credentials` has RLS on and no policies (0016_qikink.sql). That
- * bypass is exactly why each action gates on `is_staff()` first: a Server Action
+ * bypass is exactly why each action gates on staff status first: a Server Action
  * is a public POST endpoint, and without the gate this file would let anyone on
  * the internet read the store's API secret back out through "test connection".
  */
@@ -31,9 +31,8 @@ type Result = { ok: true; message?: string } | { ok: false; error: string };
 
 async function requireStaff(): Promise<boolean> {
   try {
-    const supabase = await createClient();
-    const { data } = await supabase.rpc("is_staff");
-    return Boolean(data);
+    // Read off the signed token — no round trip; see lib/auth/staff.ts.
+    return (await requireStaffSession()).ok;
   } catch {
     return false;
   }

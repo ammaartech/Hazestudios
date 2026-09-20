@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -18,6 +19,61 @@ const nextConfig: NextConfig = {
   // `cookies()`, `headers()` or `searchParams` outside a boundary is now a
   // build error rather than a silent deopt, which is the point.
   cacheComponents: true,
+
+  /**
+   * `'use cache: remote'` goes to Upstash Redis when UPSTASH_REDIS_REST_URL and
+   * _TOKEN are set, and to Next's in-memory LRU otherwise (the handler decides).
+   * The admin's shop-wide reads use it so a tag invalidated by a Server Action
+   * on one Vercel instance is invalidated on all of them. See the handler for
+   * the reasoning and the wire format.
+   */
+  cacheHandlers: {
+    remote: path.join(process.cwd(), "cache-handlers", "upstash.cjs"),
+  },
+
+  experimental: {
+    /**
+     * How long the client router may reuse a dynamic segment it already holds.
+     *
+     * The default is 0, and with forty-odd sidebar links plus a list of row
+     * links on every admin page that meant each link was re-prefetched every
+     * time it re-entered the viewport or the router state changed: one page
+     * view produced 116 prefetch requests, the same routes three and four
+     * times over. Thirty seconds lets a prefetch — and a list a user has just
+     * left — be reused within the span of one task. Server Actions still
+     * invalidate on write (`revalidatePath`), so an edit is never hidden
+     * behind this.
+     */
+    staleTimes: { dynamic: 30, static: 300 },
+  },
+
+  async headers() {
+    const everywhere = [
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
+    ];
+    return [
+      { source: "/:path*", headers: everywhere },
+      {
+        // The admin is never legitimately framed and needs no device APIs; say
+        // so, and clickjacking and permission prompts are off the table.
+        source: "/admin/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+        ],
+      },
+      {
+        source: "/login",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+        ],
+      },
+    ];
+  },
 
   cacheLife: {
     /**
@@ -48,6 +104,32 @@ const nextConfig: NextConfig = {
       stale: 300,
       revalidate: 60,
       expire: 3600,
+    },
+
+    /**
+     * Admin reference data: settings, locations, the collection list, product
+     * facets, the staff roster. Tiny, read by nearly every admin page, changed
+     * a few times a month — and every write to it goes through a Server Action
+     * that calls `updateTag`, so the revalidate window is a backstop for edits
+     * made in the Supabase dashboard, not the freshness mechanism.
+     */
+    reference: {
+      stale: 60,
+      revalidate: 300,
+      expire: 86_400,
+    },
+
+    /**
+     * Dashboard aggregates: the Analytics page and the Home strip. These sum
+     * thousands of orders per window and are keyed by that window, so two
+     * staff opening the same view within a minute pay for one aggregation.
+     * Orders arrive from checkout and webhooks, not only from admin actions,
+     * so this one *does* rely on the window: a minute is the promise.
+     */
+    dashboard: {
+      stale: 30,
+      revalidate: 60,
+      expire: 600,
     },
   },
 

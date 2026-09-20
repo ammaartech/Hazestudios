@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,7 +17,6 @@ import type { Location } from "@/lib/types";
 import { deleteLocation, saveLocation } from "../actions";
 
 export function LocationDialog({ location }: { location?: Location }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(location?.name ?? "");
   const [address1, setAddress1] = useState(location?.address?.address1 ?? "");
@@ -41,7 +39,6 @@ export function LocationDialog({ location }: { location?: Location }) {
       }
       toast.success(location ? "Location updated" : "Location added");
       setOpen(false);
-      router.refresh();
     });
   }
 
@@ -56,7 +53,6 @@ export function LocationDialog({ location }: { location?: Location }) {
       }
       toast.success("Location deleted");
       setOpen(false);
-      router.refresh();
     });
   }
 

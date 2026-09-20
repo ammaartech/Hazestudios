@@ -13,19 +13,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { createClient } from "@/lib/supabase/server";
+import { getLocations } from "@/lib/admin/reference";
 import type { Location } from "@/lib/types";
 import { DesktopTable } from "@/components/admin/record-list";
 import { LocationDialog } from "./location-dialog";
 
 export const metadata = { title: "Locations" };
 export default async function LocationsSettingsPage() {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("locations")
-    .select("*")
-    .order("created_at");
-  const locations = (data ?? []) as Location[];
+  // From the shared reference cache; the save/delete actions expire it.
+  const locations: Location[] = await getLocations();
 
   return (
     <Card>

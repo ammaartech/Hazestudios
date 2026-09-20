@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RowLink } from "@/components/admin/row-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -168,14 +169,14 @@ export default async function CustomersPage({
                     return (
                       <TableRow key={c.id}>
                         <TableCell>
-                          <Link
+                          <RowLink
                             href={`/admin/customers/${c.id}`}
                             className="font-medium text-foreground transition-colors duration-150 hover:text-primary hover:underline"
                           >
                             {/* Imported records are frequently name-less; the
                                 email is then the only handle there is. */}
                             {name || c.email || c.phone || "Unnamed customer"}
-                          </Link>
+                          </RowLink>
                           {name && c.email && (
                             <span className="block text-xs text-muted-foreground">
                               {c.email}

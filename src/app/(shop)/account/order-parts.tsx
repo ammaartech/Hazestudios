@@ -33,7 +33,12 @@ export function orderStatusLabel(order: Order): {
   if (order.fulfillment_status === "partial") {
     return { label: "Partly shipped", tone: "open" };
   }
-  if (order.payment_status === "pending" || order.payment_status === "partially_paid") {
+  // A COD order with its advance in (0033) is not waiting on the shopper for
+  // anything; the rest is settled at the door. Only "pending" is a nudge.
+  if (order.payment_status === "partially_paid") {
+    return { label: "Advance paid", tone: "open" };
+  }
+  if (order.payment_status === "pending") {
     return { label: "Payment pending", tone: "warn" };
   }
   return { label: "Preparing", tone: "open" };

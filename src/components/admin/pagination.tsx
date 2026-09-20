@@ -46,6 +46,7 @@ export function Pagination({
 
   return (
     <div
+      data-slot="pagination"
       className={cn(
         "flex items-center justify-center gap-2 border-t pt-3",
         className

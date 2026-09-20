@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/admin/page-header";
 import { Pagination } from "@/components/admin/pagination";
 import { SearchInput } from "@/components/admin/search-input";
 import { createClient } from "@/lib/supabase/server";
+import { getLocations } from "@/lib/admin/reference";
 import type {
   InventoryLevel,
   Location,
@@ -64,13 +65,13 @@ export default async function InventoryPage({
   // clicking through forty pages.
   if (q) productQuery = productQuery.ilike("title", `%${q}%`);
 
-  const [{ data: productsData, count }, { data: locationsData }] = await Promise.all([
+  const [{ data: productsData, count }, locationRows] = await Promise.all([
     productQuery,
-    supabase.from("locations").select("id, name").order("created_at"),
+    getLocations(),
   ]);
 
   const products = (productsData ?? []) as ProductRow[];
-  const locations = (locationsData ?? []) as Pick<Location, "id" | "name">[];
+  const locations: Pick<Location, "id" | "name">[] = locationRows;
   const productIds = products.map((p) => p.id);
 
   // Scoped to this page's products, so both stay proportional to PAGE_SIZE

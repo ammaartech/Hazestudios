@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { RowLink } from "@/components/admin/row-link";
 import {
   DndContext,
   KeyboardSensor,
@@ -124,12 +124,12 @@ function SortableRow({
       <Thumb url={product.cover} alt="" />
 
       <div className="min-w-0 flex-1">
-        <Link
+        <RowLink
           href={`/admin/products/${product.id}`}
           className="block truncate text-sm font-medium hover:text-primary hover:underline"
         >
           {product.title}
-        </Link>
+        </RowLink>
         <p className="truncate text-xs text-muted-foreground">
           {product.product_type || product.vendor || "—"}
         </p>
@@ -405,12 +405,12 @@ export function CollectionItems({ products }: { products: PickerProduct[] }) {
               >
                 <Thumb url={p.cover} alt="" />
                 <div className="min-w-0 flex-1">
-                  <Link
+                  <RowLink
                     href={`/admin/products/${p.id}`}
                     className="block truncate text-sm font-medium hover:text-primary hover:underline"
                   >
                     {p.title}
-                  </Link>
+                  </RowLink>
                   <p className="truncate text-xs text-muted-foreground">
                     {p.product_type || p.vendor || "—"}
                   </p>

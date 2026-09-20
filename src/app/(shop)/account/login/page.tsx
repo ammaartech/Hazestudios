@@ -21,11 +21,14 @@ export default async function LoginPage({
 }) {
   const { next, error, notice } = await searchParams;
 
+  // Only ever bounce to a path on this site. `//evil.example` starts with a
+  // slash too and the browser reads it as a protocol-relative URL, so the
+  // second check is the one that closes the open redirect.
+  const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/account";
+
   // Already signed in — no reason to show a login form.
   const session = await getAccountSession();
-  if (session) redirect(next && next.startsWith("/") ? next : "/account");
-
-  const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/account";
+  if (session) redirect(target);
 
   return (
     <AuthShell

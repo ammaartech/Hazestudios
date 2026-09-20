@@ -111,7 +111,7 @@ export function FulfillDialog({ orderId }: { orderId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Fulfill items</Button>
+        <Button variant="outline" size="sm">Mark as fulfilled<ChevronDown className="ml-1 size-3" /></Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

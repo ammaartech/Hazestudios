@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 /**
  * Contextual save bar.
  *
- * Floats just under the topbar and appears only once the record differs from
+ * Floats over the topbar and appears only once the record differs from
  * what was loaded, so "is there anything to save?" is answerable at a glance
  * instead of by hunting for a button. Rendered as an inset, rounded, elevated
  * card rather than a full-bleed slab so it reads as a control hovering over the
@@ -60,11 +60,12 @@ export function SaveBar({
 
   return (
     <div
+      data-slot="save-bar"
       // Rendered always, hidden by transform, so the entrance animates rather
       // than the element popping into existence and shifting the page.
       aria-hidden={!dirty}
       className={cn(
-        "sticky top-[4.25rem] z-30 mb-6",
+        "fixed inset-x-4 top-2 z-50 mx-auto max-w-[1000px] md:left-64",
         "transition-[transform,opacity] duration-200 ease-out motion-reduce:transition-none",
         dirty
           ? "translate-y-0 opacity-100"

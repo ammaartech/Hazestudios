@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { fetchAllPages } from "@/lib/analytics/paginate";
-import type { Order, OrderItem } from "@/lib/types";
+import type { Order } from "@/lib/types";
+import { getDashboard, type DashboardPoint } from "@/lib/analytics/dashboard";
 
 /**
  * A session counts as live if it has been seen inside this window. The
@@ -8,7 +8,7 @@ import type { Order, OrderItem } from "@/lib/types";
  * visitor drops off the count — long enough to avoid flicker on a slow
  * connection, short enough that the number still means "right now".
  */
-export const LIVE_WINDOW_SECONDS = 60;
+const LIVE_WINDOW_SECONDS = 60;
 
 export interface LiveVisitor {
   id: string;
@@ -226,6 +226,7 @@ export async function getLiveSnapshot(): Promise<LiveSnapshot> {
   }
 }
 
+
 /* -------------------------------------------------------------------------- */
 /* Sales aggregates                                                            */
 /* -------------------------------------------------------------------------- */
@@ -246,14 +247,7 @@ export interface SalesTotals {
   returningCustomerRate: number;
 }
 
-export interface SalesSeriesPoint {
-  date: string;
-  label: string;
-  sales: number;
-  orders: number;
-  sessions: number;
-  aov: number;
-}
+export type SalesSeriesPoint = DashboardPoint;
 
 export interface SalesBreakdown {
   totals: SalesTotals;
@@ -282,255 +276,63 @@ const ZERO_TOTALS: SalesTotals = {
   returningCustomerRate: 0,
 };
 
-const isPaid = (status: string) =>
-  status === "paid" || status === "partially_refunded";
-
-/** Bucket width that keeps a chart readable across a day or three years. */
-function bucketFor(from: Date, to: Date): "hour" | "day" | "week" | "month" {
-  const days = (to.getTime() - from.getTime()) / 86_400_000;
-  if (days <= 2) return "hour";
-  if (days <= 90) return "day";
-  if (days <= 730) return "week";
-  return "month";
-}
-
-function bucketKey(date: Date, bucket: ReturnType<typeof bucketFor>) {
-  const d = new Date(date);
-  if (bucket === "hour") {
-    d.setMinutes(0, 0, 0);
-  } else if (bucket === "week") {
-    d.setHours(0, 0, 0, 0);
-    // Snap to Monday so week buckets line up with how merchants read a week.
-    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-  } else if (bucket === "month") {
-    d.setHours(0, 0, 0, 0);
-    d.setDate(1);
-  } else {
-    d.setHours(0, 0, 0, 0);
-  }
-  return d;
-}
-
-function bucketLabel(date: Date, bucket: ReturnType<typeof bucketFor>) {
-  if (bucket === "hour") {
-    return new Intl.DateTimeFormat("en-US", { hour: "numeric" }).format(date);
-  }
-  if (bucket === "month") {
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      year: "2-digit",
-    }).format(date);
-  }
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-  }).format(date);
-}
-
-/**
- * The only order columns these aggregates read. `select("*")` also drags three
- * jsonb blobs (both addresses and utm) plus the note and referrer text across
- * the wire for every order in the window, none of which is ever looked at.
- */
-const SALES_ORDER_COLUMNS =
-  "created_at, total, subtotal, discount_total, payment_status, fulfillment_status, currency, order_items(title_snapshot, price_snapshot, quantity)";
-
-interface OrderRow
-  extends Pick<
-    Order,
-    | "created_at"
-    | "total"
-    | "subtotal"
-    | "discount_total"
-    | "payment_status"
-    | "fulfillment_status"
-    | "currency"
-  > {
-  order_items?: Pick<OrderItem, "title_snapshot" | "price_snapshot" | "quantity">[];
-}
-
-interface SessionRollupRow {
-  started_at: string;
-  is_returning: boolean;
-}
-
-async function totalsFor(
-  from: Date,
-  to: Date
-): Promise<{ totals: SalesTotals; series: SalesSeriesPoint[]; orders: OrderRow[] }> {
-  const supabase = await createClient();
-
-  const [orders, sessions] = await Promise.all([
-    // Paged, and ordered by id after created_at: two orders can share a
-    // timestamp, and a non-unique sort lets them swap across a page boundary.
-    fetchAllPages<OrderRow>((start, end) =>
-      supabase
-        .from("orders")
-        .select(SALES_ORDER_COLUMNS)
-        .eq("is_draft", false)
-        .gte("created_at", from.toISOString())
-        .lte("created_at", to.toISOString())
-        .order("created_at", { ascending: true })
-        .order("id", { ascending: true })
-        .range(start, end)
-    ),
-    // Missing table (migration not applied) must not blank out the sales
-    // numbers, so sessions degrade to zero instead of failing the whole read.
-    fetchAllPages<SessionRollupRow>((start, end) =>
-      supabase
-        .from("analytics_sessions")
-        .select("started_at, is_returning")
-        .gte("started_at", from.toISOString())
-        .lte("started_at", to.toISOString())
-        .order("started_at", { ascending: true })
-        .order("id", { ascending: true })
-        .range(start, end)
-    ).catch(() => [] as SessionRollupRow[]),
-  ]);
-
-  const paidOrders = orders.filter((o) => isPaid(o.payment_status));
-  const grossSales = paidOrders.reduce((s, o) => s + Number(o.subtotal), 0);
-  const discounts = paidOrders.reduce((s, o) => s + Number(o.discount_total), 0);
-  const totalSales = paidOrders.reduce((s, o) => s + Number(o.total), 0);
-  const netSales = grossSales - discounts;
-  // The schema has no shipping or tax columns, so whatever the order total
-  // carries beyond net sales is reported as tax rather than invented.
-  const taxes = Math.max(0, totalSales - netSales);
-
-  const returningSessions = sessions.filter((s) => s.is_returning).length;
-
-  const bucket = bucketFor(from, to);
-  const buckets = new Map<number, SalesSeriesPoint>();
-
-  // Pre-seed every bucket so gaps render as zero instead of collapsing the axis.
-  for (
-    let cursor = bucketKey(from, bucket);
-    cursor <= to;
-    cursor = (() => {
-      const next = new Date(cursor);
-      if (bucket === "hour") next.setHours(next.getHours() + 1);
-      else if (bucket === "day") next.setDate(next.getDate() + 1);
-      else if (bucket === "week") next.setDate(next.getDate() + 7);
-      else next.setMonth(next.getMonth() + 1);
-      return next;
-    })()
-  ) {
-    buckets.set(cursor.getTime(), {
-      date: cursor.toISOString(),
-      label: bucketLabel(cursor, bucket),
-      sales: 0,
-      orders: 0,
-      sessions: 0,
-      aov: 0,
-    });
-  }
-
-  for (const o of orders) {
-    const key = bucketKey(new Date(o.created_at), bucket).getTime();
-    const point = buckets.get(key);
-    if (!point) continue;
-    point.orders++;
-    if (isPaid(o.payment_status)) point.sales += Number(o.total);
-  }
-
-  for (const s of sessions) {
-    const key = bucketKey(new Date(s.started_at), bucket).getTime();
-    const point = buckets.get(key);
-    if (point) point.sessions++;
-  }
-
-  const series = [...buckets.values()].map((p) => ({
-    ...p,
-    aov: p.orders ? p.sales / p.orders : 0,
-  }));
-
-  return {
-    orders,
-    series,
-    totals: {
-      grossSales,
-      discounts,
-      returns: 0,
-      netSales,
-      shipping: 0,
-      taxes,
-      totalSales,
-      orders: orders.length,
-      ordersFulfilled: orders.filter((o) => o.fulfillment_status === "fulfilled")
-        .length,
-      aov: paidOrders.length ? totalSales / paidOrders.length : 0,
-      sessions: sessions.length,
-      conversionRate: sessions.length
-        ? (paidOrders.length / sessions.length) * 100
-        : 0,
-      returningCustomerRate: sessions.length
-        ? (returningSessions / sessions.length) * 100
-        : 0,
-    },
-  };
-}
-
 /**
  * Sales for a window, optionally against the immediately preceding window of
  * equal length so every headline can show a delta.
+ *
+ * A view over `getDashboard` so the Home tiles and the Analytics page can never
+ * disagree about what a sale is.
  */
 export async function getSalesBreakdown(
   from: Date,
   to: Date,
   compare = false
 ): Promise<SalesBreakdown> {
-  const empty: SalesBreakdown = {
-    totals: ZERO_TOTALS,
-    previous: null,
-    series: [],
-    previousSeries: [],
-    byProduct: [],
-    byChannel: [],
-    currency: "INR",
-    configured: false,
-  };
+  const dashboard = await getDashboard(from, to, compare ? "previous_period" : "none");
+  const { current, previous } = dashboard;
 
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return empty;
+  const pick = (t: typeof current.totals): SalesTotals => ({
+    grossSales: t.grossSales,
+    discounts: t.discounts,
+    returns: t.reversals,
+    netSales: t.netSales,
+    shipping: t.shipping,
+    taxes: t.taxes,
+    totalSales: t.totalSales,
+    orders: t.orders,
+    ordersFulfilled: t.ordersFulfilled,
+    aov: t.aov,
+    sessions: t.sessions,
+    conversionRate: t.conversionRate,
+    returningCustomerRate: t.returningCustomerRate,
+  });
 
-  try {
-    const span = to.getTime() - from.getTime();
-    const prevFrom = new Date(from.getTime() - span);
-    const prevTo = new Date(from.getTime() - 1);
-
-    const [current, previous] = await Promise.all([
-      totalsFor(from, to),
-      compare ? totalsFor(prevFrom, prevTo) : Promise.resolve(null),
-    ]);
-
-    const revenueByProduct = new Map<string, { revenue: number; units: number }>();
-    for (const order of current.orders) {
-      if (!isPaid(order.payment_status)) continue;
-      for (const item of order.order_items ?? []) {
-        const entry = revenueByProduct.get(item.title_snapshot) ?? {
-          revenue: 0,
-          units: 0,
-        };
-        entry.revenue += Number(item.price_snapshot) * item.quantity;
-        entry.units += item.quantity;
-        revenueByProduct.set(item.title_snapshot, entry);
-      }
-    }
-
+  if (!dashboard.configured) {
     return {
-      totals: current.totals,
-      previous: previous?.totals ?? null,
-      series: current.series,
-      previousSeries: previous?.series ?? [],
-      byProduct: [...revenueByProduct.entries()]
-        .map(([name, v]) => ({ name, ...v }))
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 10),
-      // Single channel until POS or social selling actually writes orders.
-      byChannel: [{ name: "Online Store", revenue: current.totals.totalSales }],
-      currency: current.orders[0]?.currency ?? "INR",
-      configured: true,
+      totals: ZERO_TOTALS,
+      previous: null,
+      series: [],
+      previousSeries: [],
+      byProduct: [],
+      byChannel: [],
+      currency: "INR",
+      configured: false,
     };
-  } catch {
-    return empty;
   }
+
+  return {
+    totals: pick(current.totals),
+    previous: previous ? pick(previous.totals) : null,
+    series: current.series,
+    previousSeries: previous?.series ?? [],
+    byProduct: current.topProductsBySales.map((p) => ({
+      name: p.name,
+      revenue: p.revenue,
+      units: p.units,
+    })),
+    // Single channel until POS or social selling actually writes orders.
+    byChannel: [{ name: "Online Store", revenue: current.totals.totalSales }],
+    currency: current.currency,
+    configured: true,
+  };
 }

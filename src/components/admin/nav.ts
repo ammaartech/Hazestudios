@@ -12,6 +12,7 @@ import {
   Share2,
   type LucideIcon,
 } from "lucide-react";
+import { CARRIERS } from "@/lib/delivery/carriers";
 
 export interface NavChild {
   label: string;
@@ -32,7 +33,9 @@ export const mainNav: NavItem[] = [
     href: "/admin/orders",
     icon: ShoppingCart,
     children: [
-      { label: "Delivery tracking", href: "/admin/orders/tracking" },
+      // Three carriers, three pages — see src/lib/delivery/carriers.ts. Spread
+      // rather than listed so adding a partner does not mean editing the nav.
+      ...CARRIERS.map((c) => ({ label: c.navLabel, href: c.href })),
       { label: "Drafts", href: "/admin/orders/drafts" },
       { label: "Abandoned checkouts", href: "/admin/orders/abandoned" },
     ],

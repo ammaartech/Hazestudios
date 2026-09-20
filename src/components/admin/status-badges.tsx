@@ -59,9 +59,19 @@ export function PaymentBadge({ status }: { status: PaymentStatus }) {
   };
   const s = resolve(map, status);
   return (
-    <Pill className={s.pill}>
+    <Pill className={cn(s.pill, "order-status")}>
       <Dot className={s.dot} />
       {s.label}
+    </Pill>
+  );
+}
+
+/** Parked by the COD review rule (0033) and waiting on a decision. */
+export function HoldBadge() {
+  return (
+    <Pill className={cn("bg-orange-100 text-orange-900", "order-status")}>
+      <Dot className="bg-orange-500" />
+      COD review
     </Pill>
   );
 }
@@ -75,7 +85,7 @@ export function FulfillmentBadge({ status }: { status: FulfillmentStatus }) {
   };
   const s = resolve(map, status);
   return (
-    <Pill className={s.pill}>
+    <Pill className={cn(s.pill, "order-status")}>
       <Dot className={s.dot} />
       {s.label}
     </Pill>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RowLink } from "@/components/admin/row-link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -96,12 +97,12 @@ export default async function DraftsPage({
                 {drafts.map((o) => (
                   <TableRow key={o.id}>
                     <TableCell>
-                      <Link
+                      <RowLink
                         href={`/admin/orders/${o.id}`}
                         className="font-semibold hover:underline"
                       >
                         #D{o.order_number}
-                      </Link>
+                      </RowLink>
                     </TableCell>
                     <TableCell>{formatDateTime(o.created_at)}</TableCell>
                     <TableCell>

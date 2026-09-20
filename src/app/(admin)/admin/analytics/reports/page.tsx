@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FileText } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getShopSettings } from "@/lib/admin/reference";
 import { REPORTS } from "@/lib/analytics/report-definitions";
 import { ReportCatalog } from "./report-catalog";
 import { AskAi } from "./ask-ai";
@@ -11,12 +11,8 @@ export default async function ReportsPage() {
 
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
     try {
-      const supabase = await createClient();
-      const { data } = await supabase
-        .from("shop_settings")
-        .select("store_name")
-        .single();
-      if (data?.store_name) storeName = data.store_name;
+      const settings = await getShopSettings();
+      if (settings?.store_name) storeName = settings.store_name;
     } catch {
       // Fall back to the default name — the catalog does not depend on it.
     }

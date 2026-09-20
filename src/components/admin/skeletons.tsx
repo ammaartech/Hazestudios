@@ -115,3 +115,87 @@ export function PageSkeleton() {
     </div>
   );
 }
+
+/** The Analytics dashboard: header band, filter pills, then the card grid. */
+export function DashboardSkeleton() {
+  return (
+    <div data-full-bleed>
+      <div className="flex items-center justify-between border-b px-4 py-4 md:px-8 xl:px-12">
+        <div className="flex items-center gap-3">
+          <Skeleton className="size-5 rounded" />
+          <Skeleton className="h-7 w-28" />
+          <Skeleton className="h-4 w-36" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="size-8 rounded-lg" />
+          <Skeleton className="h-8 w-32 rounded-lg" />
+        </div>
+      </div>
+      <div className="space-y-4 px-4 py-4 md:px-8 xl:px-12">
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-36 rounded-lg" />
+          <Skeleton className="h-8 w-36 rounded-lg" />
+          <Skeleton className="h-8 w-20 rounded-lg" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-xl border bg-card p-4">
+              <Skeleton className="h-3.5 w-40" />
+              <Skeleton className="mt-2.5 h-6 w-32" />
+              <Skeleton className="mt-5 h-[200px] w-full rounded-md" />
+              <div className="mt-3 flex justify-center">
+                <Skeleton className="h-3 w-36" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** The order page: heading strip, then the main column beside the customer rail. */
+export function OrderSkeleton() {
+  return (
+    <div data-full-bleed className="px-4 py-4 md:px-8 xl:px-12">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-7 w-28" />
+            <Skeleton className="h-5 w-16 rounded-full" />
+            <Skeleton className="h-5 w-20 rounded-full" />
+          </div>
+          <Skeleton className="h-3.5 w-56" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-20 rounded-lg" />
+          <Skeleton className="h-8 w-24 rounded-lg" />
+          <Skeleton className="h-8 w-16 rounded-lg" />
+        </div>
+      </div>
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0 space-y-5">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-4 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Skeleton className="size-10 shrink-0 rounded-md" />
+                  <Skeleton className="h-4 w-56" />
+                  <Skeleton className="ml-auto h-4 w-16" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+          <PanelSkeleton lines={3} />
+        </div>
+        <div className="space-y-5">
+          <PanelSkeleton lines={2} />
+          <PanelSkeleton lines={2} />
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,5 +1,30 @@
 # Design
 
+## Admin reference calibration (September 2026)
+
+The Shopify references supplied by the owner now govern admin geometry. These
+rules supersede older admin spacing and glass-control notes below. The canonical
+implementation is `src/app/(admin)/admin-ui.css` with `AdminContentFrame`.
+
+- List pages have a consistent 16px gutter and use the available desktop width.
+  Editors use a centered 1032px frame; the order detail retains its 968px layout.
+- Layout mode comes from the active pathname. Never use `:has([data-full-bleed])`
+  to select the frame: Next.js can retain hidden previous routes in the DOM.
+- Admin typography uses Arial/Helvetica, 13px body text with 20px line height,
+  18px page titles, 13px section titles, and 12px control and table-header text.
+- Desktop toolbar buttons are 28px high, have 8px corners, and use 6px gaps.
+  Secondary header actions use a flat gray fill; primary actions use dark gray.
+  No glass gradients on admin controls. Keep visible keyboard focus styles.
+- Plain order rows are 33px high; image rows and multiline records may grow.
+  Headers have a light-gray background and numeric amounts align right.
+- Cards use 16px internal padding and 12px spacing between heading and content.
+  Section-title typography must inherit the admin font, never the storefront font.
+- Save bars overlay the top chrome; hidden bars must reserve no document space.
+- Mobile retains 16px page gutters, stacked record lists and reachable actions.
+  Horizontal strips must use the same gutter as their containing page.
+
+The storefront retains its independent brand styles.
+
 Two registers share one codebase. **Admin** (`:root`) is a product surface — restrained, dense,
 familiar. **Storefront** (`.shop`) is a brand surface — editorial, hard-edged, monochrome. They are
 deliberately not the same design system; they share only the shadcn component contract and the
