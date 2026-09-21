@@ -13,7 +13,7 @@ export const SECTIONS: { label: string; href: string; placeholder?: boolean }[] 
   { label: "Qikink", href: "/admin/settings/qikink" },
   { label: "Payments", href: "/admin/settings/payments" },
   { label: "Checkout", href: "/admin/settings/checkout", placeholder: true },
-  { label: "Shipping and delivery", href: "/admin/settings/shipping", placeholder: true },
+  { label: "Shipping and delivery", href: "/admin/settings/shipping" },
   { label: "Taxes and duties", href: "/admin/settings/taxes", placeholder: true },
   { label: "Markets", href: "/admin/settings/markets", placeholder: true },
   { label: "Domains", href: "/admin/settings/domains", placeholder: true },

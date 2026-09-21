@@ -1,19 +1,16 @@
+import Link from "next/link";
 import { KeyRound, PackageSearch, PlugZap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Carrier } from "@/lib/delivery/carriers";
 
 /**
- * The tracking page for a carrier with no integration behind it yet.
+ * The tracking page for a carrier whose credentials have not been entered.
  *
  * Deliberately not `ComingSoon`. That component says "on the roadmap" and shows
  * a phase badge, which is right for a feature nobody has asked for and wrong
- * here: these two pages exist because the operator has accounts with both
- * couriers and is going to connect them. What they need is the list of
- * credentials to go and fetch, not a release estimate.
- *
- * It also does not link anywhere. `settings/shipping` is itself a placeholder,
- * and sending someone to a second empty page to enter credentials it cannot
- * store would be worse than telling them plainly where things stand.
+ * here: the integration exists (src/lib/couriers) and the operator has an
+ * account with the courier. What they need is the list of credentials to go
+ * and fetch, and where to paste them.
  */
 export function CarrierSetup({ carrier }: { carrier: Carrier }) {
   const steps = [
@@ -25,13 +22,21 @@ export function CarrierSetup({ carrier }: { carrier: Carrier }) {
     {
       icon: PlugZap,
       title: "Connect the account",
-      body:
-        "Credentials are stored server-side in the integrations table, the same way Qikink's are, so the secret never reaches a browser.",
+      body: (
+        <>
+          Paste them into{" "}
+          <Link href="/admin/settings/shipping" className="font-medium text-foreground underline">
+            Settings → Shipping and delivery
+          </Link>
+          , alongside the pickup address. Credentials are stored server-side in the integrations table, the same way Qikink&rsquo;s
+          are, so the secret never reaches a browser.
+        </>
+      ),
     },
     {
       icon: PackageSearch,
-      title: "Track consignments here",
-      body: `Orders shipped through ${carrier.name} will appear on this page with their AWB, current stage, and anything that has stalled.`,
+      title: "Book from any order, track here",
+      body: `Press Ship now on an order and pick ${carrier.name}. Each parcel then appears on this page with its AWB, current stage, and anything that has stalled.`,
     },
   ];
 

@@ -261,6 +261,8 @@ export interface Fulfillment {
   tracking_number: string;
   carrier: string;
   status: string;
+  /** Added in 0034_couriers.sql. Set by courier bookings; null when entered by hand. */
+  tracking_url?: string | null;
   created_at: string;
 }
 

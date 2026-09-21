@@ -1,21 +1,16 @@
 import { notFound } from "next/navigation";
 import { ComingSoon } from "@/components/admin/coming-soon";
 
-// 'payments' is no longer here: settings/payments is a real page as of the
-// Cashfree integration, and a static route wins over this dynamic one anyway —
-// leaving the entry would only mean a placeholder nothing can reach.
+// 'payments' and 'shipping' are no longer here: both are real pages now (the
+// Cashfree integration; the courier integrations in 0034), and a static route
+// wins over this dynamic one anyway — leaving an entry would only mean a
+// placeholder nothing can reach.
 const PLACEHOLDERS: Record<string, { title: string; phase: string; description: string }> = {
   checkout: {
     title: "Checkout",
     phase: "Phase S (Storefront)",
     description:
       "Checkout layout, form fields, and privacy options arrive with the storefront checkout.",
-  },
-  shipping: {
-    title: "Shipping and delivery",
-    phase: "Phase S (Storefront)",
-    description:
-      "Flat rates, carrier-calculated fees, and local pickup are configured once the storefront ships orders.",
   },
   taxes: {
     title: "Taxes and duties",

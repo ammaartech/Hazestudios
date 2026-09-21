@@ -78,3 +78,13 @@ a.product-title:hover { text-decoration:underline; }
 
 .cod-card .cod-state { margin-top:8px; padding:12px; background:#f7f7f7; border-radius:10px; }
 .cod-card .cod-share input { background:white; }
+
+/* Courier shipping — the "Ship now" button and the shipment card. */
+.admin .order-detail .ship-now,.order-detail .ship-now { background:#303030; color:white; border:1px solid #161616; box-shadow:inset 0 1px 0 #ffffff44; }
+.shipment-facts { display:grid; grid-template-columns:auto minmax(0,1fr); gap:6px 16px; margin-top:4px; }
+.shipment-facts dt { color:#616161; white-space:nowrap; }
+.shipment-facts dd { min-width:0; overflow-wrap:anywhere; }
+.shipment-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.shipment-failure { margin-top:4px; padding:12px; border:1px solid #fecaca; background:#fef2f2; border-radius:10px; }
+.shipment-history { margin-top:12px; font-size:12px; }
+@media (max-width:600px) { .shipment-facts { grid-template-columns:minmax(0,1fr); gap:2px; } .shipment-facts dt { margin-top:6px; } }

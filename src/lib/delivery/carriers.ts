@@ -14,10 +14,10 @@
  *
  * `connected` is about the *integration existing in this codebase*, not about
  * whether credentials happen to be filled in. Qikink has a client, a sync and
- * a stage model (`src/lib/qikink`); the other two have credentials to collect
- * and nothing behind them yet. A page uses this to decide whether to render a
- * tracking table or the setup state — the live credential check is separate
- * and still happens per request.
+ * a stage model (`src/lib/qikink`); Shree Maruti and Blue Dart have theirs in
+ * `src/lib/couriers` as of 0034 — booking, cancelling, tracking and labels.
+ * The live credential check is separate and still happens per request, and a
+ * tracking page whose courier is not yet configured says so in place.
  */
 
 export interface Carrier {
@@ -52,16 +52,16 @@ export const CARRIERS: Carrier[] = [
     name: "Shree Maruti",
     navLabel: "Tracking · Shree Maruti",
     href: "/admin/orders/tracking/shreemaruti",
-    connected: false,
-    credentials: "API key and account code",
+    connected: true,
+    credentials: "An InnoFulfill API key, or the portal login email and password",
   },
   {
     slug: "bluedart",
     name: "Bluedart",
     navLabel: "Tracking · Bluedart",
     href: "/admin/orders/tracking/bluedart",
-    connected: false,
-    credentials: "Licence key, login ID and customer code",
+    connected: true,
+    credentials: "Consumer key and secret, licence key, login ID, customer code and origin area",
   },
 ];
 

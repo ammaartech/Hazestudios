@@ -1,6 +1,6 @@
 # Bklit analytics research and implementation
 
-Reviewed 20 September 2026. Official source revision: `0dfdfc57ca068470ccfb93c4501cebc555c9054d`.
+Reviewed 20 September 2026; production verification completed 21 September 2026. Official source revision: `0dfdfc57ca068470ccfb93c4501cebc555c9054d`.
 
 Bklit is a React chart library distributed as source through the shadcn registry. It is built on Visx and Motion; it is not a replacement for the storefront tracking service or Supabase analytics queries. The chart package is MIT licensed. Studio is a separate proprietary application; no Studio source was copied.
 
@@ -30,7 +30,7 @@ Candlesticks and profit/loss variants target financial markets rather than this 
 
 Installed the official registry components into `src/components/charts` and added the `@bklit` namespace in `components.json`. The registry selects Visx 4 alpha packages; their resolved versions are locked in `package-lock.json`. MIT notices accompany the copied source.
 
-Local compatibility fixes: corrected the loading-label import, removed invalid generated four-hyphen CSS aliases, constrained horizontal-axis labels to their reserved width, and mount the fixed-size donut after hydration because the upstream center checks browser custom-element availability during its first render. Analytics colors and layout are scoped to analytics. Report trend payloads now retain ISO bucket timestamps instead of reparsing formatted labels.
+Local compatibility fixes: corrected the loading-label import, removed invalid generated four-hyphen CSS aliases, constrained horizontal-axis labels to their reserved width, and mount the fixed-size donut after hydration because the upstream center checks browser custom-element availability during its first render. Analytics colors and layout are scoped to analytics. Report trend payloads now retain ISO bucket timestamps instead of reparsing formatted labels. Removed an unnecessary nested Suspense boundary around the overview controls after production streaming emitted duplicate boundary IDs; the route loading boundary still covers the controls.
 
 ## Validation
 

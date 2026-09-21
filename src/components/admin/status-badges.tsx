@@ -6,6 +6,7 @@ import type {
   ProductStatus,
 } from "@/lib/types";
 import type { QikinkStage } from "@/lib/qikink/status";
+import type { ShipmentStage } from "@/lib/couriers/status";
 
 function Dot({ className }: { className?: string }) {
   return <span className={cn("size-1.5 rounded-full", className)} />;
@@ -144,6 +145,33 @@ export function StageBadge({ stage }: { stage: QikinkStage }) {
     delivered: { label: "Delivered", pill: "bg-emerald-100 text-emerald-900", dot: "bg-emerald-500" },
     rto: { label: "Returned (RTO)", pill: "bg-red-100 text-red-900", dot: "bg-red-500" },
     cancelled: { label: "Cancelled", pill: "bg-red-100 text-red-900", dot: "bg-red-500" },
+    unknown: { label: "Unknown", pill: "bg-amber-100 text-amber-900", dot: "bg-amber-500" },
+  };
+  const s = resolve(map, stage);
+  return (
+    <Pill className={s.pill}>
+      <Dot className={s.dot} />
+      {s.label}
+    </Pill>
+  );
+}
+
+/**
+ * Delivery stage of a courier booking (Shree Maruti, Blue Dart). Same palette
+ * logic as `StageBadge`: cool→warm along the journey, red where someone has to
+ * act, neutral for the states that are simply waiting.
+ */
+export function ShipmentStageBadge({ stage }: { stage: ShipmentStage }) {
+  const map: Record<ShipmentStage, Variant> = {
+    not_booked: { label: "Not booked", pill: "bg-red-100 text-red-900", dot: "bg-red-500" },
+    booked: { label: "Booked", pill: "bg-neutral-200 text-neutral-800", dot: "bg-neutral-500" },
+    picked_up: { label: "Picked up", pill: "bg-sky-100 text-sky-900", dot: "bg-sky-500" },
+    in_transit: { label: "In transit", pill: "bg-blue-100 text-blue-900", dot: "bg-blue-500" },
+    out_for_delivery: { label: "Out for delivery", pill: "bg-amber-100 text-amber-900", dot: "bg-amber-500" },
+    delivered: { label: "Delivered", pill: "bg-emerald-100 text-emerald-900", dot: "bg-emerald-500" },
+    undelivered: { label: "Undelivered", pill: "bg-orange-100 text-orange-900", dot: "bg-orange-500" },
+    rto: { label: "Returned (RTO)", pill: "bg-red-100 text-red-900", dot: "bg-red-500" },
+    cancelled: { label: "Cancelled", pill: "bg-neutral-200 text-neutral-800", dot: "bg-neutral-500" },
     unknown: { label: "Unknown", pill: "bg-amber-100 text-amber-900", dot: "bg-amber-500" },
   };
   const s = resolve(map, stage);

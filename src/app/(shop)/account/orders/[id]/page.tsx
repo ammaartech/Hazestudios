@@ -110,9 +110,20 @@ export default async function OrderDetailPage({
                     {f.carrier || "Shipment"}
                   </span>
                   {f.tracking_number && (
-                    <span className="ml-2 font-mono text-(--shop-charcoal)">
-                      {f.tracking_number}
-                    </span>
+                    f.tracking_url ? (
+                      <a
+                        href={f.tracking_url}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="ml-2 font-mono text-(--shop-charcoal) underline underline-offset-2"
+                      >
+                        {f.tracking_number}
+                      </a>
+                    ) : (
+                      <span className="ml-2 font-mono text-(--shop-charcoal)">
+                        {f.tracking_number}
+                      </span>
+                    )
                   )}
                   <span className="ml-2 text-(--shop-mute)">
                     · {f.status || "in transit"}

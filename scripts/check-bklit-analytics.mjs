@@ -4,9 +4,10 @@ import { loadEnv } from './db-config.mjs';
 loadEnv();
 const browser = await puppeteer.launch({ executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe', headless:true });
 const page = await browser.newPage();
+page.setDefaultNavigationTimeout(90000);
 const base = process.env.BASE_URL || 'http://localhost:3000';
 const errors = [];
-page.on('pageerror', e => errors.push(e.message));
+page.on('pageerror', e => { errors.push(page.url() + ': ' + e.message); console.log('Page error at', page.url(), e.message); });
 mkdirSync('.codex/analytics', { recursive:true });
 try {
   await page.setViewport({width:1600,height:1000});
@@ -36,11 +37,11 @@ try {
   await page.waitForSelector('.analytics-tooltip',{visible:true,timeout:15000});
   await page.screenshot({path:'.codex/analytics/tooltip.png'});
   await page.mouse.move(0,0);
-  await page.evaluate(()=>[...document.querySelectorAll('.analytics-toolbar button')].find(el=>el.textContent.includes('Previous period')).click());
+  await (await page.$$('.analytics-toolbar button'))[1].click();
   await page.waitForSelector('[role=menuitem]');
   await page.evaluate(()=>[...document.querySelectorAll('[role=menuitem]')].find(el=>el.textContent.includes('No comparison')).click());
   await page.waitForFunction(()=>!document.querySelector('.analytics-chart-legend .comparison'));
-  await page.evaluate(()=>[...document.querySelectorAll('.analytics-toolbar button')].find(el=>el.textContent.includes('Last 90 days')).click());
+  await (await page.$$('.analytics-toolbar button'))[0].click();
   await page.waitForSelector('[role=menuitem]');
   await page.evaluate(()=>[...document.querySelectorAll('[role=menuitem]')].find(el=>el.textContent.includes('Last 7 days')).click());
   await page.waitForFunction(()=>new URL(location.href).searchParams.get('range')==='7d');

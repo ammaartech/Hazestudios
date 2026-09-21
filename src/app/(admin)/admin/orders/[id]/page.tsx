@@ -39,6 +39,10 @@ import { getQikinkStatus } from "@/lib/qikink/config";
 import { getFulfillment } from "@/lib/qikink/fulfillment";
 import { QikinkCard } from "./qikink-card";
 import { CodAdvanceCard } from "./cod-advance-card";
+import { ShipNowDialog } from "./ship-now-dialog";
+import { ShipmentCard } from "./shipment-card";
+import { getCourierAvailability } from "@/lib/couriers/config";
+import { draftForOrder, getShipmentsForOrder, liveShipment } from "@/lib/couriers/shipments";
 
 export const metadata = { title: "Order" };
 
@@ -69,13 +73,22 @@ export default async function OrderDetailPage({
   // network alone. `admin_order_detail` (0032) composes all of it in Postgres
   // under the caller's own RLS. Qikink's status lives behind the service role
   // and is read alongside rather than after.
-  const [{ data: detail }, qikinkStatus, qikinkFulfillment, codSettings, headerList] = await Promise.all([
-    supabase.rpc("admin_order_detail", { p_id: id }),
-    getQikinkStatus(),
-    getFulfillment(id),
-    getCodSettings(),
-    headers(),
-  ]);
+  //
+  // The courier reads ride in the same wave. `draftForOrder` re-reads the
+  // order and its lines through the service role rather than waiting for the
+  // RPC's copy: a second wave of requests to Tokyo costs more than one
+  // redundant read inside the first.
+  const [{ data: detail }, qikinkStatus, qikinkFulfillment, codSettings, headerList, couriers, shipments, shipDraft] =
+    await Promise.all([
+      supabase.rpc("admin_order_detail", { p_id: id }),
+      getQikinkStatus(),
+      getFulfillment(id),
+      getCodSettings(),
+      headers(),
+      getCourierAvailability(),
+      getShipmentsForOrder(id),
+      draftForOrder(id),
+    ]);
 
   const payload = detail as OrderDetailPayload | null;
   if (!payload?.order) notFound();
@@ -97,6 +110,10 @@ export default async function OrderDetailPage({
   const next = payload.next_id ? { id: payload.next_id } : null;
   const canFulfill = !order.is_draft && !order.cancelled_at && order.payment_status !== "voided" && !["fulfilled", "restocked"].includes(order.fulfillment_status);
   const configured = qikinkStatus.enabled && qikinkStatus.configured;
+  // "Ship now" is for parcels the store packs itself. An order Qikink already
+  // has is theirs to ship, and an order a courier already has is booked.
+  const qikinkHasIt = qikinkFulfillment?.status === "sent";
+  const canShip = canFulfill && !qikinkHasIt && !liveShipment(shipments) && Boolean(shipDraft);
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const email = order.email || customer?.email || "";
   const phone = order.phone || customer?.phone || "";
@@ -141,11 +158,11 @@ export default async function OrderDetailPage({
           <section className="order-card fulfillment-card">
             <div className="section-heading">
               <h2 className="flex items-center gap-2"><span className={`section-icon ${order.fulfillment_status === "unfulfilled" ? "unfulfilled" : ""}`}><Package size={16} /></span>{fulfillmentLabel}</h2>
-              {canFulfill && <div className="fulfillment-actions"><FulfillDialog orderId={id} /><RequestFulfillment orderId={id} configured={configured} disabled={qikinkFulfillment?.status === "sent"} /></div>}
+              {canFulfill && <div className="fulfillment-actions"><FulfillDialog orderId={id} /><RequestFulfillment orderId={id} configured={configured} disabled={qikinkHasIt} />{canShip && shipDraft && <ShipNowDialog orderId={id} draft={shipDraft} availability={couriers} />}</div>}
             </div>
             <div className="shipping-summary">
               <div className="flex flex-wrap items-center justify-between gap-2"><span className="flex items-center gap-2"><Truck size={16} />Standard Shipping</span>{configured && <Link className="location-badge" href="/admin/settings/qikink"><MapPin size={13} />Qikink_Fulfillment</Link>}</div>
-              <details><summary className="shipping-profile cursor-pointer"><Tag size={15} />General profile</summary><p className="order-muted mt-2">Standard shipping · {money(order.shipping_total ?? 0)} charged on this order. {configured ? "Fulfillment is handled by Qikink." : "Fulfillment is managed by your store."}</p></details>
+              <details><summary className="shipping-profile cursor-pointer"><Tag size={15} />General profile</summary><p className="order-muted mt-2">Standard shipping · {money(order.shipping_total ?? 0)} charged on this order. {configured ? "Print-on-demand orders are fulfilled by Qikink; anything else ships by courier from Ship now." : "Fulfillment is managed by your store — book a courier from Ship now."}</p></details>
             </div>
             <div className="order-lines">
               {items.map(item => { const image = item.product_id ? imageByProduct.get(item.product_id) : undefined; return <div className="order-line" key={item.id}>
@@ -159,6 +176,7 @@ export default async function OrderDetailPage({
               {!items.length && <p className="p-3 order-muted">No items in this order.</p>}
             </div>
           </section>
+          {shipments.length > 0 && <ShipmentCard shipments={shipments} currency={order.currency} />}
           {isCod && !order.is_draft && (
             <CodAdvanceCard
               orderId={id}
@@ -200,7 +218,7 @@ export default async function OrderDetailPage({
             </div>
           </section>
           <Metafields orderId={id} values={order.metafields ?? {}} />
-          {fulfillments.length > 0 && <Card><CardHeader><CardTitle>Fulfillments</CardTitle></CardHeader><CardContent className="space-y-3">{fulfillments.map(f => <div key={f.id}><p>{f.carrier || "Shipment"} {f.tracking_number}</p><p className="order-muted">{formatDateTime(f.created_at)}</p></div>)}</CardContent></Card>}
+          {fulfillments.length > 0 && <Card><CardHeader><CardTitle>Fulfillments</CardTitle></CardHeader><CardContent className="space-y-3">{fulfillments.map(f => <div key={f.id}><p>{f.carrier || "Shipment"} {f.tracking_url ? <a className="order-link" href={f.tracking_url} target="_blank" rel="noreferrer noopener">{f.tracking_number}</a> : f.tracking_number}</p><p className="order-muted">{formatDateTime(f.created_at)}</p></div>)}</CardContent></Card>}
           {refunds.length > 0 && <Card><CardHeader><CardTitle>Refunds</CardTitle></CardHeader><CardContent className="space-y-3">{refunds.map(r => <div key={r.id}><p>{money(r.amount)} {r.reason} {r.restock && <Badge variant="secondary">Restocked</Badge>}</p><p className="order-muted">{formatDateTime(r.created_at)}</p></div>)}</CardContent></Card>}
           <OrderNotes orderId={id} notes={notes} />
           <div className="order-created"><span />{formatDateTime(order.created_at)} — Order created.</div>
