@@ -14,7 +14,7 @@ import {
   syncShipment,
   type CourierShipment,
 } from "@/lib/couriers/shipments";
-import { checkServiceability } from "@/lib/couriers/shreemaruti/client";
+import { adapterFor, isCourierError } from "@/lib/couriers/adapters";
 
 /**
  * Order-page courier actions.
@@ -143,35 +143,39 @@ export async function refreshCourierShipment(shipmentId: string): Promise<Shipme
 }
 
 export type ServiceabilityResult =
-  | { ok: true; serviceable: boolean; reason: string; destination: string | null }
-  | { ok: false; error: string };
+  | { ok: true; serviceable: boolean; codServiceable: boolean | null; reason: string; destination: string | null }
+  | { ok: false; error: string; unsupported?: boolean };
 
 /**
- * Asks Shree Maruti whether they deliver to the order's pincode, for the
- * dialog to show before the operator commits. Blue Dart has no cheap
- * equivalent — their pincode master is a bulk download — so a Blue Dart
- * booking finds out at booking time, with the same message in the same place.
+ * Asks a courier whether they deliver to the order's pincode, for the dialog
+ * to show before the operator commits. Shree Maruti, DTDC and Delhivery can
+ * answer cheaply; Blue Dart has no equivalent — their pincode master is a bulk
+ * download — so a Blue Dart booking finds out at booking time, with the same
+ * message in the same place.
  */
 export async function checkCourierServiceability(orderId: string, provider: string): Promise<ServiceabilityResult> {
   const guarded = await guard(orderId);
   if (!guarded) return { ok: false, error: DENIED };
-  if (provider !== "shreemaruti") return { ok: false, error: "Serviceability check is only available for Shree Maruti." };
+  if (!isCourierProvider(provider)) return { ok: false, error: "Unknown courier." };
 
-  const [config, draft] = await Promise.all([getCourierConfig("shreemaruti"), draftForOrder(guarded.id)]);
-  if (!config) return { ok: false, error: "Shree Maruti is not connected." };
+  const adapter = adapterFor(provider);
+  if (!adapter.serviceability) {
+    return { ok: false, unsupported: true, error: `${COURIERS[provider].name} has no serviceability check; the booking itself will say.` };
+  }
+
+  const [config, draft] = await Promise.all([getCourierConfig(provider), draftForOrder(guarded.id)]);
+  if (!config) return { ok: false, error: `${COURIERS[provider].name} is not connected.` };
   if (!draft?.pickup || !isValidPincode(draft.pickup.postal_code) || !isValidPincode(draft.consignee.postal_code)) {
     return { ok: false, error: "Both pincodes must be valid before a serviceability check." };
   }
 
   try {
-    const result = await checkServiceability(config, {
-      from: draft.pickup.postal_code,
-      to: draft.consignee.postal_code,
-      paymentMode: draft.paymentMode === "cod" ? "COD" : "PREPAID",
-    });
-    const destination = [result.destination?.city, result.destination?.state].filter(Boolean).join(", ") || null;
-    return { ok: true, serviceable: result.serviceable, reason: result.reason, destination };
+    const result = await adapter.serviceability(config, draft);
+    return { ok: true, ...result };
   } catch (cause) {
-    return { ok: false, error: cause instanceof Error ? cause.message : "Could not reach Shree Maruti." };
+    return {
+      ok: false,
+      error: isCourierError(cause) || cause instanceof Error ? cause.message : `Could not reach ${COURIERS[provider].name}.`,
+    };
   }
 }

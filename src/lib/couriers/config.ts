@@ -6,7 +6,7 @@ import {
   type PackageDefaults,
   type PickupAddress,
 } from "./draft";
-import { COURIER_PROVIDERS, type CourierProvider } from "./providers";
+import { COURIER_PROVIDERS, isCourierProvider, type CourierProvider } from "./providers";
 
 /**
  * Courier configuration: credentials for the two APIs, and the store's own
@@ -129,8 +129,83 @@ export interface BlueDartStatus {
   configured: boolean;
 }
 
-export type CourierConfig = ShreeMarutiConfig | BlueDartConfig;
-export type CourierStatus = ShreeMarutiStatus | BlueDartStatus;
+/* -------------------------------------------------------------------------- */
+/* DTDC                                                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * DTDC's customer API runs on Shipsy's platform (dtdcapi.shipsy.io) and takes
+ * a single `api-key`. Tracking is a *different* DTDC system with its own
+ * credentials: a username + password exchanged for an access token, or a
+ * static token some accounts are issued directly. Both variants fit one
+ * secret column — with a username it is the password, without one it is the
+ * token itself.
+ */
+export interface DtdcConfig {
+  provider: "dtdc";
+  environment: CourierEnvironment;
+  apiKey: string;
+  /** The billing customer code, sent on every consignment. */
+  customerCode: string;
+  defaultService: string;
+  /** Their commodity master id; "99" is "Others", which apparel falls under. */
+  commodityId: string;
+  /** How COD is collected — "cash" unless the account says otherwise. */
+  codCollectionMode: string;
+  /** Tracking API: username (may be blank when a static token is used). */
+  trackingUsername: string;
+  /** Tracking API: the password for the username, or the static access token. */
+  trackingSecret: string;
+}
+
+export interface DtdcStatus {
+  provider: "dtdc";
+  environment: CourierEnvironment;
+  hasApiKey: boolean;
+  customerCode: string;
+  defaultService: string;
+  commodityId: string;
+  codCollectionMode: string;
+  trackingUsername: string;
+  hasTrackingSecret: boolean;
+  enabled: boolean;
+  configured: boolean;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Delhivery                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One API token for everything. The catch is the pickup location: Delhivery
+ * only collects from a warehouse registered on the account, referenced by its
+ * exact (case- and space-sensitive) name — so the name is configuration, not
+ * something derived from the pickup address.
+ */
+export interface DelhiveryConfig {
+  provider: "delhivery";
+  environment: CourierEnvironment;
+  token: string;
+  /** The registered warehouse name, verbatim. */
+  pickupLocation: string;
+  defaultService: "Surface" | "Express";
+  /** Seller GSTIN, which their manifest asks for on every package. */
+  sellerGstin: string;
+}
+
+export interface DelhiveryStatus {
+  provider: "delhivery";
+  environment: CourierEnvironment;
+  hasToken: boolean;
+  pickupLocation: string;
+  defaultService: "Surface" | "Express";
+  sellerGstin: string;
+  enabled: boolean;
+  configured: boolean;
+}
+
+export type CourierConfig = ShreeMarutiConfig | BlueDartConfig | DtdcConfig | DelhiveryConfig;
+export type CourierStatus = ShreeMarutiStatus | BlueDartStatus | DtdcStatus | DelhiveryStatus;
 
 /* -------------------------------------------------------------------------- */
 /* Reading                                                                     */
@@ -210,32 +285,121 @@ function blueDartConfigured(c: BlueDartConfig): boolean {
   );
 }
 
+function dtdcFrom(row: CredentialRow): DtdcConfig {
+  const settings = row.settings ?? {};
+  return {
+    provider: "dtdc",
+    environment: toEnvironment(row.environment),
+    apiKey: s(row.client_secret),
+    customerCode: s(settings.customer_code).toUpperCase(),
+    defaultService: s(settings.default_service) || "B2C SMART EXPRESS",
+    commodityId: s(settings.commodity_id) || "99",
+    codCollectionMode: s(settings.cod_collection_mode) || "cash",
+    trackingUsername: s(settings.tracking_username),
+    trackingSecret: s(row.extra_secret),
+  };
+}
+
+function dtdcConfigured(c: DtdcConfig): boolean {
+  return Boolean(c.apiKey && c.customerCode);
+}
+
+function delhiveryFrom(row: CredentialRow): DelhiveryConfig {
+  const settings = row.settings ?? {};
+  return {
+    provider: "delhivery",
+    environment: toEnvironment(row.environment),
+    token: s(row.client_secret),
+    pickupLocation: s(settings.pickup_location),
+    defaultService: settings.default_service === "Express" ? "Express" : "Surface",
+    sellerGstin: s(settings.seller_gstin).toUpperCase(),
+  };
+}
+
+function delhiveryConfigured(c: DelhiveryConfig): boolean {
+  return Boolean(c.token && c.pickupLocation);
+}
+
+const EMPTY_ROW = (provider: string): CredentialRow => ({
+  provider, environment: "sandbox", client_id: "", client_secret: "", extra_secret: "", enabled: false, settings: {},
+});
+
+function configFrom(provider: CourierProvider, row: CredentialRow): { config: CourierConfig; configured: boolean } {
+  switch (provider) {
+    case "shreemaruti": {
+      const config = shreeMarutiFrom(row);
+      return { config, configured: shreeMarutiConfigured(config) };
+    }
+    case "bluedart": {
+      const config = blueDartFrom(row);
+      return { config, configured: blueDartConfigured(config) };
+    }
+    case "dtdc": {
+      const config = dtdcFrom(row);
+      return { config, configured: dtdcConfigured(config) };
+    }
+    case "delhivery": {
+      const config = delhiveryFrom(row);
+      return { config, configured: delhiveryConfigured(config) };
+    }
+  }
+}
+
 /** Full credentials, or null when the courier is off or not fully set up. */
 export async function getCourierConfig(provider: "shreemaruti"): Promise<ShreeMarutiConfig | null>;
 export async function getCourierConfig(provider: "bluedart"): Promise<BlueDartConfig | null>;
+export async function getCourierConfig(provider: "dtdc"): Promise<DtdcConfig | null>;
+export async function getCourierConfig(provider: "delhivery"): Promise<DelhiveryConfig | null>;
 export async function getCourierConfig(provider: CourierProvider): Promise<CourierConfig | null>;
 export async function getCourierConfig(provider: CourierProvider): Promise<CourierConfig | null> {
   const row = await readRow(provider);
   if (!row?.enabled) return null;
-  if (provider === "shreemaruti") {
-    const config = shreeMarutiFrom(row);
-    return shreeMarutiConfigured(config) ? config : null;
-  }
-  const config = blueDartFrom(row);
-  return blueDartConfigured(config) ? config : null;
+  const { config, configured } = configFrom(provider, row);
+  return configured ? config : null;
 }
 
 /** The redacted view, for the settings page and the order page's dialog. */
 export async function getCourierStatus(provider: "shreemaruti"): Promise<ShreeMarutiStatus>;
 export async function getCourierStatus(provider: "bluedart"): Promise<BlueDartStatus>;
+export async function getCourierStatus(provider: "dtdc"): Promise<DtdcStatus>;
+export async function getCourierStatus(provider: "delhivery"): Promise<DelhiveryStatus>;
 export async function getCourierStatus(provider: CourierProvider): Promise<CourierStatus>;
 export async function getCourierStatus(provider: CourierProvider): Promise<CourierStatus> {
   const row = await readRow(provider);
 
+  if (provider === "dtdc") {
+    const c = dtdcFrom(row ?? EMPTY_ROW(provider));
+    return {
+      provider: "dtdc",
+      environment: c.environment,
+      hasApiKey: Boolean(c.apiKey),
+      customerCode: c.customerCode,
+      defaultService: c.defaultService,
+      commodityId: c.commodityId,
+      codCollectionMode: c.codCollectionMode,
+      trackingUsername: c.trackingUsername,
+      hasTrackingSecret: Boolean(c.trackingSecret),
+      enabled: row?.enabled ?? false,
+      configured: dtdcConfigured(c),
+    };
+  }
+
+  if (provider === "delhivery") {
+    const c = delhiveryFrom(row ?? EMPTY_ROW(provider));
+    return {
+      provider: "delhivery",
+      environment: c.environment,
+      hasToken: Boolean(c.token),
+      pickupLocation: c.pickupLocation,
+      defaultService: c.defaultService,
+      sellerGstin: c.sellerGstin,
+      enabled: row?.enabled ?? false,
+      configured: delhiveryConfigured(c),
+    };
+  }
+
   if (provider === "shreemaruti") {
-    const c = shreeMarutiFrom(
-      row ?? { provider, environment: "sandbox", client_id: "", client_secret: "", extra_secret: "", enabled: false, settings: {} }
-    );
+    const c = shreeMarutiFrom(row ?? EMPTY_ROW(provider));
     return {
       provider: "shreemaruti",
       environment: c.environment,
@@ -253,9 +417,7 @@ export async function getCourierStatus(provider: CourierProvider): Promise<Couri
     };
   }
 
-  const c = blueDartFrom(
-    row ?? { provider, environment: "sandbox", client_id: "", client_secret: "", extra_secret: "", enabled: false, settings: {} }
-  );
+  const c = blueDartFrom(row ?? EMPTY_ROW(provider));
   return {
     provider: "bluedart",
     environment: c.environment,
@@ -302,23 +464,14 @@ export async function getCourierAvailability(): Promise<Record<CourierProvider, 
     .in("provider", COURIER_PROVIDERS);
 
   for (const row of (data ?? []) as CredentialRow[]) {
-    if (row.provider === "shreemaruti") {
-      const c = shreeMarutiFrom(row);
-      result.shreemaruti = {
-        provider: "shreemaruti",
-        ready: row.enabled && shreeMarutiConfigured(c),
-        environment: c.environment,
-        defaultService: c.defaultService,
-      };
-    } else if (row.provider === "bluedart") {
-      const c = blueDartFrom(row);
-      result.bluedart = {
-        provider: "bluedart",
-        ready: row.enabled && blueDartConfigured(c),
-        environment: c.environment,
-        defaultService: c.defaultService,
-      };
-    }
+    if (!isCourierProvider(row.provider)) continue;
+    const { config, configured } = configFrom(row.provider, row);
+    result[row.provider] = {
+      provider: row.provider,
+      ready: row.enabled && configured,
+      environment: config.environment,
+      defaultService: config.defaultService,
+    };
   }
   return result;
 }

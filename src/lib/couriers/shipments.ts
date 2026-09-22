@@ -2,7 +2,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { addTimelineNote, type Actor } from "@/lib/cashfree/advance";
 import { formatMoney } from "@/lib/format";
 import type { Order, OrderItem } from "@/lib/types";
-import { getCourierConfig, getCourierSettings, type BlueDartConfig, type ShreeMarutiConfig } from "./config";
+import { adapterFor, isCourierError, type Booked, type LatestStatus } from "./adapters";
+import { getCourierConfig, getCourierSettings, type CourierConfig } from "./config";
 import { buildShipmentDraft, type PackageInput, type ShipmentDraft } from "./draft";
 import { COURIERS, serviceLabel, type CourierProvider } from "./providers";
 import {
@@ -13,21 +14,6 @@ import {
   type ShipmentAlert,
   type ShipmentStage,
 } from "./status";
-import {
-  BlueDartError,
-  cancelWaybill,
-  generateWaybill,
-  trackBlueDart,
-} from "./bluedart/client";
-import { creditReference, mapDraftToBlueDart } from "./bluedart/map";
-import {
-  ShreeMarutiError,
-  cancelShreeMarutiOrder,
-  createShreeMarutiOrder,
-  fetchShreeMarutiLabel,
-  trackShreeMaruti,
-} from "./shreemaruti/client";
-import { mapDraftToShreeMaruti } from "./shreemaruti/map";
 
 /**
  * Booking a parcel with a courier, and everything that follows from it.
@@ -42,6 +28,10 @@ import { mapDraftToShreeMaruti } from "./shreemaruti/map";
  * fulfillment. The AWB is written to `fulfillments`, which is what the shopper
  * sees on their order page, and the order is marked fulfilled the same way
  * "Mark as fulfilled" would have. Cancelling the booking undoes both.
+ *
+ * Nothing here knows a courier's wire format: every call to one goes through
+ * its adapter (`adapters.ts`), which is what keeps four integrations from
+ * becoming four copies of this file.
  */
 
 export interface CourierShipment {
@@ -299,10 +289,11 @@ export async function bookShipment(input: BookInput): Promise<BookResult> {
   const now = new Date().toISOString();
 
   try {
-    const booked =
-      input.provider === "shreemaruti"
-        ? await bookWithShreeMaruti(config as ShreeMarutiConfig, draft, input)
-        : await bookWithBlueDart(config as BlueDartConfig, draft, input, attempt);
+    const booked: Booked = await adapterFor(input.provider).book(config, draft, {
+      service: input.service,
+      note: input.note ?? "",
+      attempt,
+    });
 
     // The label first, while we still have the bytes; a storage failure must
     // not undo a booking the courier has already made.
@@ -364,83 +355,6 @@ export async function bookShipment(input: BookInput): Promise<BookResult> {
   }
 }
 
-interface Booked {
-  awb: string;
-  providerOrderId: string | null;
-  providerStatus: string | null;
-  labelPdf: Uint8Array | null;
-  destinationArea: string | null;
-  destinationLocation: string | null;
-  request: unknown;
-  response: unknown;
-}
-
-async function bookWithShreeMaruti(config: ShreeMarutiConfig, draft: ShipmentDraft, input: BookInput): Promise<Booked> {
-  const payload = mapDraftToShreeMaruti(draft, {
-    service: input.service === "AIR" ? "AIR" : "SURFACE",
-    autoManifest: config.autoManifest,
-    note: input.note,
-  });
-  try {
-    const order = await createShreeMarutiOrder(config, payload);
-    const awb = order.shipments?.find((s) => s.awbNumber)?.awbNumber?.trim() ?? "";
-    if (!awb) {
-      throw new ShreeMarutiError(
-        "Shree Maruti created the order but has not assigned an AWB yet. Check it on their portal.",
-        undefined,
-        order
-      );
-    }
-    return {
-      awb,
-      providerOrderId: order.orderId,
-      providerStatus: order.orderStatus ?? null,
-      labelPdf: null,
-      destinationArea: null,
-      destinationLocation: null,
-      request: payload,
-      response: order,
-    };
-  } catch (cause) {
-    throw withRequest(cause, payload);
-  }
-}
-
-async function bookWithBlueDart(config: BlueDartConfig, draft: ShipmentDraft, input: BookInput, attempt: number): Promise<Booked> {
-  const request = mapDraftToBlueDart(draft, {
-    service: input.service,
-    creditReferenceNo: creditReference(draft.orderNumber, attempt),
-    shipper: {
-      customerCode: config.customerCode,
-      originArea: config.originArea,
-      pickupTime: config.pickupTime,
-      registerPickup: config.registerPickup,
-    },
-    note: input.note,
-  });
-  try {
-    const result = await generateWaybill(config, request);
-    return {
-      awb: result.AWBNo,
-      providerOrderId: null,
-      providerStatus: result.Status.map((s) => s.StatusInformation).filter(Boolean).join("; ") || null,
-      labelPdf: result.labelPdf,
-      destinationArea: result.DestinationArea,
-      destinationLocation: result.DestinationLocation,
-      request,
-      response: result.raw,
-    };
-  } catch (cause) {
-    throw withRequest(cause, request);
-  }
-}
-
-/** Attaches the payload that produced a failure, so the row can keep it. */
-function withRequest(cause: unknown, request: unknown): unknown {
-  if (cause && typeof cause === "object") return Object.assign(cause, { request });
-  return Object.assign(new Error(String(cause)), { request });
-}
-
 /** Bookings attempted so far for this order with this courier — for unique references. */
 async function countAttempts(supabase: Db, orderId: string, provider: CourierProvider): Promise<number> {
   const { count } = await supabase
@@ -479,7 +393,7 @@ async function fulfil(supabase: Db, order: Order, awb: string, carrier: string, 
 }
 
 function describeFailure(cause: unknown, courier: string): string {
-  if (cause instanceof ShreeMarutiError || cause instanceof BlueDartError) return cause.message;
+  if (isCourierError(cause)) return cause.message;
   if (cause instanceof Error && /fetch|network|ECONN|ENOTFOUND|timeout/i.test(cause.message)) {
     return `Could not reach ${courier}. Check the connection and try again.`;
   }
@@ -521,12 +435,7 @@ export async function cancelShipment(shipmentId: string, reason: string, actor: 
   if (!config) return { ok: false, error: `${meta.name} is not connected.` };
 
   try {
-    if (shipment.provider === "shreemaruti") {
-      if (!shipment.provider_order_id) return { ok: false, error: "This booking has no Shree Maruti order id to cancel." };
-      await cancelShreeMarutiOrder(config as ShreeMarutiConfig, shipment.provider_order_id, reason);
-    } else {
-      await cancelWaybill(config as BlueDartConfig, shipment.awb);
-    }
+    await adapterFor(shipment.provider).cancel(config, { awb: shipment.awb, providerOrderId: shipment.provider_order_id }, reason);
   } catch (cause) {
     return { ok: false, error: describeFailure(cause, meta.name) };
   }
@@ -591,34 +500,8 @@ export async function syncShipment(shipmentId: string): Promise<SyncResult> {
   }
 }
 
-interface LatestStatus {
-  providerStatus: string | null;
-  stage: ShipmentStage;
-  /** When the courier says it happened; null when they do not say. */
-  at: string | null;
-}
-
-async function fetchLatest(config: ShreeMarutiConfig | BlueDartConfig, shipment: CourierShipment): Promise<LatestStatus | null> {
-  if (config.provider === "shreemaruti") {
-    const tracking = await trackShreeMaruti(config, shipment.awb as string);
-    if (!tracking) return null;
-    const last = tracking.statuses?.length ? tracking.statuses[tracking.statuses.length - 1] : null;
-    const status = tracking.orderInformation?.currentStatus ?? last?.status ?? null;
-    const ts = last?.statusTimestamp;
-    const at = typeof ts === "number" ? new Date(ts).toISOString() : typeof ts === "string" && /^\d+$/.test(ts) ? new Date(Number(ts)).toISOString() : null;
-    return {
-      providerStatus: status,
-      stage: normalizeShipmentStage("shreemaruti", status, { hasAwb: true }),
-      at,
-    };
-  }
-  const tracking = await trackBlueDart(config, shipment.awb as string, config.trackingLicenceKey || undefined);
-  if (!tracking) return null;
-  return {
-    providerStatus: tracking.status || null,
-    stage: normalizeShipmentStage("bluedart", tracking.status, { statusType: tracking.statusType, hasAwb: true }),
-    at: null,
-  };
+async function fetchLatest(config: CourierConfig, shipment: CourierShipment): Promise<LatestStatus | null> {
+  return adapterFor(shipment.provider).track(config, { awb: shipment.awb as string, providerOrderId: shipment.provider_order_id });
 }
 
 /**
@@ -786,21 +669,22 @@ export async function getShipmentLabel(shipmentId: string): Promise<LabelResult>
     if (data) return { ok: true, pdf: new Uint8Array(await data.arrayBuffer()), filename };
   }
 
-  if (shipment.provider === "bluedart") {
-    return { ok: false, error: "No label was saved for this waybill. Reprint it from Blue Dart's portal." };
+  const meta = COURIERS[shipment.provider];
+  const adapter = adapterFor(shipment.provider);
+  if (!adapter.label) {
+    return { ok: false, error: `No label was saved for this ${meta.awbLabel.toLowerCase()}. Reprint it from ${meta.name}'s portal.` };
   }
-  if (!shipment.provider_order_id) return { ok: false, error: "This booking has no Shree Maruti order id." };
 
-  const config = await getCourierConfig("shreemaruti");
-  if (!config) return { ok: false, error: "Shree Maruti is not connected." };
+  const config = await getCourierConfig(shipment.provider);
+  if (!config) return { ok: false, error: `${meta.name} is not connected.` };
 
   try {
-    const pdf = await fetchShreeMarutiLabel(config, shipment.provider_order_id);
+    const pdf = await adapter.label(config, { awb: shipment.awb, providerOrderId: shipment.provider_order_id });
     const path = await storeLabel(supabase, shipment.order_id, shipment.id, pdf);
     if (path) await supabase.from("courier_shipments").update({ label_path: path }).eq("id", shipment.id);
     return { ok: true, pdf, filename };
   } catch (cause) {
-    return { ok: false, error: describeFailure(cause, "Shree Maruti") };
+    return { ok: false, error: describeFailure(cause, meta.name) };
   }
 }
 

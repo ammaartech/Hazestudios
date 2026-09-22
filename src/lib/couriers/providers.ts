@@ -6,19 +6,21 @@
  * Component) and the booking code share one list. Anything that needs a
  * credential lives in `config.ts` and never crosses to the browser.
  *
- * Two partners, two very different APIs, one shape here. Shree Maruti's
+ * Four partners, four different APIs, one shape here. Shree Maruti's
  * e-commerce platform (InnoFulfill, branded SMILE) books an *order* and picks a
  * service by delivery mode; Blue Dart generates a *waybill* and picks a service
- * by product code. `service` below is whichever of those the courier wants,
+ * by product code; DTDC uploads *softdata* for a consignment and picks a
+ * service by name; Delhivery *manifests* a package and picks a service by
+ * shipping mode. `service` below is whichever of those the courier wants,
  * stored verbatim on the shipment row.
  */
 
-export type CourierProvider = "shreemaruti" | "bluedart";
+export type CourierProvider = "shreemaruti" | "bluedart" | "dtdc" | "delhivery";
 
-export const COURIER_PROVIDERS: CourierProvider[] = ["shreemaruti", "bluedart"];
+export const COURIER_PROVIDERS: CourierProvider[] = ["shreemaruti", "bluedart", "dtdc", "delhivery"];
 
 export function isCourierProvider(value: unknown): value is CourierProvider {
-  return value === "shreemaruti" || value === "bluedart";
+  return (COURIER_PROVIDERS as unknown[]).includes(value);
 }
 
 export interface CourierService {
@@ -70,6 +72,36 @@ export const COURIERS: Record<CourierProvider, CourierMeta> = {
       { code: "A", label: "Domestic Priority", hint: "Premium air — next-day to metros" },
     ],
     trackingUrl: (awb) => `https://www.bluedart.com/tracking?trackFor=0&trackNo=${encodeURIComponent(awb)}`,
+    awbLabel: "Waybill",
+  },
+  dtdc: {
+    provider: "dtdc",
+    name: "DTDC",
+    settingsHref: "/admin/settings/shipping#dtdc",
+    // `service_type_id` on their consignment API, spelled exactly as their
+    // platform (Shipsy) lists them. The B2C set is what an e-commerce
+    // account is contracted for; which of these are enabled is theirs to say,
+    // and an unavailable one is refused at booking with a message.
+    services: [
+      { code: "B2C SMART EXPRESS", label: "Smart Express", hint: "Surface — the usual e-commerce service" },
+      { code: "B2C PRIORITY", label: "Priority", hint: "Air express — faster, costs more" },
+      { code: "B2C PREMIUM", label: "Premium", hint: "Premium express — time-definite where offered" },
+      { code: "B2C GROUND ECONOMY", label: "Ground Economy", hint: "Ground — cheapest, slowest, heavier parcels" },
+    ],
+    trackingUrl: (awb) => `https://www.dtdc.in/trace.asp?TrkType=Consignment&strCnno=${encodeURIComponent(awb)}`,
+    awbLabel: "Consignment no.",
+  },
+  delhivery: {
+    provider: "delhivery",
+    name: "Delhivery",
+    settingsHref: "/admin/settings/shipping#delhivery",
+    // `shipping_mode` on their manifest API. Express is air; Surface is
+    // ground. Both are the same account — the mode is per package.
+    services: [
+      { code: "Surface", label: "Surface", hint: "Ground network — cheaper, 3–6 days" },
+      { code: "Express", label: "Express", hint: "Air network — faster, costs more" },
+    ],
+    trackingUrl: (awb) => `https://www.delhivery.com/track-v2/package/${encodeURIComponent(awb)}`,
     awbLabel: "Waybill",
   },
 };

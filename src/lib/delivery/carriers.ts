@@ -14,10 +14,11 @@
  *
  * `connected` is about the *integration existing in this codebase*, not about
  * whether credentials happen to be filled in. Qikink has a client, a sync and
- * a stage model (`src/lib/qikink`); Shree Maruti and Blue Dart have theirs in
- * `src/lib/couriers` as of 0034 — booking, cancelling, tracking and labels.
- * The live credential check is separate and still happens per request, and a
- * tracking page whose courier is not yet configured says so in place.
+ * a stage model (`src/lib/qikink`); Shree Maruti, Blue Dart, DTDC and
+ * Delhivery have theirs in `src/lib/couriers` (0034, 0035) — booking,
+ * cancelling, tracking and labels. The live credential check is separate and
+ * still happens per request, and a tracking page whose courier is not yet
+ * configured says so in place.
  */
 
 export interface Carrier {
@@ -62,6 +63,22 @@ export const CARRIERS: Carrier[] = [
     href: "/admin/orders/tracking/bluedart",
     connected: true,
     credentials: "Consumer key and secret, licence key, login ID, customer code and origin area",
+  },
+  {
+    slug: "dtdc",
+    name: "DTDC",
+    navLabel: "Tracking · DTDC",
+    href: "/admin/orders/tracking/dtdc",
+    connected: true,
+    credentials: "API key and customer code, plus the tracking login",
+  },
+  {
+    slug: "delhivery",
+    name: "Delhivery",
+    navLabel: "Tracking · Delhivery",
+    href: "/admin/orders/tracking/delhivery",
+    connected: true,
+    credentials: "API token and the registered warehouse name",
   },
 ];
 

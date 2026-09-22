@@ -266,8 +266,8 @@ export function ShipNowDialog({
               </div>
             </div>
 
-            {provider === "shreemaruti" && availability.shreemaruti?.ready && draft.problems.length === 0 && (
-              <Serviceability orderId={orderId} />
+            {availability[provider]?.ready && draft.problems.length === 0 && (
+              <Serviceability key={provider} orderId={orderId} provider={provider} />
             )}
 
             <div className="space-y-2">
@@ -409,42 +409,44 @@ function Notice({ tone, title, children }: { tone: "error" | "warning"; title?: 
 }
 
 /**
- * Asks Shree Maruti whether they deliver to the address, once per opening —
- * the component is mounted only while the dialog is open with Shree Maruti
- * selected, so mounting *is* the trigger. A "no" does not block the button:
- * their answer is advisory and the booking itself is the authority, but nobody
- * should find out after pressing Ship.
+ * Asks the selected courier whether they deliver to the address, once per
+ * selection — the component is keyed by provider and mounted only while the
+ * dialog is open, so mounting *is* the trigger. A "no" does not block the
+ * button: their answer is advisory and the booking itself is the authority,
+ * but nobody should find out after pressing Ship. A courier with no check
+ * (Blue Dart) renders nothing.
  */
-function Serviceability({ orderId }: { orderId: string }) {
+function Serviceability({ orderId, provider }: { orderId: string; provider: CourierProvider }) {
   const [state, setState] = useState<{ loading: boolean; result: ServiceabilityResult | null }>({ loading: true, result: null });
+  const name = COURIERS[provider].name;
 
   useEffect(() => {
     let cancelled = false;
-    checkCourierServiceability(orderId, "shreemaruti").then((result) => {
+    checkCourierServiceability(orderId, provider).then((result) => {
       if (!cancelled) setState({ loading: false, result });
     });
     return () => {
       cancelled = true;
     };
-  }, [orderId]);
+  }, [orderId, provider]);
 
   if (state.loading) {
     return (
       <p className="flex items-center gap-2 text-xs text-muted-foreground">
         <Loader2 className="size-3.5 animate-spin" aria-hidden />
-        Checking whether Shree Maruti delivers to this pincode…
+        Checking whether {name} delivers to this pincode…
       </p>
     );
   }
   const r = state.result;
   if (!r) return null;
-  if (!r.ok) return <p className="text-xs text-muted-foreground">Could not check serviceability: {r.error}</p>;
+  if (!r.ok) return r.unsupported ? null : <p className="text-xs text-muted-foreground">Could not check serviceability: {r.error}</p>;
   return (
     <p className={cn("flex items-center gap-2 text-xs", r.serviceable ? "text-emerald-700" : "text-amber-700")}>
       <MapPin className="size-3.5" aria-hidden />
       {r.serviceable
-        ? `Shree Maruti delivers here${r.destination ? ` — ${r.destination}` : ""}.`
-        : `Shree Maruti says this route is not serviceable${r.reason ? `: ${r.reason}` : ""}.`}
+        ? `${name} delivers here${r.destination ? ` — ${r.destination}` : ""}${r.codServiceable === false ? " (prepaid only — no COD)" : ""}.`
+        : `${name} says this route is not serviceable${r.reason ? `: ${r.reason}` : ""}.`}
     </p>
   );
 }

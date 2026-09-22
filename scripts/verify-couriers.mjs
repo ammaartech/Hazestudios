@@ -8,12 +8,17 @@
  *   1. **The draft.** An order becomes a parcel: the collectable amount for
  *      COD, partial-COD and prepaid orders; the validation that stops a
  *      booking with a bad pincode or no pickup address; the SKU fallback.
- *   2. **Both payload mappings.** Shree Maruti's four addresses and payment
- *      block; Blue Dart's 30-character address lines, COD sub-product, unique
- *      credit reference, pickup-date rollover and `/Date()/` format.
- *   3. **Stage normalisation** for both couriers' vocabularies, including the
- *      orderings that matter ("RTO delivered" is a return, not a delivery).
- *   4. **Blue Dart response parsing** across the envelopes their gateway uses.
+ *   2. **All four payload mappings.** Shree Maruti's four addresses and
+ *      payment block; Blue Dart's 30-character address lines, COD sub-product,
+ *      unique credit reference, pickup-date rollover and `/Date()/` format;
+ *      DTDC's consignment with per-piece detail and COD collection mode;
+ *      Delhivery's manifest with grams, IST order date, special-character
+ *      scrubbing and the registered pickup name.
+ *   3. **Stage normalisation** for every courier's vocabulary, including the
+ *      orderings that matter ("RTO delivered" is a return, not a delivery;
+ *      Delhivery's "Pending" means different things under UD and RT).
+ *   4. **Response parsing** across the envelopes each gateway uses, several
+ *      of them captured live.
  *   5. **The Shree Maruti webhook signature**, hex and base64, and rejection of
  *      a tampered body, a wrong key and a stale timestamp.
  *
@@ -32,6 +37,10 @@ const bdMap = await import("../src/lib/couriers/bluedart/map.ts");
 const bdClient = await import("../src/lib/couriers/bluedart/client.ts");
 const smClient = await import("../src/lib/couriers/shreemaruti/client.ts");
 const webhook = await import("../src/lib/couriers/shreemaruti/webhook.ts");
+const dtMap = await import("../src/lib/couriers/dtdc/map.ts");
+const dtClient = await import("../src/lib/couriers/dtdc/client.ts");
+const dlMap = await import("../src/lib/couriers/delhivery/map.ts");
+const dlClient = await import("../src/lib/couriers/delhivery/client.ts");
 
 let failures = 0;
 function check(label, ok, detail = "") {
@@ -219,6 +228,71 @@ section("2. Blue Dart payload");
   check("a single overlong word is hard-split", l1.length === 30 && l2.length === 30 && l3.length === 10);
 }
 
+section("2. DTDC payload");
+{
+  const d = draftMod.buildShipmentDraft({ order, items, settings });
+  const c = dtMap.mapDraftToDtdc(d, {
+    service: "B2C SMART EXPRESS",
+    customerCode: "GL112",
+    commodityId: "99",
+    codCollectionMode: "cash",
+    attempt: 1,
+    now: new Date("2026-09-21T05:00:00Z"),
+  });
+  check("customer code and service", c.customer_code === "GL112" && c.service_type_id === "B2C SMART EXPRESS");
+  check("non-document load in cm/kg", c.load_type === "NON-DOCUMENT" && c.dimension_unit === "cm" && c.weight_unit === "kg" && c.weight === "0.500");
+  check("origin from pickup, company as name", c.origin_details.name === "Haze Studios" && c.origin_details.pincode === "400008");
+  check("destination from the order", c.destination_details.pincode === "395006" && c.destination_details.phone === "9876543210");
+  check("COD amount and collection mode", c.cod_amount === "1499.00" && c.cod_collection_mode === "cash");
+  check("declared value", c.declared_value === "1499.00");
+  check("reference HZ<order>", c.customer_reference_number === "HZ7699" && c.reference_number === "");
+  check("re-booking reference distinct", dtMap.dtdcReference(7699, 2) === "HZ7699R2");
+  check("one piece detail for one piece", c.pieces_detail.length === 1 && c.pieces_detail[0].declared_value === "1499.00");
+  check("invoice date is an IST date", c.invoice_date === "2026-09-21");
+
+  const prepaid = dtMap.mapDraftToDtdc(draftMod.buildShipmentDraft({ order: { ...order, payment_status: "paid" }, items, settings, pkg: { pieces: 2 } }), {
+    service: "B2C PRIORITY", customerCode: "GL112", commodityId: "99", codCollectionMode: "cash", attempt: 1,
+  });
+  check("prepaid has no COD", prepaid.cod_amount === "0" && prepaid.cod_collection_mode === "");
+  check("two pieces split value and weight", prepaid.pieces_detail.length === 2 && prepaid.pieces_detail[0].declared_value === "749.50" && prepaid.num_pieces === "2");
+}
+
+section("2. Delhivery payload");
+{
+  const d = draftMod.buildShipmentDraft({ order, items, settings });
+  const m = dlMap.mapDraftToDelhivery(d, {
+    service: "Surface",
+    pickupLocation: "Haze Studios Mumbai",
+    sellerName: "Haze Studios",
+    sellerAddress: "14, Industrial Estate, Mumbai, 400008",
+    sellerGstin: "27ABCDE1234F1Z5",
+    attempt: 1,
+    now: new Date("2026-09-21T05:00:00Z"),
+  });
+  const sh = m.shipments[0];
+  check("pickup location is the registered name", m.pickup_location.name === "Haze Studios Mumbai");
+  check("consignee fields", sh.name === "Aarav Mehta" && sh.pin === "395006" && sh.phone === "9876543210" && sh.city === "Surat" && sh.state === "Gujarat");
+  check("country is a name", sh.country === "India");
+  check("order id is the order number", sh.order === "7699");
+  check("COD with amount", sh.payment_mode === "COD" && sh.cod_amount === "1499.00");
+  check("weight in grams", sh.weight === "500");
+  check("dimensions in cm", sh.shipment_length === "30" && sh.shipment_width === "25" && sh.shipment_height === "5");
+  check("order date is IST YYYY-MM-DD HH:MM:SS", sh.order_date === "2026-09-21 10:30:00", sh.order_date);
+  check("return address falls back to pickup", sh.return_pin === "400008" && sh.return_name === "Haze Studios");
+  check("seller GSTIN and invoice", sh.seller_gst_tin === "27ABCDE1234F1Z5" && sh.seller_inv === "HZ7699");
+  check("waybill left blank", sh.waybill === "");
+  check("shipping mode from the service", sh.shipping_mode === "Surface");
+  check("re-booking order id distinct", dlMap.delhiveryOrderId(7699, 2) === "7699-R2");
+  check("special characters scrubbed", dlMap.safeText("Sons & Co #4; 50% off\\") === "Sons and Co 4 50 off");
+
+  const amp = dlMap.mapDraftToDelhivery(
+    draftMod.buildShipmentDraft({ order: { ...order, payment_status: "paid", shipping_address: { ...order.shipping_address, address1: "12 Park & Lane #3" } }, items, settings }),
+    { service: "Express", pickupLocation: "W", sellerName: "", sellerAddress: "", sellerGstin: "", attempt: 1 }
+  );
+  check("address scrubbed of & and #", amp.shipments[0].add.startsWith("12 Park and Lane 3"), amp.shipments[0].add);
+  check("prepaid has zero COD", amp.shipments[0].payment_mode === "Prepaid" && amp.shipments[0].cod_amount === "0");
+}
+
 /* -------------------------------------------------------------------------- */
 /* 3. Stages                                                                   */
 /* -------------------------------------------------------------------------- */
@@ -256,6 +330,34 @@ section("3. Stage normalisation");
   ];
   for (const [text, stage] of bd) check(`Blue Dart “${text}” → ${stage}`, n("bluedart", text) === stage, n("bluedart", text));
   check("Blue Dart StatusType wins over text", n("bluedart", "SHIPMENT DELIVERED", { statusType: "UD" }) === "undelivered");
+
+  const dl = [
+    ["UD", "Manifested", "booked"],
+    ["UD", "Not Picked", "booked"],
+    ["UD", "In Transit", "in_transit"],
+    ["UD", "Pending", "in_transit"],
+    ["UD", "Dispatched", "out_for_delivery"],
+    ["DL", "Delivered", "delivered"],
+    ["RT", "In Transit", "rto"],
+    ["RT", "Pending", "rto"],
+    ["RT", "Dispatched", "rto"],
+    ["DL", "RTO", "rto"],
+    ["CN", "Canceled", "cancelled"],
+  ];
+  for (const [type, text, stage] of dl) check(`Delhivery ${type}/${text} → ${stage}`, n("delhivery", text, { statusType: type }) === stage, n("delhivery", text, { statusType: type }));
+  check("Delhivery without a type falls back to text", n("delhivery", "Delivered") === "delivered");
+
+  const dt = [
+    ["Booked", "booked"],
+    ["Consignment received at facility", "in_transit"],
+    ["Bag received at hub", "in_transit"],
+    ["In transit", "in_transit"],
+    ["Out for delivery", "out_for_delivery"],
+    ["Delivered", "delivered"],
+    ["Not delivered — consignee not available", "undelivered"],
+    ["Return to origin", "rto"],
+  ];
+  for (const [text, stage] of dt) check(`DTDC “${text}” → ${stage}`, n("dtdc", text) === stage, n("dtdc", text));
   check("no status but an AWB is booked", n("bluedart", "", { hasAwb: true }) === "booked");
   check("no status and no AWB is not booked", n("shreemaruti", null) === "not_booked");
 
@@ -314,6 +416,45 @@ section("4. Shree Maruti response parsing");
   check("serviceability success is not an error", err({ success: true, status_code: 200, message: "Serviceability checked successfully.", data: [] }) === null);
   check("bad API key prefix (seen live)", err({ status_code: 400, message: "Invalid API key prefix. Supported prefixes start with innofulfill_ (new) or prayog_ (legacy).", trace_id: "x" })?.startsWith("Invalid API key prefix"));
   check("HTML 503 flattened (seen live)", err("<html>\r\n<head><title>503 Service Temporarily Unavailable</title></head>\r\n<body>\r\n<center><h1>503 Service Temporarily Unavailable</h1></center>\r\n</body>\r\n</html>") === "503 Service Temporarily Unavailable");
+}
+
+section("4. DTDC response parsing");
+{
+  const err = dtClient.describeError;
+  check("wrong api key (seen live)", err({ error: { message: "Wrong api key", statusCode: 401, reason: "WRONG_API_KEY" } }) === "Wrong api key (WRONG_API_KEY)");
+  check("tracking unauthorised (seen live)", err({ timestamp: "x", status: 401, error: "Unauthorized", message: "Unauthorized: Authentication token was either missing or invalid.", path: "/x" }) === "Unauthorized: Authentication token was either missing or invalid.");
+  check("refused consignment", err({ status: "OK", data: [{ success: false, message: "Pincode not serviceable", customer_reference_number: "HZ1" }] }) === "Pincode not serviceable");
+  check("accepted consignment is not an error", err({ status: "OK", data: [{ success: true, reference_number: "D12345678" }] }) === null);
+  check("plain text (seen live)", err("Not Authorized") === "Not Authorized");
+
+  const t = dtClient.parseDtdcTracking(
+    { statusCode: 200, trackHeader: { strShipmentNo: "D12345678", strStatus: "Delivered", strStatusRelCode: "DLV", strStatusTransOn: "20260921", strStatusTransTime: "1405" },
+      trackDetails: [{ strCode: "BKD", strAction: "Booked", strActionDate: "20260920", strActionTime: "1800", strOrigin: "MUMBAI", strDestination: "SURAT", sTrRemarks: "" }] },
+    "D12345678"
+  );
+  check("tracking parses header and scans", t?.status === "Delivered" && t?.statusCode === "DLV" && t?.scans.length === 1 && t?.scans[0].action === "Booked");
+  check("tracking with nothing is null", dtClient.parseDtdcTracking({ statusCode: 200 }, "x") === null);
+}
+
+section("4. Delhivery response parsing");
+{
+  const err = dlClient.describeError;
+  check("detail envelope (seen live)", err({ detail: "No such user" }) === "No such user");
+  check("html login page (seen live)", err("Login or API Key Required") === "Login or API Key Required");
+  check("xml detail (seen live)", err("<?xml version=\"1.0\" encoding=\"utf-8\"?><root><detail>Invalid token</detail></root>")?.includes("Invalid token"));
+  check("manifest failure with rmk (seen live)", err({ rmk: "Package creation API error.Package might be saved.", error: true, success: false, packages: [] })?.startsWith("Package creation API error"));
+  check("manifest package remarks", err({ success: false, packages: [{ status: "Fail", remarks: ["ClientWarehouse matching query does not exist."] }] })?.includes("ClientWarehouse matching query"));
+  check("manifest success is not an error", err({ success: true, packages: [{ status: "Success", waybill: "1234567890123", remarks: [] }] }) === null);
+
+  const t = dlClient.parseDelhiveryTracking(
+    { ShipmentData: [{ Shipment: { AWB: "1234567890123", Status: { Status: "Dispatched", StatusType: "UD", StatusDateTime: "2026-09-21T10:00:00", StatusLocation: "Surat_Hub (Gujarat)", Instructions: "Out for delivery" },
+      Scans: [{ ScanDetail: { Scan: "Manifested", ScanDateTime: "2026-09-20T18:00:00", ScannedLocation: "Mumbai", Instructions: "Manifest uploaded" } }] } }] },
+    "1234567890123"
+  );
+  check("tracking parses status pair and scans", t?.status === "Dispatched" && t?.statusType === "UD" && t?.scans.length === 1 && t?.scans[0].scan === "Manifested");
+  check("tracking with nothing is null", dlClient.parseDelhiveryTracking({ ShipmentData: [] }, "x") === null);
+  check("pdf link found in json", dlClient.findPdfLink({ packages: [{ pdf_download_link: "https://s3.amazonaws.com/x/label.pdf?sig=1" }] }) === "https://s3.amazonaws.com/x/label.pdf?sig=1");
+  check("no pdf link is null", dlClient.findPdfLink({ packages: [{ waybill: "123" }] }) === null);
 }
 
 /* -------------------------------------------------------------------------- */

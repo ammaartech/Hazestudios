@@ -1,15 +1,18 @@
 import type { CourierProvider } from "./providers";
 
 /**
- * Normalising two couriers' status vocabularies into stages we can filter and
+ * Normalising four couriers' status vocabularies into stages we can filter and
  * alert on.
  *
  * Same idea as `qikink/status.ts`, and for the same reasons: Shree Maruti's
  * webhook speaks in `SCREAMING_SNAKE` codes (`OUT_FOR_DELIVERY`,
  * `RTO_INITIATED`), Blue Dart's tracking speaks in scan sentences ("SHIPMENT
- * FURTHER CONNECTED", "SHIPMENT DELIVERED"), and both are theirs to change.
- * Matching is done on a squashed, lowercased form; an unrecognised string
- * becomes `unknown` and surfaces as its own bucket rather than vanishing.
+ * FURTHER CONNECTED", "SHIPMENT DELIVERED"), DTDC's in short actions ("Booked",
+ * "Out for delivery"), Delhivery's in a *pair* — a status type (UD/DL/RT) and
+ * a status ("Pending", "Dispatched") whose meaning depends on the type — and
+ * all of them are theirs to change. Matching is done on a squashed, lowercased
+ * form; an unrecognised string becomes `unknown` and surfaces as its own
+ * bucket rather than vanishing.
  *
  * The stages are ordered by how far along the parcel is, because "stuck" is
  * defined as time spent without the stage advancing.
@@ -131,6 +134,14 @@ const RULES: [test: string, stage: ShipmentStage][] = [
   ["dispatched", "in_transit"],
   ["shipped", "in_transit"],
   ["hub", "in_transit"],
+  // DTDC: "Consignment received at facility", "Bag received at …".
+  ["received at", "in_transit"],
+  ["bag ", "in_transit"],
+
+  // Delhivery's "Not Picked" and DTDC's "Not picked up" are a booking the
+  // courier has not collected yet: tested before the pickup rules, which the
+  // words would otherwise match.
+  ["not picked", "booked"],
 
   // Shree Maruti's READY_FOR_DISPATCH is categorised PICKED_UP in their own
   // docs; Blue Dart's first scan is "SHIPMENT PICKED UP".
@@ -169,6 +180,30 @@ const BLUEDART_STATUS_TYPES: Record<string, ShipmentStage> = {
   CN: "cancelled",
 };
 
+/**
+ * Delhivery reports a status *type* and a status, and the same status word
+ * means different things under different types: "Pending" under UD is a parcel
+ * waiting at the destination centre, under RT one waiting to come home;
+ * "Dispatched" under UD is out for delivery, under RT out for return. So the
+ * type is read first and the word second — verbatim from their package
+ * lifecycle table (developer portal → Package Lifecycle / Webhook).
+ */
+function delhiveryStage(statusType: string, text: string): ShipmentStage | null {
+  const type = statusType.trim().toUpperCase();
+  if (type === "RT") return "rto";
+  if (type === "CN") return "cancelled";
+  if (type === "DL") return text.includes("rto") || text.includes("dto") ? "rto" : "delivered";
+  if (type === "UD") {
+    if (text.includes("manifest") || text.includes("not picked") || text.includes("open")) return "booked";
+    if (text.includes("dispatch")) return "out_for_delivery";
+    if (text.includes("transit") || text.includes("pending")) return "in_transit";
+    if (text.includes("cancel")) return "cancelled";
+    return null;
+  }
+  // PP / PU are reverse-pickup types this store does not book; fall through.
+  return null;
+}
+
 export function normalizeShipmentStage(
   provider: CourierProvider,
   statusText: string | null | undefined,
@@ -177,6 +212,10 @@ export function normalizeShipmentStage(
   if (provider === "bluedart" && hint?.statusType) {
     const byCode = BLUEDART_STATUS_TYPES[hint.statusType.trim().toUpperCase()];
     if (byCode) return byCode;
+  }
+  if (provider === "delhivery" && hint?.statusType) {
+    const byPair = delhiveryStage(hint.statusType, (statusText ?? "").toLowerCase());
+    if (byPair) return byPair;
   }
 
   const text = (statusText ?? "")

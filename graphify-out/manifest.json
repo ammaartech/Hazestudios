@@ -305,8 +305,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.impeccable\\hook.cache.json": {
-    "mtime": 1789960347.311756,
-    "ast_hash": "2f12a6f9876b9cd66cb164c306ee2a4d",
+    "mtime": 1790014151.834076,
+    "ast_hash": "baf39e9ee9cbac95e4e5ee9091c711e7",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\db-config.mjs": {
@@ -3505,8 +3505,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\tracking\\bluedart\\page.tsx": {
-    "mtime": 1789959788.8218648,
-    "ast_hash": "34f74b05ef2a69d123bd3e78ea7e4ce0",
+    "mtime": 1790013866.9200206,
+    "ast_hash": "5b386b50b3ccda91711133dcba326ba7",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\tracking\\carrier-setup.tsx": {
@@ -3535,8 +3535,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\tracking\\shreemaruti\\page.tsx": {
-    "mtime": 1789959788.7990324,
-    "ast_hash": "0048fb28c9e8c588d6dc0e45c9a0bf9e",
+    "mtime": 1790013866.9507575,
+    "ast_hash": "fd1fbfe34a843f2ad913140ec8983d81",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\components\\admin\\analytics-charts.tsx": {
@@ -3565,8 +3565,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\delivery\\carriers.ts": {
-    "mtime": 1789959682.2893064,
-    "ast_hash": "1a895c79704e7adc6c729d65da462106",
+    "mtime": 1790013866.8108995,
+    "ast_hash": "8e5c06644b3d39e5f6a1e3d866005389",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\supabase\\migrations\\0031_order_metafields.sql": {
@@ -3845,8 +3845,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\scripts\\verify-couriers.mjs": {
-    "mtime": 1789960916.6034553,
-    "ast_hash": "6350a51e74dd50438571ec606f82a769",
+    "mtime": 1790013953.9201832,
+    "ast_hash": "1eb67ed5069b3dcd0940bdca6a64efae",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\analytics\\analytics-dashboard.tsx": {
@@ -3860,8 +3860,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\[id]\\ship-now-dialog.tsx": {
-    "mtime": 1789959893.7027383,
-    "ast_hash": "93113afe36277db10eb4383481b9ab1e",
+    "mtime": 1790013726.696362,
+    "ast_hash": "45603c33acda5a8612fe4b75698fad09",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\[id]\\shipment-card.tsx": {
@@ -3870,8 +3870,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\ship-actions.ts": {
-    "mtime": 1789960916.6034553,
-    "ast_hash": "903b674c2ea1706c25586ef5c5fb2163",
+    "mtime": 1790013726.696362,
+    "ast_hash": "7ebfef4f9e0526532502b935c2d99c7f",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\tracking\\courier-actions.ts": {
@@ -3890,8 +3890,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\shipping\\actions.ts": {
-    "mtime": 1789959532.1055603,
-    "ast_hash": "59342388d28bf6537bfd1d4969f364a0",
+    "mtime": 1790013771.9207802,
+    "ast_hash": "821e01e6de30d2522a11377f5dbf2753",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\shipping\\bluedart-form.tsx": {
@@ -3900,8 +3900,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\shipping\\page.tsx": {
-    "mtime": 1789959547.7157,
-    "ast_hash": "a5a1a84752768c88b183c4ec391d23bb",
+    "mtime": 1790013866.8108995,
+    "ast_hash": "77f1fc8cb2e85126d7613d520603a116",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\shipping\\pickup-form.tsx": {
@@ -4380,8 +4380,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\couriers\\config.ts": {
-    "mtime": 1789958947.116347,
-    "ast_hash": "77fe5b1e99e8e65e3e327833cca0fc16",
+    "mtime": 1790013278.562971,
+    "ast_hash": "a0a0cf559f31455b1dea1c51b5852906",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\couriers\\draft.ts": {
@@ -4390,13 +4390,13 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\couriers\\providers.ts": {
-    "mtime": 1789958385.0782208,
-    "ast_hash": "7b814dce6429875112bb07319ce6e866",
+    "mtime": 1790013172.3097408,
+    "ast_hash": "a5de2d064956402f8620d28d70318fd6",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\couriers\\shipments.ts": {
-    "mtime": 1789959828.6739712,
-    "ast_hash": "a732471dcd2f0ae8e9a1bcca56c4b41e",
+    "mtime": 1790013629.3233876,
+    "ast_hash": "149bc3ba7b2456307d14a149c4bd0ff8",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\couriers\\shreemaruti\\client.ts": {
@@ -4415,8 +4415,8 @@
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\couriers\\status.ts": {
-    "mtime": 1789958434.8619573,
-    "ast_hash": "f90e608621f9500c64841dfac2961c87",
+    "mtime": 1790013310.5045228,
+    "ast_hash": "cde674900b3e709272ccade52a0f3bf0",
     "semantic_hash": ""
   },
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\supabase\\migrations\\0034_couriers.sql": {
@@ -4477,6 +4477,56 @@
   "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\.codex\\analytics\\tooltip.png": {
     "mtime": 1789955410.5118258,
     "ast_hash": "362a2e21378751cf43a4bb468466b72a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\tracking\\delhivery\\page.tsx": {
+    "mtime": 1790013866.8911693,
+    "ast_hash": "5bc518643c81bc1af73a14dcdfa90c78",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\orders\\tracking\\dtdc\\page.tsx": {
+    "mtime": 1790013866.8692875,
+    "ast_hash": "3863ab1309da3e5647e37f569df47c4a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\shipping\\delhivery-form.tsx": {
+    "mtime": 1790013835.0157893,
+    "ast_hash": "129676e1300ca3f7146bc5bb898b8101",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\app\\(admin)\\admin\\settings\\shipping\\dtdc-form.tsx": {
+    "mtime": 1790013808.769079,
+    "ast_hash": "1c0fce6205e2ca17e80369542145c470",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\couriers\\adapters.ts": {
+    "mtime": 1790014298.2387397,
+    "ast_hash": "af330176878a0fd6912429a2e880fcd6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\couriers\\delhivery\\client.ts": {
+    "mtime": 1790013390.736603,
+    "ast_hash": "cc7e52235e85703b7b3f2b5297884abc",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\couriers\\delhivery\\map.ts": {
+    "mtime": 1790013413.560582,
+    "ast_hash": "822e8928cc364beec06be949c04b9fef",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\couriers\\dtdc\\client.ts": {
+    "mtime": 1790013485.6875935,
+    "ast_hash": "ef5c9c6025d5162e0a5e776bef9e529f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\src\\lib\\couriers\\dtdc\\map.ts": {
+    "mtime": 1790013504.5308614,
+    "ast_hash": "fb414fab0abdb97d5e190c5f3e88adc5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\Ammaar\\Desktop\\Hazestudios\\supabase\\migrations\\0035_couriers_dtdc_delhivery.sql": {
+    "mtime": 1790013881.3754451,
+    "ast_hash": "e0967b7dc352acdc126d02e0f5cd7e86",
     "semantic_hash": ""
   }
 }

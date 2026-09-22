@@ -5,12 +5,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requireStaff as requireStaffSession } from "@/lib/auth/staff";
 import { getCourierConfig, toEnvironment } from "@/lib/couriers/config";
 import { addressProblems, parsePickupAddress, PACKAGE_LIMITS, type PickupAddress } from "@/lib/couriers/draft";
-import { COURIERS } from "@/lib/couriers/providers";
-import { clearBlueDartTokens, testBlueDartConnection } from "@/lib/couriers/bluedart/client";
-import { clearShreeMarutiSessions, testShreeMarutiConnection } from "@/lib/couriers/shreemaruti/client";
+import { COURIERS, isCourierProvider } from "@/lib/couriers/providers";
+import { adapterFor } from "@/lib/couriers/adapters";
+import { clearBlueDartTokens } from "@/lib/couriers/bluedart/client";
+import { clearDtdcTokens } from "@/lib/couriers/dtdc/client";
+import { clearShreeMarutiSessions } from "@/lib/couriers/shreemaruti/client";
 
 /**
- * Shipping settings: the store's pickup profile and both couriers' credentials.
+ * Shipping settings: the store's pickup profile and the four couriers' credentials.
  *
  * Every write goes through the service-role client, because
  * `integration_credentials` has RLS on and no policies (0016). That bypass is
@@ -195,16 +197,28 @@ export async function saveShreeMarutiSettings(input: ShreeMarutiSettingsInput): 
   return { ok: true, message: "Shree Maruti settings saved" };
 }
 
-export async function testShreeMaruti(): Promise<Result> {
+/**
+ * "Test connection" for any courier: proves the stored credentials without
+ * booking anything, through the courier's adapter. Reports the adapter's
+ * sentence or the courier's own error — never a token, a secret, or a raw
+ * response, since this returns to a browser.
+ */
+export async function testCourier(provider: string): Promise<Result> {
   if (!(await requireStaff())) return { ok: false, error: "You do not have permission to do this." };
-  const config = await getCourierConfig("shreemaruti");
-  if (!config) return { ok: false, error: "Save the credentials and switch Shree Maruti on first." };
+  if (!isCourierProvider(provider)) return { ok: false, error: "Unknown courier." };
+  const name = COURIERS[provider].name;
+  const config = await getCourierConfig(provider);
+  if (!config) return { ok: false, error: `Save the credentials and switch ${name} on first.` };
   try {
-    const message = await testShreeMarutiConnection(config);
+    const message = await adapterFor(provider).test(config);
     return { ok: true, message: `${message} (${config.environment})` };
   } catch (cause) {
-    return { ok: false, error: cause instanceof Error ? cause.message : "Could not reach Shree Maruti." };
+    return { ok: false, error: cause instanceof Error ? cause.message : `Could not reach ${name}.` };
   }
+}
+
+export async function testShreeMaruti(): Promise<Result> {
+  return testCourier("shreemaruti");
 }
 
 /* -------------------------------------------------------------------------- */
@@ -296,13 +310,139 @@ export async function saveBlueDartSettings(input: BlueDartSettingsInput): Promis
 }
 
 export async function testBlueDart(): Promise<Result> {
-  if (!(await requireStaff())) return { ok: false, error: "You do not have permission to do this." };
-  const config = await getCourierConfig("bluedart");
-  if (!config) return { ok: false, error: "Save the credentials and switch Blue Dart on first." };
-  try {
-    const message = await testBlueDartConnection(config);
-    return { ok: true, message: `${message} (${config.environment})` };
-  } catch (cause) {
-    return { ok: false, error: cause instanceof Error ? cause.message : "Could not reach Blue Dart." };
+  return testCourier("bluedart");
+}
+
+/* -------------------------------------------------------------------------- */
+/* DTDC                                                                        */
+/* -------------------------------------------------------------------------- */
+
+export interface DtdcSettingsInput {
+  environment: string;
+  /** Blank keeps the stored value. */
+  apiKey?: string;
+  customerCode: string;
+  defaultService: string;
+  commodityId: string;
+  codCollectionMode: string;
+  trackingUsername: string;
+  /** Password for the username, or the static access token. Blank keeps the stored value. */
+  trackingSecret?: string;
+  enabled: boolean;
+}
+
+export async function saveDtdcSettings(input: DtdcSettingsInput): Promise<Result> {
+  if (!(await requireStaff())) return DENIED;
+  const supabase = createAdminClient();
+  if (!supabase) return NO_ADMIN;
+
+  const { data: existing } = await supabase
+    .from("integration_credentials")
+    .select("client_secret, extra_secret")
+    .eq("provider", "dtdc")
+    .maybeSingle();
+
+  const apiKey = trim(input.apiKey) || existing?.client_secret || "";
+  const trackingSecret = trim(input.trackingSecret) || existing?.extra_secret || "";
+  const customerCode = trim(input.customerCode).toUpperCase();
+  const service = COURIERS.dtdc.services.some((s) => s.code === input.defaultService) ? input.defaultService : "B2C SMART EXPRESS";
+
+  if (input.enabled && !(apiKey && customerCode)) {
+    return { ok: false, error: "DTDC needs the API key and customer code before it can be switched on." };
   }
+
+  const { error } = await supabase.from("integration_credentials").upsert(
+    {
+      provider: "dtdc",
+      environment: toEnvironment(input.environment),
+      client_id: customerCode,
+      client_secret: apiKey,
+      extra_secret: trackingSecret,
+      enabled: input.enabled,
+      auto_send: false,
+      settings: {
+        customer_code: customerCode,
+        default_service: service,
+        commodity_id: trim(input.commodityId) || "99",
+        cod_collection_mode: trim(input.codCollectionMode).toLowerCase() || "cash",
+        tracking_username: trim(input.trackingUsername),
+      },
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "provider" }
+  );
+  if (error) return { ok: false, error: error.message };
+
+  clearDtdcTokens();
+  revalidatePath("/admin/settings/shipping");
+  return { ok: true, message: "DTDC settings saved" };
+}
+
+export async function testDtdc(): Promise<Result> {
+  return testCourier("dtdc");
+}
+
+/* -------------------------------------------------------------------------- */
+/* Delhivery                                                                   */
+/* -------------------------------------------------------------------------- */
+
+export interface DelhiverySettingsInput {
+  environment: string;
+  /** Blank keeps the stored value. */
+  token?: string;
+  pickupLocation: string;
+  defaultService: string;
+  sellerGstin: string;
+  enabled: boolean;
+}
+
+export async function saveDelhiverySettings(input: DelhiverySettingsInput): Promise<Result> {
+  if (!(await requireStaff())) return DENIED;
+  const supabase = createAdminClient();
+  if (!supabase) return NO_ADMIN;
+
+  const { data: existing } = await supabase
+    .from("integration_credentials")
+    .select("client_secret")
+    .eq("provider", "delhivery")
+    .maybeSingle();
+
+  const token = trim(input.token) || existing?.client_secret || "";
+  // Verbatim, not trimmed of inner spaces: their match is exact.
+  const pickupLocation = typeof input.pickupLocation === "string" ? input.pickupLocation.trim() : "";
+  const sellerGstin = trim(input.sellerGstin).toUpperCase();
+
+  if (sellerGstin && !/^[0-9A-Z]{15}$/.test(sellerGstin)) {
+    return { ok: false, error: "A GSTIN is 15 letters and digits, e.g. 27ABCDE1234F1Z5." };
+  }
+  if (input.enabled && !(token && pickupLocation)) {
+    return { ok: false, error: "Delhivery needs the API token and the registered pickup location name before it can be switched on." };
+  }
+
+  const { error } = await supabase.from("integration_credentials").upsert(
+    {
+      provider: "delhivery",
+      environment: toEnvironment(input.environment),
+      client_id: pickupLocation,
+      client_secret: token,
+      extra_secret: "",
+      enabled: input.enabled,
+      auto_send: false,
+      settings: {
+        pickup_location: pickupLocation,
+        default_service: input.defaultService === "Express" ? "Express" : "Surface",
+        seller_gstin: sellerGstin,
+      },
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "provider" }
+  );
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/settings/shipping");
+  return { ok: true, message: "Delhivery settings saved" };
+}
+
+export async function testDelhivery(): Promise<Result> {
+  return testCourier("delhivery");
 }

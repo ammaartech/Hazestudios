@@ -1,12 +1,12 @@
 import { CourierTrackingPage } from "../courier-tracking";
 
-export const metadata = { title: "Delivery tracking · Blue Dart" };
+export const metadata = { title: "Delivery tracking · DTDC" };
 
 /** See the Shree Maruti page: one shared component, four providers. */
-export default function BlueDartTrackingPage({
+export default function DtdcTrackingPage({
   searchParams,
 }: {
   searchParams: Promise<{ tab?: string; page?: string }>;
 }) {
-  return <CourierTrackingPage provider="bluedart" searchParams={searchParams} />;
+  return <CourierTrackingPage provider="dtdc" searchParams={searchParams} />;
 }

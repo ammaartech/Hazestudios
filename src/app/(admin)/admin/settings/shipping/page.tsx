@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCourierStatus } from "@/lib/couriers/config";
 import { parsePackageDefaults, parsePickupAddress } from "@/lib/couriers/draft";
 import { BlueDartForm } from "./bluedart-form";
+import { DelhiveryForm } from "./delhivery-form";
+import { DtdcForm } from "./dtdc-form";
 import { PickupForm } from "./pickup-form";
 import { ShreeMarutiForm } from "./shreemaruti-form";
 
@@ -22,9 +24,11 @@ export const metadata = { title: "Shipping and delivery" };
  */
 export default async function ShippingSettingsPage() {
   const supabase = createAdminClient();
-  const [shreemaruti, bluedart, headerList, profile] = await Promise.all([
+  const [shreemaruti, bluedart, dtdc, delhivery, headerList, profile] = await Promise.all([
     getCourierStatus("shreemaruti"),
     getCourierStatus("bluedart"),
+    getCourierStatus("dtdc"),
+    getCourierStatus("delhivery"),
     headers(),
     supabase
       ? supabase.from("courier_settings").select("pickup, return_address, package_defaults").eq("id", true).maybeSingle()
@@ -44,6 +48,8 @@ export default async function ShippingSettingsPage() {
       />
       <ShreeMarutiForm status={shreemaruti} webhookUrl={origin ? `${origin}/api/webhooks/shreemaruti` : ""} />
       <BlueDartForm status={bluedart} />
+      <DtdcForm status={dtdc} />
+      <DelhiveryForm status={delhivery} />
     </div>
   );
 }
