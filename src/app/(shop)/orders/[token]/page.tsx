@@ -52,13 +52,16 @@ export default async function OrderConfirmationPage({
 
   const address = order.shipping_address as Partial<CheckoutAddress>;
   const hasAddress = Boolean(address?.address1);
+  const closed = Boolean(order.cancelled_at) || order.payment_status === "voided";
+  const paymentReview = order.hold_reason === "payment_review" && !order.released_at;
+  const stopped = closed || paymentReview;
 
   /* Money owed on an order the shopper chose to pay for up front. The only
      state in which this page has anything left to ask of them, and the reason
      it is computed here rather than inside the block below: the heading copy
      and the delivery estimate both change when an order is not yet paid. */
   const awaitingPayment =
-    isPrepaidMethod(order.payment_method) && order.payment_status === "pending";
+    !stopped && isPrepaidMethod(order.payment_method) && order.payment_status === "pending";
 
   /* The other thing this page can ask for: an advance on a cash-on-delivery
      order (0033). Only while the order is still pending — once the advance is
@@ -67,7 +70,7 @@ export default async function OrderConfirmationPage({
      store decides what happens next, not the clock. */
   const isCod = isCodMethod(order.payment_method);
   const requests: PaymentRequest[] =
-    isCod && order.payment_status === "pending"
+    !stopped && isCod && order.payment_status === "pending"
       ? await getPaymentRequests(order.id)
       : [];
   const advance = findOpenRequest(requests);
@@ -92,7 +95,7 @@ export default async function OrderConfirmationPage({
           a payment window would inflate every conversion figure by the people
           who closed it. The beacon dedupes on the order id, so it still fires
           exactly once — on whichever visit finds the order paid. */}
-      {!awaitingPayment && (
+      {!stopped && !awaitingPayment && (
         <PurchaseBeacon orderId={order.id} total={Number(order.total)} />
       )}
 
@@ -103,13 +106,13 @@ export default async function OrderConfirmationPage({
             changes. */}
         <span
           className={
-            awaiting
+            awaiting || stopped
               ? "flex size-11 items-center justify-center rounded-full bg-(--shop-ink)/8 text-(--shop-charcoal)"
               : "flex size-11 items-center justify-center rounded-full bg-(--shop-success)/10 text-(--shop-success)"
           }
           aria-hidden
         >
-          {awaiting ? (
+          {awaiting || stopped ? (
             <Clock className="size-5" strokeWidth={2.5} />
           ) : (
             <Check className="size-5" strokeWidth={2.5} />
@@ -121,7 +124,11 @@ export default async function OrderConfirmationPage({
             Order #{order.order_number} · {formatDate(order.created_at)}
           </p>
           <h1 className="display mt-2 text-3xl tracking-[-0.03em] md:text-4xl">
-            {awaitingPayment
+            {paymentReview
+              ? "Your payment needs a review."
+              : closed
+                ? "This order is closed."
+              : awaitingPayment
               ? "One step left."
               : awaitingAdvance
                 ? "One step to confirm."
@@ -132,12 +139,17 @@ export default async function OrderConfirmationPage({
                 }.`}
           </h1>
           <p className="mt-3 max-w-prose text-(--shop-mute)">
-            {/* "Reserved" stays true in both states — the stock came out of
-                inventory when the order was placed, whether or not the money
-                has. What follows is the part that differs. */}
-            Your order is {awaiting ? "reserved" : "confirmed and reserved"},
-            under <span className="text-(--shop-ink)">{order.email}</span>.{" "}
-            {paymentNote(order, { advance, lapsedAdvance })}
+            {paymentReview ? (
+              "We received a payment for an order that needs our attention. Please contact us before placing another order."
+            ) : closed ? (
+              "This order has been cancelled or its payment window has expired. It will not be dispatched. Please contact us if you need help with a payment."
+            ) : (
+              <>
+                Your order is {awaiting ? "reserved" : "confirmed and reserved"},
+                under <span className="text-(--shop-ink)">{order.email}</span>.{" "}
+                {paymentNote(order, { advance, lapsedAdvance })}
+              </>
+            )}
           </p>
         </div>
       </header>
@@ -258,7 +270,7 @@ export default async function OrderConfirmationPage({
         {/* Money already taken online against a COD order, and what that
             leaves for the door. Only rendered once something has been paid,
             so every order placed before 0033 reads exactly as it did. */}
-        {Number(order.amount_paid) > 0 && (
+        {!stopped && Number(order.amount_paid) > 0 && (
           <dl className="mt-4 flex flex-col gap-3 border-t border-(--shop-ink)/10 pt-4 text-sm">
             <Row
               label="Advance paid"
@@ -370,7 +382,7 @@ function paymentNote(
   // opted to pay up front and has not yet. The block above this one is where
   // they actually do it, so the sentence only has to point at it.
   if (isPrepaidMethod(method)) {
-    return "Payment hasn't gone through yet — you can finish it above. Nothing has been charged.";
+    return "We're awaiting payment confirmation. If you've already paid, we'll update your order once it's confirmed.";
   }
   // 'manual', and anything imported. Deliberately vague: the store knows how
   // these were arranged and this page does not.

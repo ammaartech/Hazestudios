@@ -30,8 +30,8 @@ import { confirmPayment, retryPayment } from "@/app/(checkout)/checkout/actions"
  * net for a webhook that never arrives — a dead tunnel, a deploy mid-delivery.
  *
  * **Either way it offers another go.** A dismissed modal, a declined card, a
- * gateway that was down. Each press mints a fresh Cashfree session against the
- * same order of ours.
+ * gateway that was down. An active payment session is resumed safely against
+ * the same order of ours.
  *
  * With `advance` set it is the same window for a different sum: the advance
  * the store has asked for on a cash-on-delivery order (0033). The request id is
@@ -133,7 +133,7 @@ export function PayNow({
 
   const idle = advance
     ? `Pay ${advance.amount} now to confirm your order. The remaining ${advance.balance} is paid to the courier at your door.`
-    : "Your order is held and nothing has been charged. Complete the payment to send it into production.";
+    : "Complete your payment to confirm the order. If you've already paid, wait for confirmation before trying again.";
 
   return (
     <section className="mt-12 rounded-3xl bg-(--shop-cloud) px-5 py-6 md:px-7 md:py-7">

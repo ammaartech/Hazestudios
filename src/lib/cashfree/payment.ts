@@ -1,29 +1,20 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isCodMethod, isPrepaidMethod } from "@/lib/shop/payment-methods";
 import { nationalPhoneDigits } from "@/lib/shop/phone-codes";
-import type { Order, PaymentRequest } from "@/lib/types";
+import type { Order } from "@/lib/types";
 import {
   CashfreeError,
   createCashfreeOrder,
   getCashfreeOrder,
   getCashfreeOrderPayments,
   type CashfreePayment,
+  type CashfreeOrderPayload,
 } from "./client";
 import { SDK_MODE, getCashfreeConfig, type CashfreeMode } from "./config";
 
 /**
- * Taking money for an order, and recording what happened.
- *
- * The Cashfree counterpart of `src/lib/qikink/fulfillment.ts`, and written to
- * the same rules: everything runs on the service-role client, nothing throws,
- * and every outcome — including every failure — leaves a row behind for the
- * operator to read.
- *
- * The ordering constraint that governs this whole file: `map.ts` decides
- * whether Qikink is told an order is Prepaid or COD purely from
- * `payment_status === 'paid'`. So the order must be marked paid *before* it is
- * pushed. Push first and the printer bills the customer on delivery for money
- * the store has already collected.
+ * Durable payment attempts are allocated in Postgres before any gateway call.
+ * Settlement commits payment, event receipt, order status and outbox together.
+ * Failed gateway calls leave the attempt available for recovery by the worker.
  */
 
 /* -------------------------------------------------------------------------- */
@@ -42,6 +33,7 @@ export type PaymentStatus =
 export interface PaymentAttempt {
   id: string;
   order_id: string;
+  provider: string;
   provider_order_id: string;
   cf_order_id: string | null;
   cf_payment_id: string | null;
@@ -58,6 +50,10 @@ export interface PaymentAttempt {
    * order, a full attempt closes it.
    */
   request_id: string | null;
+  session_expires_at: string | null;
+  gateway_closed_at: string | null;
+  gateway_environment: string | null;
+  request?: CashfreeOrderPayload;
 }
 
 export type StartResult =
@@ -81,13 +77,7 @@ export interface SettleResult {
 }
 
 const ATTEMPT_COLUMNS =
-  "id, order_id, provider_order_id, cf_order_id, cf_payment_id, payment_session_id, status, amount, currency, method, error, created_at, request_id";
-
-/** A session Cashfree will no longer honour. Half an hour is their default. */
-const SESSION_MINUTES = 30;
-
-/** Cashfree's floor, in rupees. Below it, create-order is rejected outright. */
-const MINIMUM_AMOUNT = 1;
+  "id, order_id, provider, provider_order_id, cf_order_id, cf_payment_id, payment_session_id, status, amount, currency, method, error, created_at, request_id, session_expires_at, gateway_closed_at, gateway_environment";
 
 /**
  * What a shopper is told when the gateway will not open.
@@ -145,21 +135,6 @@ export async function getLatestAttempt(
   return latest ?? null;
 }
 
-async function findAttemptByProviderOrderId(
-  providerOrderId: string
-): Promise<PaymentAttempt | null> {
-  const supabase = createAdminClient();
-  if (!supabase) return null;
-
-  const { data } = await supabase
-    .from("payments")
-    .select(ATTEMPT_COLUMNS)
-    .eq("provider_order_id", providerOrderId)
-    .maybeSingle();
-
-  return (data as PaymentAttempt) ?? null;
-}
-
 async function loadOrder(orderId: string): Promise<Order | null> {
   const supabase = createAdminClient();
   if (!supabase) return null;
@@ -171,26 +146,6 @@ async function loadOrder(orderId: string): Promise<Order | null> {
     .maybeSingle();
 
   return (data as Order) ?? null;
-}
-
-type PaymentRequestRow = Pick<
-  PaymentRequest,
-  "id" | "order_id" | "amount" | "status" | "expires_at"
->;
-
-async function loadRequest(requestId: string): Promise<PaymentRequestRow | null> {
-  if (!/^[0-9a-f-]{36}$/i.test(requestId)) return null;
-
-  const supabase = createAdminClient();
-  if (!supabase) return null;
-
-  const { data } = await supabase
-    .from("payment_requests")
-    .select("id, order_id, amount, status, expires_at")
-    .eq("id", requestId)
-    .maybeSingle();
-
-  return (data as PaymentRequestRow) ?? null;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -227,222 +182,78 @@ export async function startCashfreePayment(
   options: StartOptions = {}
 ): Promise<StartResult> {
   const supabase = createAdminClient();
-  if (!supabase) {
-    return { ok: false, error: "The store is not available right now." };
-  }
-
+  if (!supabase) return { ok: false, error: GATEWAY_UNAVAILABLE };
   const config = await getCashfreeConfig();
-  if (!config) {
-    return {
-      ok: false,
-      error: "Online payment is not connected. Add credentials in Settings → Payments.",
-    };
-  }
-
+  if (!config) return { ok: false, error: GATEWAY_UNAVAILABLE };
   const order = await loadOrder(orderId);
-  if (!order) return { ok: false, error: "Order not found." };
-
-  // Refusals, each of which would otherwise be a way to charge someone for
-  // something they do not owe.
-  if (order.is_draft) {
-    return { ok: false, error: "This is a draft order." };
+  if (!order?.checkout_token) return { ok: false, error: "Order not found." };
+  if (options.requestId && !/^[0-9a-f-]{36}$/i.test(options.requestId)) {
+    return { ok: false, error: "Invalid payment request." };
   }
-  if (order.payment_status === "paid") {
-    return { ok: false, error: "This order is already paid." };
-  }
-  if (order.payment_status !== "pending") {
-    return { ok: false, error: "This order is not awaiting payment." };
-  }
-  if (!order.checkout_token) {
-    return { ok: false, error: "This order has no checkout link." };
-  }
-
-  // What to charge. Two shapes: the whole order, for a prepaid one; or the
-  // amount of an open request, for a COD order the store has asked an advance
-  // on. The request is re-read here rather than trusted from the caller — the
-  // amount is the one thing a forged call must not be able to choose.
-  let amount: number;
-  let request: PaymentRequestRow | null = null;
-
-  if (options.requestId) {
-    request = await loadRequest(options.requestId);
-    if (!request || request.order_id !== order.id) {
-      return { ok: false, error: "That payment request doesn't belong to this order." };
-    }
-    if (request.status === "paid") {
-      return { ok: false, error: "This advance has already been paid." };
-    }
-    if (request.status !== "open") {
-      return { ok: false, error: "This payment request is no longer active." };
-    }
-    if (new Date(request.expires_at) <= new Date()) {
-      // Written down on the way out, so the next reader sees the row agree
-      // with the clock.
-      await supabase
-        .from("payment_requests")
-        .update({ status: "expired", resolved_at: new Date().toISOString() })
-        .eq("id", request.id)
-        .eq("status", "open");
-      return { ok: false, error: "This payment request has expired. Please contact us for a new one." };
-    }
-    if (!isCodMethod(order.payment_method)) {
-      return { ok: false, error: "This order is not set up for an advance." };
-    }
-    amount = Number(request.amount);
-  } else {
-    if (!isPrepaidMethod(order.payment_method)) {
-      return { ok: false, error: "This order is not set up for online payment." };
-    }
-    amount = Number(order.total);
-  }
-
-  // Cashfree's floor is ₹1, and it refuses anything under with
-  // "order_amount : Invalid amount entered" — which sounds like a malformed
-  // field and is actually a minimum. Caught here so a 95-paise test order says
-  // something true instead of spending a round trip to be told off.
-  if (!(amount >= MINIMUM_AMOUNT)) {
-    return {
-      ok: false,
-      error: `Online payment needs a total of at least ${MINIMUM_AMOUNT}. Please choose cash on delivery for this one.`,
-    };
-  }
-
-  // A Cashfree order id may never be reused, so a retry cannot simply be the
-  // order number again. The attempt counter is what distinguishes the second
-  // try from the first, and the unique constraint on the column is what stops
-  // two concurrent clicks minting the same one.
-  const attempts = await getPaymentAttempts(orderId);
-  const providerOrderId = `HZ${order.order_number}A${attempts.length + 1}`;
-
-  // Cashfree rejects a plain-HTTP return_url outright — "url should be https" —
-  // and the whole create-order call fails with it, taking the payment session
-  // with it. On `next dev` the honest origin *is* http://localhost:3000, so
-  // sending one is not a misconfiguration to correct but a fact to work around.
-  //
-  // Omitted rather than faked. https://localhost:3000 is not a place, so
-  // inventing it would trade an error the operator can read for a shopper
-  // stranded on a dead page. Without it Cashfree simply returns them to its own
-  // completion screen, and the modal flow — which is how they got here — never
-  // wanted the redirect anyway. Set NEXT_PUBLIC_SITE_URL to a tunnel to get the
-  // real behaviour locally.
-  const returnUrl = returnUrlFor(order.checkout_token);
-  const canReturn = returnUrl.startsWith("https://");
-
-  const payload = {
-    order_id: providerOrderId,
-    order_amount: amount,
-    order_currency: order.currency || "INR",
-    customer_details: {
-      customer_id: customerId(order),
-      // Stored with its dialling code so a number is never ambiguous about
-      // where it belongs; Cashfree is Indian and wants the plain ten digits.
-      customer_phone: nationalPhoneDigits(order.phone),
-      customer_email: order.email,
-      customer_name:
-        [order.shipping_address?.first_name, order.shipping_address?.last_name]
-          .filter(Boolean)
-          .join(" ") || undefined,
-    },
-    // A fallback, not the main path. Checkout opens in a modal over our own
-    // page, but UPI intent and some 3DS flows navigate away regardless, and
-    // this is where they come back to.
-    //
-    // notify_url is deliberately never sent: the webhook is registered once,
-    // account-wide, in the Cashfree dashboard. Per-order URLs would mean every
-    // order placed from a preview deployment pointing webhooks at it.
-    ...(canReturn ? { order_meta: { return_url: returnUrl } } : {}),
-    order_expiry_time: new Date(
-      Date.now() + SESSION_MINUTES * 60_000
-    ).toISOString(),
-    order_note: request
-      ? `Advance on order #${order.order_number}`
-      : `Order #${order.order_number}`,
-  };
-
-  let created;
-  try {
-    created = await createCashfreeOrder(config, payload);
-  } catch (cause) {
-    // Two audiences, two sentences.
-    //
-    // Cashfree's own message names our fields and quotes our values —
-    // "order_meta.return_url : url should be https. Value received: …". That is
-    // precisely what an operator needs and precisely what a customer must never
-    // be shown: it is internal detail, it is unactionable by them, and a
-    // checkout that prints an API error reads as a broken shop rather than a
-    // temporary fault. So the detail is written to the row and the shopper gets
-    // a sentence about what to do next.
-    const detail =
-      cause instanceof CashfreeError
-        ? cause.message
-        : cause instanceof Error
-          ? cause.message
-          : "Unknown failure creating the Cashfree order.";
-
-    await supabase.from("payments").insert({
-      order_id: orderId,
-      provider_order_id: providerOrderId,
-      request_id: request?.id ?? null,
-      status: "failed",
-      amount,
-      currency: order.currency || "INR",
-      request: payload,
-      response: (cause instanceof CashfreeError ? cause.body : null) ?? {},
-      error: detail,
-    });
-
-    // Loud on the server, because nothing else will say it: an order that
-    // cannot open a payment is invisible until someone reads the table.
-    console.error(`[cashfree] create order ${providerOrderId} failed:`, detail);
-
-    return { ok: false, error: GATEWAY_UNAVAILABLE };
-  }
-
-  const sessionId = created.payment_session_id;
-  if (!sessionId) {
-    const detail = "Cashfree accepted the order but returned no payment session.";
-    await supabase.from("payments").insert({
-      order_id: orderId,
-      provider_order_id: providerOrderId,
-      request_id: request?.id ?? null,
-      status: "failed",
-      amount,
-      currency: order.currency || "INR",
-      request: payload,
-      response: created as Record<string, unknown>,
-      error: detail,
-    });
-    console.error(`[cashfree] create order ${providerOrderId}:`, detail);
-    return { ok: false, error: GATEWAY_UNAVAILABLE };
-  }
-
-  const { error: insertError } = await supabase.from("payments").insert({
-    order_id: orderId,
-    provider_order_id: providerOrderId,
-    request_id: request?.id ?? null,
-    cf_order_id: created.cf_order_id != null ? String(created.cf_order_id) : null,
-    payment_session_id: sessionId,
-    status: "created",
-    amount,
-    currency: order.currency || "INR",
-    request: payload,
-    response: created as Record<string, unknown>,
+  const { data, error } = await supabase.rpc("claim_cashfree_attempt", {
+    p_order_id: orderId, p_request_id: options.requestId ?? null,
+    p_environment: config.environment,
   });
-
-  if (insertError) {
-    // The session is live on Cashfree's side but unrecorded here, which would
-    // leave a payment nothing could be reconciled against. Refusing is the
-    // safer half of that trade: the shopper retries, and the abandoned session
-    // expires in half an hour having charged nobody.
-    return { ok: false, error: "Could not start the payment. Please try again." };
+  if (error || !data) return { ok: false, error: error?.code === "HZ001" ? error.message : GATEWAY_UNAVAILABLE };
+  const attempt = data as PaymentAttempt;
+  if (attempt.status === "success") return { ok: false, error: "This order is already paid." };
+  const expires = attempt.session_expires_at ?? new Date(new Date(attempt.created_at).getTime() + 30 * 60_000).toISOString();
+  if (new Date(expires).getTime() <= Date.now()) {
+    return { ok: false, error: "This payment is being checked. Please try again shortly." };
   }
-
-  return {
-    ok: true,
-    paymentSessionId: sessionId,
-    mode: SDK_MODE[config.environment],
-    orderId: providerOrderId,
+  if (attempt.payment_session_id) {
+    return { ok: true, paymentSessionId: attempt.payment_session_id, mode: SDK_MODE[config.environment], orderId: attempt.provider_order_id };
+  }
+  const returnUrl = returnUrlFor(order.checkout_token);
+  const candidate: CashfreeOrderPayload = {
+    order_id: attempt.provider_order_id, order_amount: Number(attempt.amount), order_currency: attempt.currency,
+    customer_details: {
+      customer_id: customerId(order), customer_phone: nationalPhoneDigits(order.phone), customer_email: order.email,
+      customer_name: [order.shipping_address?.first_name, order.shipping_address?.last_name].filter(Boolean).join(" ") || undefined,
+    },
+    ...(returnUrl.startsWith("https://") ? { order_meta: { return_url: returnUrl } } : {}),
+    order_expiry_time: expires,
+    order_note: `Order #${order.order_number}`,
   };
+  // Freeze the request once. Even concurrent tabs use the same idempotency key AND body.
+  const { data: frozen, error: freezeError } = await supabase.rpc("prepare_cashfree_payload", {
+    p_payment_id: attempt.id, p_payload: candidate,
+  });
+  if (freezeError) return { ok: false, error: GATEWAY_UNAVAILABLE };
+  try {
+    // Recover a previously accepted request whose response was lost before issuing a POST.
+    let remote;
+    try {
+      remote = await getCashfreeOrder(config, attempt.provider_order_id);
+    } catch (cause) {
+      if (!(cause instanceof CashfreeError) || cause.status !== 404) throw cause;
+      try {
+        remote = await createCashfreeOrder(config, frozen as CashfreeOrderPayload, attempt.id);
+      } catch (createError) {
+        if (!(createError instanceof CashfreeError) || createError.status !== 409) throw createError;
+        remote = await getCashfreeOrder(config, attempt.provider_order_id);
+      }
+    }
+    if (remote.order_status === "PAID") {
+      await reconcileAttempt(attempt);
+      return { ok: false, error: "Payment received. Refresh to see your order." };
+    }
+    if (remote.order_status !== "ACTIVE" || !remote.payment_session_id) {
+      await reconcileAttempt(attempt);
+      return { ok: false, error: "This payment session has closed. Please try again shortly." };
+    }
+    const { error: saveError } = await supabase.from("payments").update({
+      payment_session_id: remote.payment_session_id,
+      cf_order_id: remote.cf_order_id != null ? String(remote.cf_order_id) : null,
+      updated_at: new Date().toISOString(),
+    }).eq("id", attempt.id);
+    if (saveError) throw saveError;
+    return { ok: true, paymentSessionId: remote.payment_session_id, mode: SDK_MODE[config.environment], orderId: attempt.provider_order_id };
+  } catch {
+    // Keep the attempt recoverable: a timeout is NOT proof that creation failed.
+    console.error("[commerce] payment session needs recovery", { paymentId: attempt.id });
+    return { ok: false, error: GATEWAY_UNAVAILABLE };
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -455,113 +266,24 @@ export interface Outcome {
   method?: string | null;
   /** The amount the provider says was paid, for the mismatch check. */
   paidAmount?: number | null;
+  paidCurrency?: string | null;
+  remoteOrderStatus?: string | null;
   error?: string | null;
   response?: Record<string, unknown>;
 }
 
-/**
- * The one place money becomes truth.
- *
- * Every route into "this order is paid" comes through here — the webhook, and
- * the reconcile the shopper's own browser triggers when it gets back before the
- * webhook does. Both can arrive, in either order, more than once. So the whole
- * function is written to be safe to run twice:
- *
- *   - the order update is conditional on it still being `pending`, so the
- *     second caller changes nothing and knows it changed nothing;
- *   - the Qikink push short-circuits on an already-sent row;
- *   - the amount is checked against what we asked for, so a webhook claiming a
- *     different figure marks the attempt failed instead of the order paid.
- */
+/** Commit the monetary outcome and fulfillment job in one database transaction. */
 export async function settlePayment(
   attempt: PaymentAttempt,
   outcome: Outcome
 ): Promise<SettleResult> {
   const supabase = createAdminClient();
-  if (!supabase) return { status: attempt.status, newlyPaid: false };
-
-  let status = outcome.status;
-  let error = outcome.error ?? null;
-
-  // The tampered-amount guard. Cashfree's own figure has to match what we
-  // asked them to charge; anything else is either a bug on one side or an
-  // attempt to settle an order for less than it costs, and neither should end
-  // with goods in production.
-  if (
-    status === "success" &&
-    outcome.paidAmount != null &&
-    Math.abs(Number(outcome.paidAmount) - Number(attempt.amount)) > 0.01
-  ) {
-    status = "failed";
-    error = `Amount mismatch: expected ${attempt.amount}, gateway reported ${outcome.paidAmount}.`;
-  }
-
-  await supabase
-    .from("payments")
-    .update({
-      status,
-      cf_payment_id: outcome.cfPaymentId ?? attempt.cf_payment_id,
-      method: outcome.method ?? attempt.method,
-      error,
-      ...(outcome.response ? { response: outcome.response } : {}),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", attempt.id);
-
-  if (status !== "success") return { status, newlyPaid: false };
-
-  let newlyPaid: boolean;
-
-  if (attempt.request_id) {
-    // An advance, not the whole order. `settle_payment_request` (0033) does
-    // the three writes that must land together — request paid, order credited
-    // and moved to partially_paid, hold released — and is idempotent on the
-    // request's status, which gives the webhook and the reconcile the same
-    // "only one of us did this" answer the conditional update below gives.
-    const { data: settled } = await supabase.rpc("settle_payment_request", {
-      p_request_id: attempt.request_id,
-      p_payment_id: attempt.id,
-    });
-    newlyPaid = settled === true;
-  } else {
-    // Conditional on purpose: `select` after `update` returns only the rows the
-    // filter actually matched, so an empty result means somebody else got here
-    // first. That is how two deliveries of the same event end with one push.
-    const { data: flipped } = await supabase
-      .from("orders")
-      .update({ payment_status: "paid" })
-      .eq("id", attempt.order_id)
-      .eq("payment_status", "pending")
-      .select("id");
-
-    newlyPaid = Boolean(flipped?.length);
-  }
-
-  // Now, and only now, the printer. `payment_status` is already 'paid', which
-  // is the flag map.ts reads to send this in as Prepaid rather than COD — or,
-  // for an advance, 'partially_paid' with `amount_paid` credited, which map.ts
-  // turns into COD for the balance. Either way the order's money is settled
-  // before Qikink hears about it, and the hold (if any) is already released.
-  //
-  // Attempted on every successful settlement rather than only the flipping one:
-  // an order can be marked paid by hand from the admin and then reconciled here,
-  // and pushOrderToQikink is itself idempotent, so a redundant call costs a
-  // short-circuit rather than a duplicate job.
-  try {
-    const { getQikinkConfig } = await import("@/lib/qikink/config");
-    const config = await getQikinkConfig();
-    if (config?.autoSend) {
-      const { pushOrderToQikink } = await import("@/lib/qikink/fulfillment");
-      await pushOrderToQikink(attempt.order_id);
-    }
-  } catch {
-    // Swallowed, exactly as the COD path does. The money is banked and the
-    // order is paid; a printer that cannot be reached is the operator's problem
-    // to retry from the order page, not a reason to fail a webhook and have
-    // Cashfree redeliver it.
-  }
-
-  return { status, newlyPaid };
+  if (!supabase) throw new Error("Payment database unavailable");
+  const { data, error } = await supabase.rpc("settle_cashfree_payment", {
+    p_provider_order_id: attempt.provider_order_id, p_outcome: outcome,
+  });
+  if (error) throw new Error(`Payment settlement failed: ${error.code}`);
+  return data as SettleResult;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -593,83 +315,73 @@ function pickPayment(payments: CashfreePayment[]): CashfreePayment | null {
   return payments.find((p) => p.payment_status === "SUCCESS") ?? payments[0];
 }
 
-/**
- * Asks Cashfree what actually happened, and settles on the answer.
- *
- * Pull rather than push, for the same reason `syncQikinkOrder` is: the shopper
- * can be back on our page before the webhook has left theirs, and a
- * confirmation screen that says "pending" about money already taken is the
- * thing this exists to prevent. It is also the safety net for a webhook that
- * never arrives at all — a tunnel that died, a deploy mid-delivery.
- *
- * Never throws. A gateway that cannot be reached leaves the order exactly as it
- * was, which is the correct outcome: pending is the truth until proven wrong.
+/** A failed transaction can still belong to an ACTIVE, payable gateway order.
+ * Only verified terminal gateway states permit stock release. Failures throw so
+ * the durable worker can retry; the browser-facing wrapper is best effort.
  */
-export async function reconcilePayment(orderId: string): Promise<SettleResult> {
-  const attempt = await getLatestAttempt(orderId);
-  if (!attempt) return { status: "created", newlyPaid: false };
-  if (isTerminal(attempt.status) && attempt.status !== "success") {
-    // Already resolved and not in our favour. Re-asking would tell us the same
-    // thing and spend a request doing it.
-    return { status: attempt.status, newlyPaid: false };
-  }
-
+export async function reconcileAttempt(attempt: PaymentAttempt): Promise<SettleResult> {
+  if (attempt.provider !== "cashfree") throw new Error("This payment is not a Cashfree attempt");
+  if (attempt.status === "success") return { status: "success", newlyPaid: false };
   const config = await getCashfreeConfig();
-  if (!config) return { status: attempt.status, newlyPaid: false };
-
-  try {
-    const [order, payments] = await Promise.all([
-      getCashfreeOrder(config, attempt.provider_order_id),
-      getCashfreeOrderPayments(config, attempt.provider_order_id).catch(
-        () => [] as CashfreePayment[]
-      ),
-    ]);
-
-    const payment = pickPayment(payments);
-
-    // The order's own status is the authority on whether money arrived; the
-    // payment record is where the detail lives. They can disagree briefly while
-    // a transaction settles, and `order_status === 'PAID'` is the safer of the
-    // two to act on.
-    const status: PaymentStatus =
-      order.order_status === "PAID"
-        ? "success"
-        : order.order_status === "EXPIRED"
-          ? "expired"
-          : order.order_status === "TERMINATED"
-            ? "cancelled"
-            : mapPaymentStatus(payment?.payment_status);
-
-    return settlePayment(attempt, {
-      status,
-      cfPaymentId:
-        payment?.cf_payment_id != null ? String(payment.cf_payment_id) : null,
-      method: payment?.payment_group ?? null,
-      paidAmount:
-        status === "success"
-          ? (payment?.payment_amount ?? order.order_amount ?? null)
-          : null,
-      error: status === "failed" ? (payment?.payment_message ?? null) : null,
-      response: { order, payment } as unknown as Record<string, unknown>,
-    });
-  } catch {
-    return { status: attempt.status, newlyPaid: false };
+  if (!config || (attempt.gateway_environment && attempt.gateway_environment !== config.environment)) {
+    throw new Error("Payment gateway unavailable or environment changed");
   }
+  let remote;
+  try {
+    remote = await getCashfreeOrder(config, attempt.provider_order_id);
+  } catch (cause) {
+    const expiry = new Date(attempt.session_expires_at ?? new Date(new Date(attempt.created_at).getTime() + 30 * 60_000)).getTime();
+    if (cause instanceof CashfreeError && cause.status === 404 && attempt.gateway_environment === config.environment && Date.now() > expiry + 5 * 60_000) {
+      return settlePayment(attempt, { status: "expired", remoteOrderStatus: "NOT_FOUND" });
+    }
+    throw cause;
+  }
+  const payments = await getCashfreeOrderPayments(config, attempt.provider_order_id);
+  const payment = pickPayment(payments);
+  const status: PaymentStatus = remote.order_status === "PAID" || payment?.payment_status === "SUCCESS"
+    ? "success" : remote.order_status === "EXPIRED" ? "expired"
+      : remote.order_status === "TERMINATED" ? "cancelled" : mapPaymentStatus(payment?.payment_status);
+  return settlePayment(attempt, {
+    status, remoteOrderStatus: remote.order_status,
+    cfPaymentId: payment?.cf_payment_id != null ? String(payment.cf_payment_id) : null,
+    method: payment?.payment_group ?? null,
+    paidAmount: status === "success" ? (payment?.payment_amount ?? remote.order_amount ?? null) : null,
+    paidCurrency: payment?.payment_currency ?? remote.order_currency ?? null,
+    error: status === "failed" ? payment?.payment_message ?? null : null,
+    response: { order: remote, payment } as unknown as Record<string, unknown>,
+  });
 }
 
-/**
- * Settles a signed webhook against the attempt it names.
- *
- * The webhook carries everything needed, so unlike `reconcilePayment` this does
- * not call back out to Cashfree — the signature already proved the payload came
- * from them, and a round trip would only add a way for the handler to time out
- * and be redelivered.
- */
+/** Check every unresolved attempt, including an older session paid after a retry. */
+export async function reconcilePayment(orderId: string): Promise<SettleResult> {
+  const attempts = await getPaymentAttempts(orderId);
+  let result: SettleResult = { status: attempts[0]?.status ?? "created", newlyPaid: false };
+  for (const attempt of attempts) {
+    if (attempt.status === "success") return { status: "success", newlyPaid: false };
+    if (attempt.provider !== "cashfree") continue;
+    if (attempt.gateway_closed_at) continue;
+    try {
+      result = await reconcileAttempt(attempt);
+      if (result.status === "success") return result;
+    } catch {
+      // The durable reconciliation job retries independently of the shopper's tab.
+      console.error("[commerce] reconciliation deferred", { paymentId: attempt.id });
+    }
+  }
+  return result;
+}
+
+/** Signed events and payment changes commit together, or all roll back. */
 export async function settleFromWebhook(
-  providerOrderId: string,
-  outcome: Outcome
-): Promise<SettleResult | null> {
-  const attempt = await findAttemptByProviderOrderId(providerOrderId);
-  if (!attempt) return null;
-  return settlePayment(attempt, outcome);
+  providerOrderId: string, outcome: Outcome,
+  event: { key: string; type: string; payload: Record<string, unknown> }
+): Promise<SettleResult> {
+  const supabase = createAdminClient();
+  if (!supabase) throw new Error("Payment database unavailable");
+  const { data, error } = await supabase.rpc("settle_cashfree_payment", {
+    p_provider_order_id: providerOrderId, p_outcome: outcome,
+    p_event_key: event.key, p_event_type: event.type, p_event_payload: event.payload,
+  });
+  if (error) throw new Error(`Webhook settlement failed: ${error.code}`);
+  return data as SettleResult;
 }

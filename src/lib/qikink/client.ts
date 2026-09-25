@@ -175,6 +175,7 @@ async function mintAccessToken(config: QikinkConfig, key: string): Promise<strin
       client_secret: config.clientSecret,
     }),
     cache: "no-store",
+    signal: AbortSignal.timeout(8_000),
   });
 
   const body = await readBody(response);
@@ -277,6 +278,7 @@ async function request<T>(
     },
     body: init.body ? JSON.stringify(init.body) : undefined,
     cache: "no-store",
+    signal: AbortSignal.timeout(8_000),
   });
 
   const body = await readBody(response);

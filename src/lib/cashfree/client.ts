@@ -128,7 +128,7 @@ function describeError(body: unknown): { message: string | null; code?: string }
 async function request<T>(
   config: CashfreeConfig,
   path: string,
-  init: { method: "GET" | "POST"; body?: unknown } = { method: "GET" }
+  init: { method: "GET" | "POST"; body?: unknown; idempotencyKey?: string } = { method: "GET" }
 ): Promise<T> {
   let response: Response;
 
@@ -139,10 +139,12 @@ async function request<T>(
         "x-api-version": API_VERSION,
         "x-client-id": config.appId,
         "x-client-secret": config.secretKey,
+        ...(init.idempotencyKey ? { "x-idempotency-key": init.idempotencyKey } : {}),
         ...(init.body ? { "Content-Type": "application/json" } : {}),
       },
       body: init.body ? JSON.stringify(init.body) : undefined,
       cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
     });
   } catch (cause) {
     // DNS, TLS, timeout. Distinguished from a rejection because the remedy is
@@ -185,7 +187,8 @@ const ORDER_ID = /^[A-Za-z0-9_-]{3,45}$/;
  */
 export async function createCashfreeOrder(
   config: CashfreeConfig,
-  payload: CashfreeOrderPayload
+  payload: CashfreeOrderPayload,
+  idempotencyKey?: string
 ): Promise<CashfreeOrder> {
   if (!ORDER_ID.test(payload.order_id)) {
     throw new CashfreeError(
@@ -199,6 +202,7 @@ export async function createCashfreeOrder(
   return request<CashfreeOrder>(config, "/orders", {
     method: "POST",
     body: payload,
+    idempotencyKey,
   });
 }
 

@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCashfreeConfig } from "@/lib/cashfree/config";
 import { settleFromWebhook, type Outcome } from "@/lib/cashfree/payment";
@@ -46,12 +45,12 @@ export async function POST(request: Request): Promise<Response> {
 
   const config = await getCashfreeConfig();
   if (!config) {
-    // Nothing here can act, and no amount of retrying will change that. A 200
-    // stops Cashfree hammering an endpoint whose store has the gateway off.
-    return ok("gateway not configured");
+    // Missing credentials or a transient settings read must not acknowledge money
+    // that has not been recorded. Retry after configuration is restored.
+    return new Response("Service unavailable", { status: 503 });
   }
 
-  const headerList = await headers();
+  const headerList = request.headers;
   const verification = verifyWebhookSignature(
     raw,
     headerList.get("x-webhook-timestamp"),
@@ -80,31 +79,12 @@ export async function POST(request: Request): Promise<Response> {
     return new Response("Service unavailable", { status: 503 });
   }
 
-  // The ledger insert *is* the lock. Doing it before any work means two
-  // deliveries racing on two instances resolve in the database rather than
-  // both proceeding to push the same order into production.
-  const key = idempotencyKey(
-    headerList.get("x-idempotency-header"),
-    payload,
-    raw
-  );
-
-  const { error: ledgerError } = await supabase.from("payment_events").insert({
-    idempotency_key: key,
-    event_type: payload.type ?? null,
-    payload: payload as unknown as Record<string, unknown>,
-  });
-
-  if (ledgerError) {
-    // 23505 is unique_violation: this exact event has already been handled.
-    if (ledgerError.code === "23505") return ok("duplicate");
-    return new Response("Service unavailable", { status: 503 });
-  }
-
+  const key = idempotencyKey(headerList.get("x-idempotency-header"), payload, raw);
   if (!isPaymentWebhook(payload.type)) {
-    // Refunds, settlements, disputes. Recorded above so there is a trail, but
-    // nothing in this store acts on them yet.
-    return ok("ignored");
+    const { error } = await supabase.from("payment_events").upsert({
+      idempotency_key: key, event_type: payload.type ?? null, payload,
+    }, { onConflict: "provider,idempotency_key", ignoreDuplicates: true });
+    return error ? new Response("Service unavailable", { status: 503 }) : ok("ignored");
   }
 
   const providerOrderId = payload.data?.order?.order_id;
@@ -125,6 +105,7 @@ export async function POST(request: Request): Promise<Response> {
     // Their `payment_amount` is the figure actually captured, which is the one
     // worth comparing; the order amount is only a fallback.
     paidAmount: payment?.payment_amount ?? payload.data?.order?.order_amount ?? null,
+    paidCurrency: payment?.payment_currency ?? payload.data?.order?.order_currency ?? null,
     error:
       payload.data?.error_details?.error_description ??
       payment?.payment_message ??
@@ -133,17 +114,12 @@ export async function POST(request: Request): Promise<Response> {
   };
 
   try {
-    const settled = await settleFromWebhook(providerOrderId, outcome);
-    // An unknown order id is not a retryable condition — it means the payment
-    // belongs to a different store or a wiped database, and it will still be
-    // unknown in ten minutes. The ledger row stays as the record that it came.
-    if (!settled) return ok("unknown order");
+    await settleFromWebhook(providerOrderId, outcome, {
+      key, type: payload.type!, payload: payload as unknown as Record<string, unknown>,
+    });
   } catch {
-    // The ledger row was written before the work, which is what makes a
-    // redelivery safe to ignore — so if the work did not happen, the row is a
-    // lie and has to go. Removing it and asking for a retry is the only way
-    // Cashfree gets a second chance at this event.
-    await supabase.from("payment_events").delete().eq("idempotency_key", key);
+    // No ledger entry commits unless settlement commits. Unknown attempts retry too.
+    console.error("[commerce] webhook settlement deferred", { providerOrderId });
     return new Response("Service unavailable", { status: 503 });
   }
 

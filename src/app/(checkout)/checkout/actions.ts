@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { after } from "next/server";
+import { commerceRateLimit, retryCheckout } from "@/lib/commerce/guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getCashfreeConfig, type CashfreeMode } from "@/lib/cashfree/config";
@@ -195,9 +195,11 @@ export async function placeOrder(
     return { error: "The store is not available right now.", field: null };
   }
 
+  const rateError = await commerceRateLimit("checkout", cartToken);
+  if (rateError) return { error: rateError, field: null };
   const landingPath = text(form, "landing_path", 512);
 
-  const { data, error } = await admin.rpc("place_order", {
+  const { data, error } = await retryCheckout(() => admin.rpc("place_order", {
     payload: {
       cart_token: cartToken,
       email,
@@ -225,7 +227,7 @@ export async function placeOrder(
       landing_path: landingPath,
       utm: readUtm(landingPath),
     },
-  });
+  }));
 
   if (error) {
     // Anything without our SQLSTATE is a fault, not a shopper problem — saying
@@ -252,67 +254,7 @@ export async function placeOrder(
   // cookie stops the next request resurrecting an empty one.
   await clearCartCookie();
 
-  // Hand the order to the print supplier, if auto-send is on.
-  //
-  // Deliberately outside the transaction and after the response: fulfillment is
-  // a downstream consequence of the order, not a condition of it. Qikink being
-  // slow, rate-limited or down must never cost a shopper their checkout, and a
-  // failed push is already recorded on qikink_fulfillments for the operator to
-  // retry from the order page. `after` runs it once the redirect is on its way,
-  // so nobody waits on two HTTP calls to another provider.
-  //
-  // COD only, and this is the part that has to stay true as payment methods are
-  // added. map.ts reports an order to Qikink as Prepaid or COD purely on
-  // `payment_status === 'paid'`, and a prepaid order is pending at this point —
-  // so auto-sending one would put goods into production, billed to the customer
-  // on delivery, for money the store is separately about to ask for. A prepaid
-  // order is pushed by `settlePayment` instead, the moment its payment lands
-  // and not a step before.
-  if (result.order_id && paymentMethod === "cod") {
-    const orderId = result.order_id;
-    after(async () => {
-      try {
-        // The COD review hold (0033). Decided here, after the order exists and
-        // before anything downstream sees it: a held order is not pushed, and
-        // sits on the "Needs review" list until staff approve it or ask for an
-        // advance. The update is conditional on the rule *in SQL* so the
-        // decision and the total it depends on come from the same row.
-        const { getCodSettings } = await import("@/lib/shop/cod");
-        const settings = await getCodSettings();
-        if (settings.holdEnabled) {
-          let hold = admin
-            .from("orders")
-            .update({ held_at: new Date().toISOString(), hold_reason: "cod_review" })
-            .eq("id", orderId)
-            .eq("payment_method", "cod")
-            .is("held_at", null);
-          if (settings.holdMinTotal != null) {
-            hold = hold.gte("total", settings.holdMinTotal);
-          }
-          const { data: held, error: holdError } = await hold.select("id");
-          // Held, or the hold could not be recorded. Either way this order is
-          // not sent: an order the rule wanted looked at must never slip into
-          // production because the write that would have parked it failed. It
-          // shows on the order page as not sent, with the button to send it.
-          if (holdError) {
-            console.error(`[cod] hold for order ${orderId} failed:`, holdError.message);
-            return;
-          }
-          if (held?.length) return;
-        }
-
-        const { getQikinkConfig } = await import("@/lib/qikink/config");
-        const config = await getQikinkConfig();
-        if (!config?.autoSend) return;
-        const { pushOrderToQikink } = await import("@/lib/qikink/fulfillment");
-        await pushOrderToQikink(orderId);
-      } catch {
-        // Swallowed on purpose. The order is placed and the shopper has been
-        // redirected; there is no one left to tell, and pushOrderToQikink has
-        // already persisted anything worth reading.
-      }
-    });
-  }
+  // Checkout committed the COD review hold and fulfilment/expiry jobs atomically.
 
   // Every path leaves this page, prepaid included, and that is load-bearing
   // rather than tidy.
@@ -396,6 +338,8 @@ async function orderIdForToken(token: string): Promise<string | null> {
  * order it already knows the status of.
  */
 export async function confirmPayment(token: string): Promise<void> {
+  const rateError = await commerceRateLimit("payment-check", token);
+  if (rateError) redirect(`/orders/${token}`);
   const orderId = await orderIdForToken(token);
   if (orderId) {
     try {
@@ -431,6 +375,8 @@ export async function retryPayment(
    */
   requestId?: string
 ): Promise<{ ok: true; payment: PaymentHandoff } | { ok: false; error: string }> {
+  const rateError = await commerceRateLimit("payment-start", token);
+  if (rateError) return { ok: false, error: rateError };
   const orderId = await orderIdForToken(token);
   if (!orderId) return { ok: false, error: "We could not find that order." };
 

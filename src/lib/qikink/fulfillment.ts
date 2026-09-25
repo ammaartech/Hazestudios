@@ -29,7 +29,7 @@ export interface QikinkFulfillment {
 
 export type PushResult =
   | { ok: true; qikinkOrderId: string }
-  | { ok: false; error: string; problems?: string[] };
+  | { ok: false; error: string; problems?: string[]; reviewRequired?: boolean };
 
 const FULFILLMENT_COLUMNS =
   "order_id, qikink_order_id, status, qikink_status, stage, stage_since, awb, tracking_url, error, sent_at, synced_at";
@@ -88,13 +88,14 @@ async function record(
   patch: Record<string, unknown>
 ): Promise<void> {
   const supabase = createAdminClient();
-  if (!supabase) return;
-  await supabase
+  if (!supabase) throw new Error("Fulfilment database unavailable");
+  const { error } = await supabase
     .from("qikink_fulfillments")
     .upsert(
       { order_id: orderId, ...patch, updated_at: new Date().toISOString() },
       { onConflict: "order_id" }
     );
+  if (error) throw new Error(`Could not record fulfilment: ${error.code}`);
 }
 
 /**
@@ -153,6 +154,13 @@ export async function pushOrderToQikink(orderId: string): Promise<PushResult> {
     return { ok: false, error: "Order cannot be sent yet.", problems: mapped.problems };
   }
 
+  const { data: claimed, error: claimError } = await supabase.rpc("claim_fulfillment_dispatch", { p_order_id: orderId });
+  if (claimError) return { ok: false, error: "Could not reserve fulfilment. Please retry." };
+  if (!claimed) return {
+    ok: false, reviewRequired: true,
+    error: "Fulfilment is already running, needs supplier reconciliation, or this order cannot be shipped.",
+  };
+  let recordedOrderId: string | null = null;
   try {
     const result = await createOrder(config, mapped.payload);
     const qikinkOrderId = result.order_id != null ? String(result.order_id) : "";
@@ -166,7 +174,8 @@ export async function pushOrderToQikink(orderId: string): Promise<PushResult> {
         request: mapped.payload,
         response: result as Record<string, unknown>,
       });
-      return { ok: false, error };
+      await supabase.from("fulfillment_dispatches").update({ state: "uncertain", updated_at: new Date().toISOString() }).eq("order_id", orderId);
+      return { ok: false, error, reviewRequired: true };
     }
 
     await record(orderId, {
@@ -182,21 +191,37 @@ export async function pushOrderToQikink(orderId: string): Promise<PushResult> {
       response: result as Record<string, unknown>,
       sent_at: new Date().toISOString(),
     });
+    recordedOrderId = qikinkOrderId;
 
+    const { error: finishError } = await supabase.from("fulfillment_dispatches").update({ state: "complete", updated_at: new Date().toISOString() }).eq("order_id", orderId);
+    if (finishError) throw finishError;
     return { ok: true, qikinkOrderId };
   } catch (cause) {
+    if (recordedOrderId) {
+      // The supplier ID is durable. A failure updating the secondary fence must
+      // not overwrite that successful record or trigger another supplier POST.
+      return { ok: true, qikinkOrderId: recordedOrderId };
+    }
     const error =
       cause instanceof QikinkError
         ? cause.message
         : "Could not reach Qikink. Check the connection and try again.";
+    // Only an explicit HTTP rejection is safe to retry. Lost responses/5xx may
+    // represent an accepted print job; leave a durable fence until reconciled.
+    const retryable = cause instanceof QikinkError && (
+      [400, 401, 403, 422, 429].includes(cause.status ?? 0) || /invalid accesstoken|token expired/i.test(cause.message)
+    );
+    await supabase.from("fulfillment_dispatches").update({
+      state: retryable ? "retryable" : "uncertain", updated_at: new Date().toISOString(),
+    }).eq("order_id", orderId);
     await record(orderId, {
       status: "failed",
       stage: "not_sent",
       error,
       request: mapped.payload,
-      response: (cause instanceof QikinkError ? cause.body : null) as Record<string, unknown>,
+      response: ((cause instanceof QikinkError ? cause.body : null) ?? {}) as Record<string, unknown>,
     });
-    return { ok: false, error };
+    return { ok: false, error, reviewRequired: !retryable };
   }
 }
 

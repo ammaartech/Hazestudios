@@ -312,7 +312,7 @@ export async function recordManualAdvance(
       method: "manual",
       request: { recorded_by: actor.email },
     })
-    .select("id, order_id, provider_order_id, cf_order_id, cf_payment_id, payment_session_id, status, amount, currency, method, error, created_at, request_id")
+    .select("id, order_id, provider, provider_order_id, cf_order_id, cf_payment_id, payment_session_id, status, amount, currency, method, error, created_at, request_id, session_expires_at, gateway_closed_at, gateway_environment")
     .single();
 
   if (error || !data) return { ok: false, error: error?.message ?? "Could not record the payment." };
@@ -320,6 +320,7 @@ export async function recordManualAdvance(
   await settlePayment(data as PaymentAttempt, {
     status: "success",
     paidAmount: Number(request.amount),
+    paidCurrency: request.currency,
     method: "manual",
   });
 

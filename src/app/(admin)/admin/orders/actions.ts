@@ -324,6 +324,17 @@ export async function deleteOrder(orderId: string) {
 export async function cancelOrder(orderId: string, restock: boolean) {
   const supabase = await createClient();
 
+  const { data: handled, error: cancelError } = await supabase.rpc("cancel_checkout_order", {
+    p_order_id: orderId, p_restock: restock,
+  });
+  if (cancelError) return { error: cancelError.message };
+  if (handled) {
+    revalidatePath(`/admin/orders/${orderId}`);
+    revalidatePath("/admin/orders");
+    revalidateOrders();
+    return { ok: true };
+  }
+
   const { data: order } = await supabase
     .from("orders")
     .select("payment_status, cancelled_at")

@@ -48,12 +48,14 @@ export function verifyWebhookSignature(
   if (!signature) return { ok: false, reason: "missing signature" };
   if (!secretKey) return { ok: false, reason: "no secret configured" };
 
-  // Cashfree sends epoch seconds. Anything unparseable is treated as hostile
-  // rather than tolerated, since a genuine delivery always carries one.
+  // Cashfree documents epoch milliseconds. Accept legacy second timestamps too,
+  // but retain the exact header bytes when computing the HMAC below.
+  if (!/^(?:\d{10}|\d{13})$/.test(timestamp)) return { ok: false, reason: "bad timestamp" };
   const sent = Number(timestamp);
   if (!Number.isFinite(sent)) return { ok: false, reason: "bad timestamp" };
 
-  const skew = Math.abs(Date.now() / 1000 - sent);
+  const sentSeconds = timestamp.length === 13 ? sent / 1000 : sent;
+  const skew = Math.abs(Date.now() / 1000 - sentSeconds);
   if (skew > MAX_SKEW_SECONDS) return { ok: false, reason: "stale timestamp" };
 
   const expected = createHmac("sha256", secretKey)
